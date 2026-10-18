@@ -1,54 +1,67 @@
 import argparse
 import asyncio
+import base64
 import json
 import wave
 from urllib.parse import urlencode
 import websockets
-from crossexam.config import get_settings, PROJECT_ROOT
-
-
-async def try_type(msg_type, text, voice, s, out_dir):
-    url = f"{s.tts_ws_url}?{urlencode({'voice': voice})}"
-    print(f"\n=== type={msg_type!r} ===")
-    audio = bytearray()
-    try:
-        async with websockets.connect(url, additional_headers={"Authorization": s.assemblyai_api_key},
-                                      open_timeout=s.tts_timeout_seconds) as ws:
-            await ws.send(json.dumps({"type": msg_type, "text": text}))
-            while True:
-                msg = await asyncio.wait_for(ws.recv(), timeout=s.tts_timeout_seconds)
-                if isinstance(msg, bytes):
-                    audio.extend(msg)
-                    continue
-                data = json.loads(msg)
-                summary = {k: v for k, v in data.items() if k not in ("audio", "data")}
-                if "audio" in data or "data" in data:
-                    summary["audio_field_chars"] = len(data.get("audio") or data.get("data") or "")
-                print("text:", json.dumps(summary)[:400])
-    except Exception as e:
-        print("ended:", type(e).__name__, str(e)[:300])
-    if audio:
-        out = out_dir / f"probe_{msg_type}.wav"
-        with wave.open(str(out), "wb") as w:
-            w.setnchannels(1)
-            w.setsampwidth(2)
-            w.setframerate(24000)
-            w.writeframes(bytes(audio))
-        print(f"saved {len(audio)} bytes of audio to {out}")
+from crossexam.config import get_settings
 
 
 async def main():
-    p = argparse.ArgumentParser(description="Probe the streaming TTS WebSocket protocol.")
+    p = argparse.ArgumentParser(description="Generate speech via the streaming TTS WebSocket and log every server message.")
     p.add_argument("--text", required=True)
     p.add_argument("--voice")
-    p.add_argument("--types", nargs="+",
-                   default=["Text", "Speak", "Synthesize", "Input", "Generate", "Flush"])
+    p.add_argument("--out", default="probe.wav")
     a = p.parse_args()
     s = get_settings()
-    out_dir = PROJECT_ROOT / "outputs"
-    out_dir.mkdir(exist_ok=True)
-    for t in a.types:
-        await try_type(t, a.text, a.voice or s.tts_default_voice, s, out_dir)
+
+    url = f"{s.tts_ws_url}?{urlencode({'voice': a.voice or s.tts_default_voice})}"
+    audio = bytearray()
+    seen_types = {}
+
+    async with websockets.connect(url, additional_headers={"Authorization": s.assemblyai_api_key},
+                                  open_timeout=s.tts_timeout_seconds) as ws:
+        await ws.send(json.dumps({"type": "Generate", "text": a.text}))
+        await ws.send(json.dumps({"type": "Flush"}))
+        while True:
+            try:
+                msg = await asyncio.wait_for(ws.recv(), timeout=s.tts_timeout_seconds)
+            except asyncio.TimeoutError:
+                print("timeout waiting for more messages")
+                break
+            if isinstance(msg, bytes):
+                audio.extend(msg)
+                seen_types["<binary>"] = seen_types.get("<binary>", 0) + 1
+                continue
+            data = json.loads(msg)
+            t = data.get("type", "?")
+            seen_types[t] = seen_types.get(t, 0) + 1
+            for field in ("audio", "data", "chunk"):
+                if isinstance(data.get(field), str):
+                    try:
+                        audio.extend(base64.b64decode(data[field], validate=True))
+                    except ValueError:
+                        print(f"{field} is not base64: {data[field][:100]}")
+                        continue
+                    data[field] = f"<{len(data[field])} base64 chars>"
+            if seen_types[t] <= 3:
+                print(json.dumps(data)[:600])
+            if t == "FlushDone":
+                await ws.send(json.dumps({"type": "Terminate"}))
+            if t in ("Termination", "Terminated", "Error"):
+                break
+
+    print("\nmessage counts:", seen_types)
+    if audio:
+        out = s.resolve(s.outputs_dir) / a.out
+        out.parent.mkdir(exist_ok=True)
+        with wave.open(str(out), "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(s.tts_sample_rate)
+            w.writeframes(bytes(audio))
+        print(f"saved {len(audio)} bytes ({len(audio) / (s.tts_sample_rate * 2):.1f}s) to {out}")
 
 
 if __name__ == "__main__":
