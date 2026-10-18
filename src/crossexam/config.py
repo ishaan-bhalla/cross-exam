@@ -17,9 +17,12 @@ class Settings(BaseSettings):
     tts_default_voice: str
     tts_timeout_seconds: float
     tts_sample_rate: int
+    retrieval_top_k: int
     data_dir: Path
     prompts_dir: Path
+    witness_answer_prompt: str
     outputs_dir: Path
+    processed_dir: Path
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p
