@@ -2,7 +2,9 @@
 
 Paragraphs come from the configured retriever. If retrieval fails its refusal
 gate (see retrieval.retriever) the witness says the point is not covered,
-without calling the LLM. Otherwise the LLM picks a
+without calling the LLM. If the relevance check is on, the LLM is first
+asked whether any retrieved paragraph directly answers the question; if not,
+the witness says it is not covered. Otherwise the LLM picks a
 paragraph, copies a quote from it (optionally elided with "...") and picks a
 lead-in id from a fixed menu. The quote is checked against the chosen
 paragraph, then against the other retrieved paragraphs; if it matches none,
@@ -79,18 +81,40 @@ def _parse_reply(raw: str) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
+def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
+    """{"answers": bool | None, "para_no": int | None, "raw": str, "error": str | None}.
+    answers is None when the check could not be run or parsed; the caller then proceeds."""
+    s = get_settings()
+    template = (s.resolve(s.prompts_dir) / s.relevance_check_prompt).read_text()
+    context = "\n\n".join(f"[Paragraph {p['para_no']}] {p['text']}" for p in paragraphs)
+    try:
+        raw = chat([{"role": "user", "content": template.format(paragraphs=context, question=question)}])
+    except Exception as e:
+        return {"answers": None, "para_no": None, "raw": "", "error": f"{type(e).__name__}: {e}"}
+    reply = _parse_reply(raw)
+    if reply is None or not isinstance(reply.get("answers"), bool):
+        return {"answers": None, "para_no": None, "raw": raw, "error": "unparseable reply"}
+    para_no = reply.get("para_no")
+    return {"answers": reply["answers"], "para_no": para_no if isinstance(para_no, int) else None,
+            "raw": raw, "error": None}
+
+
 def _result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
-            "para_corrected": False, "fallback": False, "skipped_llm": False, "spoken": "", "raw": ""}
+            "para_corrected": False, "fallback": False, "skipped_llm": False,
+            "relevance_rejected": False, "relevance": None, "spoken": "", "raw": ""}
     return {**base, **fields}
 
 
 def answer(question: str, retriever: Retriever, witness_name: str,
-           demeanour: str | None = None, retrieval: Retrieval | None = None) -> dict:
+           demeanour: str | None = None, retrieval: Retrieval | None = None,
+           relevance_check: bool | None = None) -> dict:
     """Retrieves with retriever unless a retrieval for this question is passed in.
+    relevance_check overrides the relevance_check_enabled setting.
 
     Returns {quote, para_no, lead_in_id, lead_in, verified, para_corrected,
-    fallback, skipped_llm, spoken, raw}; raw is the LLM's reply text.
+    fallback, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
+    the answer LLM's reply text and relevance the check's result (or None).
     """
     template, not_covered = _load_prompt()
     lead_ins = _load_lead_ins(demeanour)
@@ -99,6 +123,11 @@ def answer(question: str, retriever: Retriever, witness_name: str,
 
     if not retriever.passes_gate(retrieval):
         return _result(verified=True, skipped_llm=True, spoken=not_covered)
+
+    check = get_settings().relevance_check_enabled if relevance_check is None else relevance_check
+    relevance = _relevance_check(question, paragraphs) if check else None
+    if relevance and relevance["answers"] is False:
+        return _result(verified=True, relevance_rejected=True, relevance=relevance, spoken=not_covered)
 
     context = "\n\n".join(f"[Paragraph {p['para_no']}] {p['text']}" for p in paragraphs)
     menu = "\n".join(f"- {i}: {text}" for i, text in lead_ins.items())
@@ -109,7 +138,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     reply = _parse_reply(raw)
 
     if reply is not None and reply.get("para_no") is None:
-        return _result(verified=True, spoken=not_covered, raw=raw)
+        return _result(verified=True, relevance=relevance, spoken=not_covered, raw=raw)
 
     by_no = {p["para_no"]: p for p in paragraphs}
     quote, lead_in_id, para = "", None, None
@@ -141,4 +170,4 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     spoken = f"{lead_in} {SPOKEN_PAUSE.join(segments)}".strip()
     return _result(quote=quote, para_no=para["para_no"], lead_in_id=lead_in_id if lead_in else None,
                    lead_in=lead_in, verified=verified, para_corrected=para_corrected,
-                   fallback=fallback, spoken=spoken, raw=raw)
+                   fallback=fallback, relevance=relevance, spoken=spoken, raw=raw)

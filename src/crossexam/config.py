@@ -26,13 +26,16 @@ class Settings(BaseSettings):
     embedding_query_prefix: str
     embedding_cache_dir: Path
     rrf_k: int
+    dense_weight: float
     dense_min_score: float
     hyde_enabled: bool
+    relevance_check_enabled: bool
     data_dir: Path
     prompts_dir: Path
     witness_answer_prompt: str
     lead_ins_file: str
     hyde_prompt: str
+    relevance_check_prompt: str
     outputs_dir: Path
     processed_dir: Path
     eval_dir: Path

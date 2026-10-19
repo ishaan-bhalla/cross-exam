@@ -28,3 +28,8 @@
 {"id": "t04", "question": "Did you ever discuss Horizon with Paula Vennells?", "expected_paras": [], "category": "trap", "difficulty": "hard"}
 {"id": "t05", "question": "What was your involvement in the Initial Complaint Review and Mediation Scheme?", "expected_paras": [], "category": "trap", "difficulty": "hard"}
 {"id": "t06", "question": "Did you provide any evidence in the case against Lee Castleton?", "expected_paras": [], "category": "trap", "difficulty": "hard"}
+{"id": "r01", "question": "What did you make of POL00055418?", "expected_paras": [64], "category": "docref", "difficulty": "easy"}
+{"id": "r02", "question": "Turning to POL00001697, what was your understanding of what that programme was dealing with?", "expected_paras": [34], "category": "docref", "difficulty": "easy"}
+{"id": "r03", "question": "Can you help the Inquiry with FUJ00084797?", "expected_paras": [49], "category": "docref", "difficulty": "hard"}
+{"id": "r04", "question": "What was POL00087409 intended to deal with?", "expected_paras": [61, 59], "category": "docref", "difficulty": "hard"}
+{"id": "r05", "question": "Please look at POL00041235. Do you recall receiving that report?", "expected_paras": [], "category": "docref", "difficulty": "hard"}

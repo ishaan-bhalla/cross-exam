@@ -20,8 +20,11 @@ from crossexam.statements.parser import load_statement
 from crossexam.retrieval.retriever import Retriever
 from crossexam.witness.answer import answer
 
-CATEGORY_ORDER = ["direct", "paraphrased", "multi", "trap"]
-ABLATION = [("bm25", False), ("dense", False), ("hybrid", False), ("hybrid", True)]
+CATEGORY_ORDER = ["direct", "paraphrased", "multi", "docref", "trap"]
+# (retriever, hyde, dense_weight); dense_weight None means the DENSE_WEIGHT setting.
+ABLATION = [("bm25", False, None), ("dense", False, None), ("hybrid", False, None),
+            ("hybrid", False, 0.6), ("hybrid", False, 0.75), ("hybrid", False, 0.9),
+            ("hybrid", True, None)]
 WORST_MISSES = 5
 DENSE_SCORE_LISTING = 6
 
@@ -41,11 +44,13 @@ def _p95(values: list[float]) -> float | None:
     return ordered[min(len(ordered) - 1, round(0.95 * (len(ordered) - 1)))]
 
 
-def variant_name(kind: str, hyde: bool) -> str:
-    return f"{kind}+hyde" if hyde else kind
+def variant_name(kind: str, hyde: bool, dense_weight: float | None = None) -> str:
+    name = f"{kind} w{dense_weight}" if dense_weight is not None else kind
+    return f"{name}+hyde" if hyde else name
 
 
-def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool) -> dict:
+def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
+                 relevance_check: bool | None) -> dict:
     expected = set(q["expected_paras"])
     answerable = bool(expected)
     waited_before = rate_limit_wait_seconds()
@@ -57,6 +62,7 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool) -> 
     r = {"id": q["id"], "category": q["category"], "difficulty": q["difficulty"],
          "question": q["question"], "expected_paras": q["expected_paras"],
          "retriever": retriever.kind, "hyde": retriever.hyde,
+         "dense_weight": retriever.dense_weight if retriever.kind == "hybrid" else None,
          "query": retrieval.query if retriever.hyde else None, "hyde_error": retrieval.hyde_error,
          "retrieved": [h["para_no"] for h in hits], "scores": [round(h["score"], 4) for h in hits],
          "hit_details": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in h.items() if k != "text"}
@@ -67,19 +73,24 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool) -> 
          "hit_at_k": any(h["para_no"] in expected for h in hits) if answerable else None}
 
     if use_llm:
-        a = answer(q["question"], retriever, witness, retrieval=retrieval)
+        a = answer(q["question"], retriever, witness, retrieval=retrieval, relevance_check=relevance_check)
+        rel = a["relevance"] or {}
         r.update({"para_no": a["para_no"],
                   "para_correct": (a["para_no"] in expected) if answerable else None,
                   "verified": a["verified"], "fallback": a["fallback"],
                   "verified_no_fallback": a["verified"] and not a["fallback"],
                   "para_corrected": a["para_corrected"], "skipped_llm": a["skipped_llm"],
+                  "relevance_checked": a["relevance"] is not None,
+                  "relevance_rejected": a["relevance_rejected"],
+                  "relevance_para_no": rel.get("para_no"), "relevance_error": rel.get("error"),
                   "refused": a["para_no"] is None, "spoken": a["spoken"], "raw": a["raw"]})
     else:
         # No answer step: the only refusal possible is the retrieval gate.
         refused = not retriever.passes_gate(retrieval)
         r.update({"para_no": None, "para_correct": None, "verified": None, "fallback": None,
                   "verified_no_fallback": None, "para_corrected": None,
-                  "skipped_llm": refused, "refused": refused})
+                  "skipped_llm": refused, "relevance_checked": False, "relevance_rejected": None,
+                  "refused": refused})
     waited = rate_limit_wait_seconds() - waited_before
     r["rate_limit_wait_ms"] = round(waited * 1000, 1)
     r["latency_ms"] = round((time.perf_counter() - start - waited) * 1000, 1)
@@ -109,6 +120,8 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
         s["grounding_rate"] = _ratio(sum(r["verified_no_fallback"] for r in non_refused), len(non_refused))
         s["para_corrected"] = sum(r["para_corrected"] for r in rows)
         s["skipped_llm"] = sum(r["skipped_llm"] for r in rows)
+        s["relevance_rejected"] = sum(r["relevance_rejected"] for r in rows)
+        s["relevance_rejected_answerable"] = sum(r["relevance_rejected"] for r in rows if r["expected_paras"])
     return s
 
 
@@ -129,7 +142,8 @@ def print_table(summary: dict, use_llm: bool):
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%")]
     if use_llm:
         cols += [("para acc", "para_accuracy", "%"), ("grounded", "grounding_rate", "%"),
-                 ("corrected", "para_corrected", "d"), ("skip llm", "skipped_llm", "d")]
+                 ("corrected", "para_corrected", "d"), ("skip llm", "skipped_llm", "d"),
+                 ("rel rej", "relevance_rejected", "d")]
     cols += [("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),
              ("ref rec", "refusal_recall", "%"), ("mean ms", "latency_mean_ms", "f"),
              ("p95 ms", "latency_p95_ms", "f"), ("rl wait ms", "rate_limit_wait_ms", "f")]
@@ -142,15 +156,15 @@ def print_table(summary: dict, use_llm: bool):
 
 
 def print_ablation(summaries: dict[str, dict]):
-    cats = ["direct", "paraphrased", "multi"]
+    cats = ["direct", "paraphrased", "multi", "docref"]
     head = "".join(f"{c[:5] + ' @1':>10}{c[:5] + ' @k':>10}" for c in cats) + f"{'all @1':>10}{'all @k':>10}"
-    print(f"{'variant':<14}{head}{'dense ans':>11}{'dense trap':>11}")
+    print(f"{'variant':<16}{head}{'dense ans':>11}{'dense trap':>11}")
     for name, sm in summaries.items():
         by = sm["by_category"]
         cells = "".join(f"{fmt(by.get(c, {}).get('hit_at_1'), '%'):>10}{fmt(by.get(c, {}).get('hit_at_k'), '%'):>10}"
                         for c in cats)
         o = sm["overall"]
-        print(f"{name:<14}{cells}{fmt(o['hit_at_1'], '%'):>10}{fmt(o['hit_at_k'], '%'):>10}"
+        print(f"{name:<16}{cells}{fmt(o['hit_at_1'], '%'):>10}{fmt(o['hit_at_k'], '%'):>10}"
               f"{fmt(o['mean_top_dense_answerable'], '3'):>11}{fmt(o['mean_top_dense_trap'], '3'):>11}")
 
 
@@ -182,15 +196,20 @@ def write(out_dir: Path, rows: list[dict], summary: dict):
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
 
 
-def run_variant(questions, paragraphs, a, kind, hyde, use_llm) -> tuple[list[dict], dict]:
-    retriever = Retriever(paragraphs, a.pdf.stem, kind=kind, hyde=hyde, top_k=a.top_k, min_score=a.min_score)
+def run_variant(questions, paragraphs, a, kind, hyde, use_llm, dense_weight=None) -> tuple[list[dict], dict]:
+    s = get_settings()
+    retriever = Retriever(paragraphs, a.pdf.stem, kind=kind, hyde=hyde, top_k=a.top_k,
+                          min_score=a.min_score, dense_weight=dense_weight)
+    relevance_check = False if a.no_relevance_check else None
     rows = []
     for q in questions:
-        rows.append(run_question(q, retriever, a.witness, use_llm))
-        print(f"  {variant_name(kind, hyde)} {q['id']}", end="\r", flush=True)
+        rows.append(run_question(q, retriever, a.witness, use_llm, relevance_check))
+        print(f"  {variant_name(kind, hyde, dense_weight)} {q['id']}", end="\r", flush=True)
     print(" " * 40, end="\r")
     summary = build_summary(rows, use_llm, questions=str(a.questions), pdf=str(a.pdf), witness=a.witness,
-                            retriever=kind, hyde=hyde, top_k=retriever.top_k, min_score=retriever.min_score)
+                            retriever=kind, hyde=hyde, top_k=retriever.top_k, min_score=retriever.min_score,
+                            dense_weight=retriever.dense_weight if kind == "hybrid" else None,
+                            relevance_check=use_llm and (False if a.no_relevance_check else s.relevance_check_enabled))
     return rows, summary
 
 
@@ -205,6 +224,7 @@ def main():
     p.add_argument("--hyde", action=argparse.BooleanOptionalAction, help="override HYDE_ENABLED")
     p.add_argument("--ablation", action="store_true", help="run bm25, dense, hybrid and hybrid+hyde")
     p.add_argument("--no-llm", action="store_true", help="retrieval only, no answer generation")
+    p.add_argument("--no-relevance-check", action="store_true", help="skip the LLM relevance check")
     a = p.parse_args()
     s = get_settings()
     use_llm = not a.no_llm
@@ -216,12 +236,12 @@ def main():
     out_dir = s.resolve(s.outputs_dir) / "eval" / datetime.now().strftime("%Y%m%d-%H%M%S")
 
     if a.ablation:
-        variants = [(k, h) for k, h in ABLATION if use_llm or not h]
+        variants = [(k, h, w) for k, h, w in ABLATION if use_llm or not h]
         summaries, rows_by_name = {}, {}
-        for kind, hyde in variants:
-            rows, summary = run_variant(questions, paragraphs, a, kind, hyde, use_llm)
-            name = variant_name(kind, hyde)
-            write(out_dir / name, rows, summary)
+        for kind, hyde, weight in variants:
+            rows, summary = run_variant(questions, paragraphs, a, kind, hyde, use_llm, weight)
+            name = variant_name(kind, hyde, weight)
+            write(out_dir / name.replace(" ", "_"), rows, summary)
             summaries[name] = summary
             rows_by_name[name] = rows
         (out_dir / "ablation.json").write_text(json.dumps(summaries, indent=2))
@@ -234,7 +254,7 @@ def main():
         rows, summary = run_variant(questions, paragraphs, a, a.retriever or s.retriever, hyde, use_llm)
         write(out_dir, rows, summary)
         print(f"retriever={summary['retriever']} hyde={hyde} top_k={summary['top_k']} "
-              f"min_score={summary['min_score']} llm={use_llm}\n")
+              f"min_score={summary['min_score']} relevance_check={summary['relevance_check']} llm={use_llm}\n")
         print_table(summary, use_llm)
         print_misses(rows)
         print_dense_scores(rows)

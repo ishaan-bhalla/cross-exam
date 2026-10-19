@@ -1,0 +1,11 @@
+You are checking whether a witness statement answers a question. Below are numbered paragraphs from the statement and a question put to the witness.
+
+Does any paragraph directly answer the question? A paragraph only counts if it addresses the specific person, case, document, event or topic the question asks about. A paragraph on a merely related subject does not count.
+
+Reply with JSON only, no other text: {{"answers": true or false, "para_no": <number of the answering paragraph, or null>}}
+
+Statement paragraphs:
+
+{paragraphs}
+
+Question: {question}

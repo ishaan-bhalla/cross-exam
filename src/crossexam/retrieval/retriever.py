@@ -28,12 +28,14 @@ class Retrieval:
 
 class Retriever:
     def __init__(self, paragraphs: list[dict], statement_id: str, kind: str | None = None,
-                 hyde: bool | None = None, top_k: int | None = None, min_score: float | None = None):
+                 hyde: bool | None = None, top_k: int | None = None, min_score: float | None = None,
+                 dense_weight: float | None = None):
         s = get_settings()
         self.kind = kind or s.retriever
         if self.kind not in KINDS:
             raise ValueError(f"unknown retriever {self.kind!r}; expected one of {KINDS}")
         self.hyde = s.hyde_enabled if hyde is None else hyde
+        self.dense_weight = s.dense_weight if dense_weight is None else dense_weight
         self.top_k = top_k or s.retrieval_top_k
         default_min = s.retrieval_min_score if self.kind == "bm25" else s.dense_min_score
         self.min_score = default_min if min_score is None else min_score
@@ -64,7 +66,7 @@ class Retriever:
         elif self.kind == "dense":
             ranking = dense_ranking
         else:
-            ranking = fuse(bm25_ranking, dense_ranking)
+            ranking = fuse(bm25_ranking, dense_ranking, self.dense_weight)
         top_dense = dense_ranking[0]["score"] if dense_ranking else None
         gate = bm25_ranking[0]["score"] if self.kind == "bm25" else top_dense
         return Retrieval(query, ranking, ranking[:self.top_k], gate, top_dense, hyde_error)
