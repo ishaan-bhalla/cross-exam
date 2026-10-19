@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     dense_min_score: float
     hyde_enabled: bool
     relevance_check_enabled: bool
+    doc_id_pattern: str
     data_dir: Path
     prompts_dir: Path
     witness_answer_prompt: str

@@ -11,6 +11,7 @@ paragraph, then against the other retrieved paragraphs; if it matches none,
 the answer falls back to the first sentence of the top-ranked paragraph and
 is marked unverified.
 """
+import functools
 import json
 import re
 from crossexam.clients.llm_gateway import chat
@@ -28,12 +29,14 @@ SPOKEN_PAUSE = "… "
 DEFAULT_DEMEANOURS = ("confident", "neutral")
 
 
-def _load_prompt() -> tuple[str, str]:
-    """(system prompt template, not-covered phrase) from the prompt file."""
+def _load_prompt() -> tuple[str, dict[str, str]]:
+    """(system prompt template, fixed phrases) from the prompt file. The header above
+    the "---" line holds one "KEY: phrase" per line (NOT_COVERED, NOT_RECOGNISED)."""
     s = get_settings()
     header, template = (s.resolve(s.prompts_dir) / s.witness_answer_prompt).read_text().split("\n---\n", 1)
-    not_covered = header.split(":", 1)[1].strip()
-    return template, not_covered
+    phrases = dict((k.strip(), v.strip()) for k, v in
+                   (line.split(":", 1) for line in header.splitlines() if ":" in line))
+    return template, phrases
 
 
 def _load_lead_ins(demeanour: str | None) -> dict[str, str]:
@@ -99,10 +102,11 @@ def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
             "raw": raw, "error": None}
 
 
-def _result(**fields) -> dict:
+def _base_result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
             "para_corrected": False, "fallback": False, "skipped_llm": False,
-            "relevance_rejected": False, "relevance": None, "spoken": "", "raw": ""}
+            "relevance_rejected": False, "relevance": None, "routed": None, "doc_id_unknown": False,
+            "spoken": "", "raw": ""}
     return {**base, **fields}
 
 
@@ -116,11 +120,15 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     fallback, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
     the answer LLM's reply text and relevance the check's result (or None).
     """
-    template, not_covered = _load_prompt()
+    template, phrases = _load_prompt()
+    not_covered = phrases["NOT_COVERED"]
     lead_ins = _load_lead_ins(demeanour)
     retrieval = retrieval or retriever.retrieve(question)
     paragraphs = retrieval.hits
+    _result = functools.partial(_base_result, routed=retrieval.routed)
 
+    if retrieval.doc_id_unknown:
+        return _result(verified=True, skipped_llm=True, doc_id_unknown=True, spoken=phrases["NOT_RECOGNISED"])
     if not retriever.passes_gate(retrieval):
         return _result(verified=True, skipped_llm=True, spoken=not_covered)
 

@@ -25,6 +25,8 @@ def main():
 
     retriever = Retriever(load_statement(a.pdf), a.pdf.stem, kind=a.retriever, hyde=a.hyde)
     retrieval = retriever.retrieve(a.question)
+    if retrieval.routed:
+        print(f"Routed by document ID {retrieval.doc_ids}" + (" (not in statement)" if retrieval.doc_id_unknown else ""))
     if retriever.hyde:
         print(f"HyDE query: {retrieval.query}" + (f"  (failed: {retrieval.hyde_error})" if retrieval.hyde_error else ""))
     print(f"Retrieved paragraphs ({retriever.kind}; gate {retrieval.gate_score:.3f} vs min {retriever.min_score}):")

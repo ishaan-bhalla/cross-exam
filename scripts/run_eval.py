@@ -68,6 +68,7 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
          "hit_details": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in h.items() if k != "text"}
                          for h in hits],
          "gate_score": retrieval.gate_score, "top_dense_score": retrieval.top_dense_score,
+         "routed": retrieval.routed, "doc_ids": retrieval.doc_ids, "doc_id_unknown": retrieval.doc_id_unknown,
          "best_expected_rank": min((rank_of[n] for n in expected if n in rank_of), default=None),
          "hit_at_1": hits[0]["para_no"] in expected if answerable else None,
          "hit_at_k": any(h["para_no"] in expected for h in hits) if answerable else None}
@@ -85,8 +86,8 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
                   "relevance_para_no": rel.get("para_no"), "relevance_error": rel.get("error"),
                   "refused": a["para_no"] is None, "spoken": a["spoken"], "raw": a["raw"]})
     else:
-        # No answer step: the only refusal possible is the retrieval gate.
-        refused = not retriever.passes_gate(retrieval)
+        # No answer step: refusals come only from routing and the retrieval gate.
+        refused = retrieval.doc_id_unknown or not retriever.passes_gate(retrieval)
         r.update({"para_no": None, "para_correct": None, "verified": None, "fallback": None,
                   "verified_no_fallback": None, "para_corrected": None,
                   "skipped_llm": refused, "relevance_checked": False, "relevance_rejected": None,
@@ -108,6 +109,8 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
          "hit_at_1": _ratio(sum(r["hit_at_1"] for r in answerable), len(answerable)),
          "hit_at_k": _ratio(sum(r["hit_at_k"] for r in answerable), len(answerable)),
          "refused": len(refused),
+         "routed": sum(r["routed"] == "doc_id" for r in rows),
+         "doc_id_unknown": sum(r["doc_id_unknown"] for r in rows),
          "refusal_precision": _ratio(sum(not r["expected_paras"] for r in refused), len(refused)),
          "refusal_recall": _ratio(sum(r["refused"] for r in traps), len(traps)),
          "mean_top_dense_answerable": _mean(dense(answerable)),
@@ -144,7 +147,7 @@ def print_table(summary: dict, use_llm: bool):
         cols += [("para acc", "para_accuracy", "%"), ("grounded", "grounding_rate", "%"),
                  ("corrected", "para_corrected", "d"), ("skip llm", "skipped_llm", "d"),
                  ("rel rej", "relevance_rejected", "d")]
-    cols += [("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),
+    cols += [("routed", "routed", "d"), ("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),
              ("ref rec", "refusal_recall", "%"), ("mean ms", "latency_mean_ms", "f"),
              ("p95 ms", "latency_p95_ms", "f"), ("rl wait ms", "rate_limit_wait_ms", "f")]
     groups = [(c, summary["by_category"][c]) for c in CATEGORY_ORDER if c in summary["by_category"]]
