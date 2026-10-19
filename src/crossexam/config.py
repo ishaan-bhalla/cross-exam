@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     llm_model: str
     llm_max_tokens: int
     llm_timeout_seconds: float
+    llm_max_retries: int
+    llm_retry_backoff_seconds: float
     tts_ws_url: str
     tts_default_voice: str
     tts_timeout_seconds: float
@@ -25,6 +27,7 @@ class Settings(BaseSettings):
     lead_ins_file: str
     outputs_dir: Path
     processed_dir: Path
+    eval_dir: Path
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p

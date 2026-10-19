@@ -79,22 +79,24 @@ def _parse_reply(raw: str) -> dict | None:
 
 def _result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
-            "para_corrected": False, "skipped_llm": False, "spoken": "", "raw": ""}
+            "para_corrected": False, "fallback": False, "skipped_llm": False, "spoken": "", "raw": ""}
     return {**base, **fields}
 
 
 def answer(question: str, paragraphs: list[dict], witness_name: str,
-           demeanour: str | None = None) -> dict:
+           demeanour: str | None = None, min_score: float | None = None) -> dict:
     """paragraphs: retrieved paragraphs, best first, each with a BM25 "score".
+    min_score overrides the retrieval_min_score setting.
 
     Returns {quote, para_no, lead_in_id, lead_in, verified, para_corrected,
-    skipped_llm, spoken, raw}; raw is the LLM's reply text.
+    fallback, skipped_llm, spoken, raw}; raw is the LLM's reply text.
     """
     s = get_settings()
     template, not_covered = _load_prompt()
     lead_ins = _load_lead_ins(demeanour)
 
-    if not paragraphs or paragraphs[0]["score"] < s.retrieval_min_score:
+    threshold = s.retrieval_min_score if min_score is None else min_score
+    if not paragraphs or paragraphs[0]["score"] < threshold:
         return _result(verified=True, skipped_llm=True, spoken=not_covered)
 
     context = "\n\n".join(f"[Paragraph {p['para_no']}] {p['text']}" for p in paragraphs)
@@ -126,7 +128,8 @@ def answer(question: str, paragraphs: list[dict], witness_name: str,
         if len(others) == 1:
             para, verified, para_corrected = others[0], True, True
 
-    if not verified:
+    fallback = not verified
+    if fallback:
         # The lead-in was chosen for a quote we are discarding, so drop it too.
         para = paragraphs[0]
         quote = _first_sentence(para["text"])
@@ -137,4 +140,4 @@ def answer(question: str, paragraphs: list[dict], witness_name: str,
     spoken = f"{lead_in} {SPOKEN_PAUSE.join(segments)}".strip()
     return _result(quote=quote, para_no=para["para_no"], lead_in_id=lead_in_id if lead_in else None,
                    lead_in=lead_in, verified=verified, para_corrected=para_corrected,
-                   spoken=spoken, raw=raw)
+                   fallback=fallback, spoken=spoken, raw=raw)

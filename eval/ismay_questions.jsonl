@@ -1,0 +1,30 @@
+{"id": "d01", "question": "Did you design the training delivered to subpostmasters?", "expected_paras": [19], "category": "direct", "difficulty": "easy"}
+{"id": "d02", "question": "When did you leave Post Office Ltd?", "expected_paras": [17], "category": "direct", "difficulty": "easy"}
+{"id": "d03", "question": "Did you personally carry out audits?", "expected_paras": [56], "category": "direct", "difficulty": "easy"}
+{"id": "d04", "question": "Who asked you to conduct the review that became report POL00026572?", "expected_paras": [39], "category": "direct", "difficulty": "easy"}
+{"id": "d05", "question": "Did you oversee the Anti-Money Laundering Team?", "expected_paras": [8], "category": "direct", "difficulty": "easy"}
+{"id": "d06", "question": "Why was the Ping Project established?", "expected_paras": [24], "category": "direct", "difficulty": "easy"}
+{"id": "d07", "question": "When did you take over the role of Head of Product and Branch Accounting?", "expected_paras": [12], "category": "direct", "difficulty": "easy"}
+{"id": "d08", "question": "Do you recall the crib sheet for disputing Transaction Corrections referred to in NFSP00000521?", "expected_paras": [20], "category": "direct", "difficulty": "easy"}
+{"id": "d09", "question": "Did you have any input into prosecution cases?", "expected_paras": [65], "category": "direct", "difficulty": "easy"}
+{"id": "d10", "question": "Why did your report say Post Office was justified in assuming that losses identified at audit were due to theft?", "expected_paras": [40], "category": "direct", "difficulty": "hard"}
+{"id": "d11", "question": "How were Transaction Corrections identified at the time?", "expected_paras": [30], "category": "direct", "difficulty": "hard"}
+{"id": "d12", "question": "What did the joint panel with the NFSP decide about counterfeit benefit cheques?", "expected_paras": [59], "category": "direct", "difficulty": "easy"}
+{"id": "p01", "question": "At what point did your employment with the organisation come to an end?", "expected_paras": [17], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p02", "question": "Where were you employed immediately before you came to the company, and what position did you first hold?", "expected_paras": [5], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p03", "question": "Were you the person who put together the courses given to people running local outlets?", "expected_paras": [19], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p04", "question": "Did you yourself go and examine the money and goods held at individual outlets?", "expected_paras": [56], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p05", "question": "Was the 2010 paper you produced a new inquiry into the allegations, or something else?", "expected_paras": [39, 76], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p06", "question": "Did your own department rely on the same IT as sub-postmasters in its day-to-day operations?", "expected_paras": [28], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p07", "question": "With today's understanding, would you have flagged the computer system as a danger to a senior governance body sooner?", "expected_paras": [75], "category": "paraphrased", "difficulty": "hard"}
+{"id": "p08", "question": "Do you stand by the language in your paper characterising the business as showing sympathy to those accused?", "expected_paras": [45, 76], "category": "paraphrased", "difficulty": "hard"}
+{"id": "m01", "question": "How did your role develop between joining in 2003 and becoming Head of Product and Branch Accounting?", "expected_paras": [5, 6, 7, 8, 9, 10, 11, 12], "category": "multi", "difficulty": "hard"}
+{"id": "m02", "question": "Looking back, what would you have done differently with the 2010 report?", "expected_paras": [42, 43, 44, 45, 76], "category": "multi", "difficulty": "easy"}
+{"id": "m03", "question": "Why did branches use the other postage button, and how did the stock adjustment project respond?", "expected_paras": [35, 36, 37], "category": "multi", "difficulty": "hard"}
+{"id": "m04", "question": "What did the Ping Project propose, and why were you in favour of it?", "expected_paras": [24, 25, 27], "category": "multi", "difficulty": "easy"}
+{"id": "t01", "question": "What is your favourite football team?", "expected_paras": [], "category": "trap", "difficulty": "easy"}
+{"id": "t02", "question": "Where did you go on holiday last summer?", "expected_paras": [], "category": "trap", "difficulty": "easy"}
+{"id": "t03", "question": "What car do you drive?", "expected_paras": [], "category": "trap", "difficulty": "easy"}
+{"id": "t04", "question": "Did you ever discuss Horizon with Paula Vennells?", "expected_paras": [], "category": "trap", "difficulty": "hard"}
+{"id": "t05", "question": "What was your involvement in the Initial Complaint Review and Mediation Scheme?", "expected_paras": [], "category": "trap", "difficulty": "hard"}
+{"id": "t06", "question": "Did you provide any evidence in the case against Lee Castleton?", "expected_paras": [], "category": "trap", "difficulty": "hard"}

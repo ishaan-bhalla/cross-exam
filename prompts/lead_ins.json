@@ -1,8 +1,8 @@
 [
-  {"id": "c1", "demeanour": "confident", "text": "As I set out in my statement,"},
-  {"id": "c2", "demeanour": "confident", "text": "To be clear,"},
-  {"id": "n1", "demeanour": "neutral", "text": "My recollection is that"},
+  {"id": "c1", "demeanour": "confident", "text": "As I set out in my statement:"},
+  {"id": "c2", "demeanour": "confident", "text": "To be clear:"},
+  {"id": "n1", "demeanour": "neutral", "text": "My recollection is this:"},
   {"id": "n2", "demeanour": "neutral", "text": "I'd refer you to paragraph {para_no}:"},
-  {"id": "k1", "demeanour": "cornered", "text": "I… I would say that"},
+  {"id": "k1", "demeanour": "cornered", "text": "I… I would say this:"},
   {"id": "k2", "demeanour": "cornered", "text": "I can only repeat what I've said:"}
 ]
