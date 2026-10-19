@@ -14,6 +14,7 @@ def main():
     p.add_argument("--pdf", required=True, type=Path)
     p.add_argument("--witness", required=True)
     p.add_argument("--question", required=True)
+    p.add_argument("--demeanour")
     p.add_argument("--speak", action="store_true")
     p.add_argument("--voice")
     p.add_argument("--out", default="answer.wav")
@@ -25,10 +26,11 @@ def main():
     for h in hits:
         print(f"  [{h['para_no']}] score={h['score']:.2f} (page {h['page']}) {h['text'][:160]}")
 
-    result = answer(a.question, hits, a.witness)
-    print("\nLLM raw reply:\n" + result["raw"])
+    result = answer(a.question, hits, a.witness, a.demeanour)
+    print("\nLLM raw reply:\n" + (result["raw"] or "(LLM skipped: top score below retrieval_min_score)"))
     print(f"\nAnswer (para {result['para_no']}): {result['spoken']}")
-    print(f"verified: {result['verified']}")
+    print(f"verified: {result['verified']}  para_corrected: {result['para_corrected']}  "
+          f"skipped_llm: {result['skipped_llm']}")
 
     if a.speak:
         speech = asyncio.run(synthesize(result["spoken"], a.voice))
