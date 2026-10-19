@@ -81,6 +81,16 @@ def _matches(segments: list[str], text: str) -> bool:
     return bool(needles)
 
 
+def quote_segments(quote: str) -> list[str]:
+    """The quote's parts between ellipses, wrapping quotation marks removed."""
+    return _segments(quote)
+
+
+def spoken_quote(quote: str) -> str:
+    """The quote as spoken: its segments joined with a short pause."""
+    return SPOKEN_PAUSE.join(_segments(quote))
+
+
 def quote_matches(quote: str, text: str) -> bool:
     """True if quote (optionally elided with "...") is a verbatim extract of text."""
     return _matches(_segments(quote), text)

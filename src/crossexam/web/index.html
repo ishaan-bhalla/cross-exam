@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cross-examination</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="left">
+      <div class="witness-card" id="witness-card">
+        <div class="role" id="witness-role"></div>
+        <div class="name" id="witness-name"></div>
+      </div>
+      <div class="statement" id="statement" aria-label="Witness statement"></div>
+    </section>
+    <section class="right">
+      <div class="transcript" id="transcript" aria-live="polite"></div>
+      <form class="ask" id="ask-form">
+        <textarea id="question" rows="2" placeholder="Ask the witness a question…" required></textarea>
+        <button type="submit" id="ask-button">Ask</button>
+      </form>
+      <div class="status" id="status"></div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

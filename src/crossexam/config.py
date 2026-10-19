@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     outputs_dir: Path
     processed_dir: Path
     eval_dir: Path
+    witnesses_file: Path
+    web_dir: Path
+    api_host: str
+    api_port: int
+    ui_audio_buffer_ms: int
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p

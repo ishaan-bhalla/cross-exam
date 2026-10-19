@@ -6,3 +6,5 @@ pypdf
 rank-bm25
 fastembed
 pytest
+fastapi
+uvicorn[standard]
