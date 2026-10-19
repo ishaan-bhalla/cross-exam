@@ -1,4 +1,4 @@
-import { activeWordIndex, mergeWords, splitBySpans } from "./sync.js";
+import { activeWordIndex, mergeWords, quotePieces } from "./sync.js";
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -76,7 +76,7 @@ function startAnswer() {
   clearHighlight();
   current = {
     answer: null, words: [], startTime: null, nextTime: null, sources: [], underruns: 0,
-    lateWordsMs: 0, done: null, rafId: null, row: null, wordEls: new Map(), lastActive: -1,
+    lateWordsMs: 0, done: null, rafId: null, row: null, bandEls: [], spokenUpTo: 0, lastActive: -1,
   };
 }
 
@@ -161,20 +161,38 @@ function onWords(msg) {
   if (msg.part === "quote" && current.row) renderQuote();
 }
 
+// The quote is drawn as pieces (words and the gaps between them) that join a continuous
+// band as they are spoken; bandEls is kept in band order so tick() can advance through it.
 function renderQuote() {
   const text = paragraphs.get(current.answer.para_no);
   const body = current.row.querySelector(".body");
   body.replaceChildren();
-  current.wordEls.clear();
-  for (const piece of splitBySpans(text, current.words)) {
-    if (piece.word === null) body.append(document.createTextNode(piece.text));
+  current.bandEls = [];
+  for (const piece of quotePieces(text, current.words)) {
+    if (piece.band === null) body.append(document.createTextNode(piece.text));
     else {
-      const span = el("span", "w quote", piece.text);
-      current.wordEls.set(piece.word, span);
+      const span = el("span", "q pending", piece.text);
+      current.bandEls.push({ el: span, band: piece.band });
       body.append(span);
     }
   }
+  current.bandEls.sort((a, b) => a.band - b.band);
+  current.spokenUpTo = 0;
   current.lastActive = -1;
+}
+
+function advanceBand(idx) {
+  while (current.spokenUpTo < current.bandEls.length && current.bandEls[current.spokenUpTo].band <= idx) {
+    current.bandEls[current.spokenUpTo].el.classList.replace("pending", "spoken");
+    current.spokenUpTo++;
+  }
+}
+
+function settleQuote() {
+  for (const { el: e } of current.bandEls) {
+    e.classList.remove("pending", "spoken");
+    e.classList.add("quoted");
+  }
 }
 
 function tick() {
@@ -183,8 +201,7 @@ function tick() {
   const ended = current.done && audioCtx.currentTime >= current.nextTime;
   const idx = ended ? -1 : activeWordIndex(current.words, t);
   if (idx !== current.lastActive) {
-    current.wordEls.get(current.lastActive)?.classList.remove("active");
-    current.wordEls.get(idx)?.classList.add("active");
+    advanceBand(idx);
     current.lastActive = idx;
   }
   if (ended) finish();
@@ -198,8 +215,12 @@ function onDone(msg) {
 
 function finish() {
   const d = current.done;
+  settleQuote();
   const timing = `answer ${d.answer_latency_ms} ms · first audio ${d.question_to_first_audio_ms} ms after question` +
-    ` (TTS ${d.time_to_first_audio_ms} ms) · audio ${(d.duration_ms / 1000).toFixed(1)} s` +
+    (d.question_to_quote_audio_ms && d.question_to_quote_audio_ms !== d.question_to_first_audio_ms
+      ? ` · quote audio ${d.question_to_quote_audio_ms} ms` : "") +
+    (d.cached?.length ? ` (${d.cached.join(", ")} cached)` : "") +
+    ` · audio ${(d.duration_ms / 1000).toFixed(1)} s` +
     (current.underruns ? ` · ${current.underruns} audio underrun(s)` : "") +
     (current.lateWordsMs > 0 ? ` · word timings arrived up to ${Math.round(current.lateWordsMs)} ms late` : "");
   current.turn?.append(el("div", "timing", timing));

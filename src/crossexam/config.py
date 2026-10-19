@@ -1,12 +1,14 @@
 from functools import lru_cache
 from pathlib import Path
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ENV_FILE = PROJECT_ROOT / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=PROJECT_ROOT / ".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
     assemblyai_api_key: str
     llm_gateway_url: str
@@ -20,6 +22,12 @@ class Settings(BaseSettings):
     tts_default_voice: str
     tts_timeout_seconds: float
     tts_sample_rate: int
+    tts_session_retries: int
+    tts_session_retry_backoff_seconds: float
+    tts_silence_threshold: int
+    tts_trim_preroll_ms: int
+    tts_lead_in_gap_ms: int
+    phrase_cache_dir: str
     retrieval_top_k: int
     retrieval_min_score: float
     retriever: str
@@ -51,6 +59,27 @@ class Settings(BaseSettings):
         return p if p.is_absolute() else PROJECT_ROOT / p
 
 
+def describe_errors(error: ValidationError) -> str:
+    """Setting names only: pydantic's own message includes the offending input values,
+    which can contain secrets."""
+    missing = sorted({str(e["loc"][0]).upper() for e in error.errors() if e["type"] == "missing"})
+    invalid = sorted({str(e["loc"][0]).upper() for e in error.errors() if e["type"] != "missing"})
+    lines = ["Configuration error (see .env.example):"]
+    if missing:
+        lines.append("  missing: " + ", ".join(missing))
+    if invalid:
+        lines.append("  invalid: " + ", ".join(invalid))
+    return "\n".join(lines)
+
+
+def load_settings(**kwargs) -> Settings:
+    """Settings(**kwargs), exiting with a list of bad setting names instead of a traceback."""
+    try:
+        return Settings(**kwargs)
+    except ValidationError as e:
+        raise SystemExit(describe_errors(e)) from None
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return load_settings()

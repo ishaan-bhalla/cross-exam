@@ -5,15 +5,17 @@
   --muted: #6b6b70;
   --line: #e4e4e0;
   --cited: #fff8e1;
-  --quote: #ffe9a8;
-  --active: #f5b301;
+  --quote-pending: #fff1c7;
+  --band: #f9cf4a;
+  --quoted: #fde9a6;
+  --quoted-rule: #d9a400;
   --badge: #eceae4;
   --warn: #9a3412;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #161617; --panel: #1f1f21; --text: #ececec; --muted: #9a9aa0; --line: #333336;
-    --cited: #2c2716; --quote: #5a4a12; --active: #c98f00; --badge: #333336; --warn: #fdba74;
+    --cited: #2c2716; --quote-pending: #3a3117; --band: #8a6a0c; --quoted: #4d3f13; --quoted-rule: #c98f00; --badge: #333336; --warn: #fdba74;
   }
 }
 * { box-sizing: border-box; }
@@ -31,9 +33,12 @@ body { margin: 0; background: var(--bg); color: var(--text);
 .para { display: grid; grid-template-columns: 2.5em 1fr; gap: 6px; padding: 6px 8px; border-radius: 6px; margin: 2px 0; }
 .para .no { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .para.cited { background: var(--cited); }
-.para .w { border-radius: 3px; transition: background-color 60ms linear; }
-.para .w.quote { background: var(--quote); }
-.para .w.active { background: var(--active); color: #000; }
+/* Quote pieces abut with no padding, margin or radius so the band is continuous,
+   including across spaces, "&" and line wraps. */
+.para .q { padding: 0; margin: 0; border-radius: 0; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.para .q.pending { background: var(--quote-pending); }
+.para .q.spoken { background: var(--band); }
+.para .q.quoted { background: var(--quoted); box-shadow: inset 0 -2px 0 var(--quoted-rule); }
 
 .transcript { overflow-y: auto; flex: 1; }
 .turn { margin: 0 0 14px; }

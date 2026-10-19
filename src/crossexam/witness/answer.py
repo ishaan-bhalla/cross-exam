@@ -44,6 +44,15 @@ def _load_prompt() -> tuple[str, dict[str, str]]:
     return template, phrases
 
 
+def fixed_phrases() -> list[str]:
+    """Every phrase the witness can say verbatim: lead-ins without placeholders, and the
+    fixed refusal phrases. These can be synthesised ahead of time."""
+    s = get_settings()
+    lead_ins = json.loads((s.resolve(s.prompts_dir) / s.lead_ins_file).read_text())
+    texts = [li["text"] for li in lead_ins if "{" not in li["text"]]
+    return list(dict.fromkeys(texts + list(_load_prompt()[1].values())))
+
+
 def _load_lead_ins(demeanour: str | None) -> dict[str, str]:
     """{id: text} for the requested demeanour (default: confident + neutral)."""
     s = get_settings()

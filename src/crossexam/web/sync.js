@@ -30,6 +30,21 @@ export function splitBySpans(text, words) {
   return out;
 }
 
+// splitBySpans, plus a `band` index on every piece that belongs to the quote's highlight:
+// a word's own index, or for the text between two quoted words (spaces, "&", punctuation)
+// the index of the word after it, so the band grows without gaps. Gaps that contain
+// letters or digits (e.g. text left out by an elision) are not part of the band.
+export function quotePieces(text, words) {
+  const pieces = splitBySpans(text, words).map((p) => ({ ...p, band: p.word }));
+  for (let i = 1; i < pieces.length - 1; i++) {
+    const p = pieces[i];
+    if (p.word === null && pieces[i - 1].word !== null && pieces[i + 1].word !== null && !/[\p{L}\p{N}]/u.test(p.text)) {
+      p.band = pieces[i + 1].word;
+    }
+  }
+  return pieces;
+}
+
 // Insert words into a list kept sorted by start time.
 export function mergeWords(existing, incoming) {
   return [...existing, ...incoming].sort((a, b) => a.start - b.start);
