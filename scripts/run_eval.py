@@ -61,6 +61,7 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
 
     r = {"id": q["id"], "category": q["category"], "difficulty": q["difficulty"],
          "question": q["question"], "expected_paras": q["expected_paras"],
+         "label_confidence": q.get("label_confidence"), "partial": q.get("partial", False),
          "retriever": retriever.kind, "hyde": retriever.hyde,
          "dense_weight": retriever.dense_weight if retriever.kind == "hybrid" else None,
          "query": retrieval.query if retriever.hyde else None, "hyde_error": retrieval.hyde_error,
@@ -128,11 +129,17 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
     return s
 
 
-def build_summary(rows: list[dict], use_llm: bool, **meta) -> dict:
+def build_summary(rows: list[dict], use_llm: bool, split_confidence: bool = True, **meta) -> dict:
+    """If questions carry label_confidence, also summarises the high-confidence subset
+    under "high_confidence" (same shape, without meta)."""
     categories = sorted({r["category"] for r in rows})
-    return {**meta, "llm": use_llm,
-            "by_category": {c: summarise([r for r in rows if r["category"] == c], use_llm) for c in categories},
-            "overall": summarise(rows, use_llm)}
+    summary = {**meta, "llm": use_llm,
+               "by_category": {c: summarise([r for r in rows if r["category"] == c], use_llm) for c in categories},
+               "overall": summarise(rows, use_llm)}
+    if split_confidence and any(r["label_confidence"] for r in rows):
+        high = [r for r in rows if r["label_confidence"] == "high"]
+        summary["high_confidence"] = build_summary(high, use_llm, split_confidence=False) if high else None
+    return summary
 
 
 def fmt(v, kind: str) -> str:
@@ -141,7 +148,8 @@ def fmt(v, kind: str) -> str:
     return {"%": f"{v:.0%}", "d": f"{v}", "f": f"{v:.0f}", "3": f"{v:.3f}"}[kind]
 
 
-def print_table(summary: dict, use_llm: bool):
+def table_columns(use_llm: bool) -> list[tuple[str, str, str]]:
+    """(header, summary key, format) for each summary metric shown in tables."""
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%")]
     if use_llm:
         cols += [("para acc", "para_accuracy", "%"), ("grounded", "grounding_rate", "%"),
@@ -150,9 +158,18 @@ def print_table(summary: dict, use_llm: bool):
     cols += [("routed", "routed", "d"), ("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),
              ("ref rec", "refusal_recall", "%"), ("mean ms", "latency_mean_ms", "f"),
              ("p95 ms", "latency_p95_ms", "f"), ("rl wait ms", "rate_limit_wait_ms", "f")]
+    return cols
+
+
+def table_groups(summary: dict) -> list[tuple[str, dict]]:
     groups = [(c, summary["by_category"][c]) for c in CATEGORY_ORDER if c in summary["by_category"]]
     groups += [(c, v) for c, v in summary["by_category"].items() if c not in CATEGORY_ORDER]
     groups.append(("overall", summary["overall"]))
+    return groups
+
+
+def print_table(summary: dict, use_llm: bool):
+    cols, groups = table_columns(use_llm), table_groups(summary)
     print(f"{'':<12}" + "".join(f"{h:>11}" for h, _, _ in cols))
     for name, g in groups:
         print(f"{name:<12}" + "".join(f"{fmt(g.get(k), kind):>11}" for _, k, kind in cols))
@@ -193,6 +210,41 @@ def print_dense_scores(rows: list[dict]):
             print(f"  {label:<11}{r['id']}  {r['top_dense_score']:.3f}  {r['question']}")
 
 
+def aggregate(summaries: list[dict], use_llm: bool) -> dict:
+    """{group: {metric: {mean, min, max, values}}} across repeated runs; None values are skipped."""
+    out = {}
+    for name, _ in table_groups(summaries[0]):
+        groups = [s["overall"] if name == "overall" else s["by_category"][name] for s in summaries]
+        out[name] = {}
+        for _, key, _ in table_columns(use_llm):
+            values = [g.get(key) for g in groups if g.get(key) is not None]
+            out[name][key] = ({"mean": statistics.mean(values), "min": min(values), "max": max(values),
+                               "values": values} if values else None)
+    return out
+
+
+def print_repeats(agg: dict, use_llm: bool, n: int):
+    """Rows are metrics, columns are categories; each cell is mean (min-max) over the runs."""
+    def cell(stat, kind):
+        if stat is None:
+            return "–"
+        if kind == "%":
+            m, lo, hi = (f"{v * 100:.0f}" for v in (stat["mean"], stat["min"], stat["max"]))
+            return f"{m}%" if lo == hi else f"{m}% ({lo}-{hi})"
+        if kind == "d":
+            return f"{stat['mean']:g}" if stat["min"] == stat["max"] else \
+                f"{stat['mean']:.1f} ({stat['min']}-{stat['max']})"
+        m, lo, hi = (fmt(v, kind) for v in (stat["mean"], stat["min"], stat["max"]))
+        return m if lo == hi else f"{m} ({lo}-{hi})"
+    names = list(agg)
+    cells = {(h, nm): cell(agg[nm][key], kind) for h, key, kind in table_columns(use_llm) for nm in names}
+    width = max(len(c) for c in [*cells.values(), *names]) + 2
+    print(f"mean (min-max) over {n} runs\n")
+    print(f"{'':<12}" + "".join(f"{nm:>{width}}" for nm in names))
+    for header, _, _ in table_columns(use_llm):
+        print(f"{header:<12}" + "".join(f"{cells[(header, nm)]:>{width}}" for nm in names))
+
+
 def write(out_dir: Path, rows: list[dict], summary: dict):
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "results.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -228,7 +280,10 @@ def main():
     p.add_argument("--ablation", action="store_true", help="run bm25, dense, hybrid and hybrid+hyde")
     p.add_argument("--no-llm", action="store_true", help="retrieval only, no answer generation")
     p.add_argument("--no-relevance-check", action="store_true", help="skip the LLM relevance check")
+    p.add_argument("--repeats", type=int, default=1, help="run the eval N times; report mean and min-max")
     a = p.parse_args()
+    if a.repeats > 1 and a.ablation:
+        p.error("--repeats is not supported with --ablation")
     s = get_settings()
     use_llm = not a.no_llm
 
@@ -254,11 +309,37 @@ def main():
     else:
         # --no-llm keeps HyDE off unless --hyde is passed explicitly.
         hyde = a.hyde if a.hyde is not None else (False if a.no_llm else s.hyde_enabled)
-        rows, summary = run_variant(questions, paragraphs, a, a.retriever or s.retriever, hyde, use_llm)
+        kind = a.retriever or s.retriever
+        if a.repeats > 1:
+            summaries = []
+            for i in range(1, a.repeats + 1):
+                rows, summary = run_variant(questions, paragraphs, a, kind, hyde, use_llm)
+                write(out_dir / f"run_{i}", rows, summary)
+                summaries.append(summary)
+            agg = aggregate(summaries, use_llm)
+            high = [sm["high_confidence"] for sm in summaries if sm.get("high_confidence")]
+            agg_high = aggregate(high, use_llm) if high else None
+            (out_dir / "repeats.json").write_text(json.dumps(
+                {"runs": a.repeats, "aggregate": agg, "aggregate_high_confidence": agg_high}, indent=2))
+            print(f"retriever={kind} hyde={hyde} top_k={summaries[0]['top_k']} min_score={summaries[0]['min_score']} "
+                  f"relevance_check={summaries[0]['relevance_check']} llm={use_llm}\n")
+            print("All labels")
+            print_repeats(agg, use_llm, a.repeats)
+            if agg_high:
+                print("\nHigh-confidence labels only")
+                print_repeats(agg_high, use_llm, a.repeats)
+            print(f"\nwrote {out_dir}")
+            return
+        rows, summary = run_variant(questions, paragraphs, a, kind, hyde, use_llm)
         write(out_dir, rows, summary)
         print(f"retriever={summary['retriever']} hyde={hyde} top_k={summary['top_k']} "
               f"min_score={summary['min_score']} relevance_check={summary['relevance_check']} llm={use_llm}\n")
+        if summary.get("high_confidence"):
+            print("All labels")
         print_table(summary, use_llm)
+        if summary.get("high_confidence"):
+            print("\nHigh-confidence labels only")
+            print_table(summary["high_confidence"], use_llm)
         print_misses(rows)
         print_dense_scores(rows)
     print(f"\nwrote {out_dir}")

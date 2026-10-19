@@ -1,8 +1,9 @@
 """The configured retriever (bm25 | dense | hybrid), optional HyDE rewrite, and refusal gate.
 
 Document-ID routing: if the question cites IDs matching doc_id_pattern, the
-paragraphs mentioning any of them (case-insensitive) come first, in paragraph
-order, and the configured ranking fills the rest; HyDE is skipped and the gate
+paragraphs mentioning any of them (case-insensitive) come first, ordered by
+dense score for the question (or the configured ranking if there is no dense
+index), and the configured ranking fills the rest; HyDE is skipped and the gate
 passes. If none of the cited IDs is in the statement, doc_id_unknown is set.
 
 The gate compares a retriever-specific score with a threshold: the top BM25
@@ -89,7 +90,8 @@ class Retriever:
             return Retrieval(query, ranking, ranking[:self.top_k], gate, top_dense, hyde_error)
         lowered = [d.lower() for d in doc_ids]
         matched = {h["para_no"] for h in ranking if any(d in h["text"].lower() for d in lowered)}
-        routed = sorted((h for h in ranking if h["para_no"] in matched), key=lambda h: h["para_no"])
+        by_no = {h["para_no"]: h for h in ranking}
+        routed = [by_no[h["para_no"]] for h in (dense_ranking or ranking) if h["para_no"] in matched]
         ranking = routed + [h for h in ranking if h["para_no"] not in matched]
         return Retrieval(query, ranking, ranking[:self.top_k], gate, top_dense, hyde_error,
                          routed="doc_id", doc_ids=doc_ids, doc_id_unknown=not matched)

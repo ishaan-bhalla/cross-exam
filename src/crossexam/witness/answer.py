@@ -22,8 +22,13 @@ THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[\"'“‘(A-Z0-9])")
 ELLIPSIS_RE = re.compile(r"\.\.\.|…")
-QUOTE_CHARS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"',
+# Straight and curly single and double quotes all compare as the same character; so do dashes.
+QUOTE_CHARS = str.maketrans({"‘": '"', "’": '"', "“": '"', "”": '"', "'": '"',
                              "–": "-", "—": "-"})
+QUOTE_MARKS = "\"'‘’“”"
+# Trimming the ends of a segment cannot make it match text that it would not match
+# untrimmed, so wrapping quotation marks and closing punctuation are dropped before matching.
+SEGMENT_EDGES_RE = re.compile(rf"^[\s{QUOTE_MARKS}]+|[\s{QUOTE_MARKS}.,;:!?]+$")
 # Joins the parts of an elided quote in the spoken text; TTS reads it as a short pause.
 SPOKEN_PAUSE = "… "
 DEFAULT_DEMEANOURS = ("confident", "neutral")
@@ -54,19 +59,31 @@ def _normalise(text: str) -> str:
     return " ".join(text.translate(QUOTE_CHARS).split()).lower()
 
 
+def _strip_quote_marks(quote: str) -> str:
+    """Remove quotation marks wrapping the whole quote (the LLM sometimes adds them)."""
+    return quote.strip().strip(QUOTE_MARKS).strip()
+
+
 def _segments(quote: str) -> list[str]:
-    return [seg.strip() for seg in ELLIPSIS_RE.split(quote) if seg.strip()]
+    return [seg.strip() for seg in ELLIPSIS_RE.split(_strip_quote_marks(quote)) if seg.strip()]
 
 
 def _matches(segments: list[str], text: str) -> bool:
-    """Every segment is a normalised substring of text, in order."""
+    """Every segment, minus its wrapping quote marks and closing punctuation, is a
+    normalised substring of text, in order."""
+    needles = [n for n in (_normalise(SEGMENT_EDGES_RE.sub("", seg)) for seg in segments) if n]
     haystack, pos = _normalise(text), 0
-    for seg in segments:
-        i = haystack.find(_normalise(seg), pos)
+    for needle in needles:
+        i = haystack.find(needle, pos)
         if i < 0:
             return False
-        pos = i + len(_normalise(seg))
-    return bool(segments)
+        pos = i + len(needle)
+    return bool(needles)
+
+
+def quote_matches(quote: str, text: str) -> bool:
+    """True if quote (optionally elided with "...") is a verbatim extract of text."""
+    return _matches(_segments(quote), text)
 
 
 def _first_sentence(text: str) -> str:
@@ -151,7 +168,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     by_no = {p["para_no"]: p for p in paragraphs}
     quote, lead_in_id, para = "", None, None
     if reply is not None:
-        quote = str(reply.get("quote") or "").strip()
+        quote = _strip_quote_marks(str(reply.get("quote") or ""))
         lead_in_id = reply.get("lead_in_id")
         try:
             para = by_no.get(int(reply["para_no"]))

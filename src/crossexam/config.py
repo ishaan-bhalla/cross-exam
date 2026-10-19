@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     llm_gateway_url: str
     llm_model: str
     llm_max_tokens: int
+    llm_temperature: float
     llm_timeout_seconds: float
     llm_max_retries: int
     llm_retry_backoff_seconds: float

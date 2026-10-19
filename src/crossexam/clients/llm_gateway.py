@@ -22,6 +22,7 @@ def chat(messages: list[dict], model: str | None = None) -> str:
                 "model": model or s.llm_model,
                 "messages": messages,
                 "max_tokens": s.llm_max_tokens,
+                "temperature": s.llm_temperature,
             },
             timeout=s.llm_timeout_seconds,
         )
