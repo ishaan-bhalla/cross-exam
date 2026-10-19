@@ -21,10 +21,18 @@ class Settings(BaseSettings):
     tts_sample_rate: int
     retrieval_top_k: int
     retrieval_min_score: float
+    retriever: str
+    embedding_model: str
+    embedding_query_prefix: str
+    embedding_cache_dir: Path
+    rrf_k: int
+    dense_min_score: float
+    hyde_enabled: bool
     data_dir: Path
     prompts_dir: Path
     witness_answer_prompt: str
     lead_ins_file: str
+    hyde_prompt: str
     outputs_dir: Path
     processed_dir: Path
     eval_dir: Path

@@ -27,9 +27,12 @@ class BM25Index:
         self.paragraphs = paragraphs
         self.bm25 = BM25Okapi([tokenize(p["text"]) for p in paragraphs])
 
+    def rank(self, text: str) -> list[dict]:
+        """Every paragraph, best first, each with a "score" key."""
+        scores = self.bm25.get_scores(tokenize(text))
+        order = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        return [{**self.paragraphs[i], "score": float(scores[i])} for i in order]
+
     def search(self, question: str, top_k: int | None = None) -> list[dict]:
         """Top-k paragraphs for the question, best first, each with a "score" key."""
-        k = top_k or get_settings().retrieval_top_k
-        scores = self.bm25.get_scores(tokenize(question))
-        ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
-        return [{**self.paragraphs[i], "score": float(scores[i])} for i in ranked]
+        return self.rank(question)[:top_k or get_settings().retrieval_top_k]

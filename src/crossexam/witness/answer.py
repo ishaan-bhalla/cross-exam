@@ -1,7 +1,8 @@
 """Answer a question as the witness, quoting only from their statement.
 
-If the best retrieval score is below retrieval_min_score the witness says the
-point is not covered, without calling the LLM. Otherwise the LLM picks a
+Paragraphs come from the configured retriever. If retrieval fails its refusal
+gate (see retrieval.retriever) the witness says the point is not covered,
+without calling the LLM. Otherwise the LLM picks a
 paragraph, copies a quote from it (optionally elided with "...") and picks a
 lead-in id from a fixed menu. The quote is checked against the chosen
 paragraph, then against the other retrieved paragraphs; if it matches none,
@@ -12,6 +13,7 @@ import json
 import re
 from crossexam.clients.llm_gateway import chat
 from crossexam.config import get_settings
+from crossexam.retrieval.retriever import Retrieval, Retriever
 
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -83,20 +85,19 @@ def _result(**fields) -> dict:
     return {**base, **fields}
 
 
-def answer(question: str, paragraphs: list[dict], witness_name: str,
-           demeanour: str | None = None, min_score: float | None = None) -> dict:
-    """paragraphs: retrieved paragraphs, best first, each with a BM25 "score".
-    min_score overrides the retrieval_min_score setting.
+def answer(question: str, retriever: Retriever, witness_name: str,
+           demeanour: str | None = None, retrieval: Retrieval | None = None) -> dict:
+    """Retrieves with retriever unless a retrieval for this question is passed in.
 
     Returns {quote, para_no, lead_in_id, lead_in, verified, para_corrected,
     fallback, skipped_llm, spoken, raw}; raw is the LLM's reply text.
     """
-    s = get_settings()
     template, not_covered = _load_prompt()
     lead_ins = _load_lead_ins(demeanour)
+    retrieval = retrieval or retriever.retrieve(question)
+    paragraphs = retrieval.hits
 
-    threshold = s.retrieval_min_score if min_score is None else min_score
-    if not paragraphs or paragraphs[0]["score"] < threshold:
+    if not retriever.passes_gate(retrieval):
         return _result(verified=True, skipped_llm=True, spoken=not_covered)
 
     context = "\n\n".join(f"[Paragraph {p['para_no']}] {p['text']}" for p in paragraphs)

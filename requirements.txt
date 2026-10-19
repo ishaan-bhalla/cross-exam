@@ -4,3 +4,4 @@ websockets
 pydantic-settings
 pypdf
 rank-bm25
+fastembed
