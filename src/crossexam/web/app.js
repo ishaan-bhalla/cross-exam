@@ -1,4 +1,5 @@
 import { activeWordIndex, mergeWords, quotePieces } from "./sync.js";
+import { startMic } from "./mic.js";
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -8,6 +9,9 @@ let paragraphs = new Map(); // para_no -> text
 let ws = null;
 let audioCtx = null;
 let current = null; // state of the answer being played
+let witnessId = null;
+let mic = null; // { stop } while listening
+let spoken = null; // timing for a question asked by voice, shown under it
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -20,6 +24,7 @@ async function init() {
   config = await (await fetch("/api/config")).json();
   const list = await (await fetch("/api/witnesses")).json();
   const witness = list.find((w) => w.id === params.get("witness")) || list[0];
+  witnessId = witness.id;
   $("witness-role").textContent = witness.role_label;
   $("witness-name").textContent = witness.name;
   document.title = `Cross-examination: ${witness.name}`;
@@ -44,16 +49,63 @@ function connect(witnessId) {
 }
 
 function setStatus(text) { $("status").textContent = text; }
-function setBusy(busy) { $("ask-button").disabled = busy; $("question").disabled = busy; }
+function setBusy(busy) {
+  $("ask-button").disabled = busy;
+  $("question").disabled = busy;
+  $("mic-button").disabled = busy;
+}
+
+function ensureAudio() {
+  // Playback must be started from a user gesture (the Ask or Speak click).
+  audioCtx = audioCtx || new AudioContext();
+  audioCtx.resume();
+}
+
+function stopMic() {
+  mic?.stop();
+  mic = null;
+  $("mic-button").setAttribute("aria-pressed", "false");
+  $("mic-button").textContent = "🎤 Speak";
+}
+
+$("mic-button").addEventListener("click", async () => {
+  if (mic) { stopMic(); setStatus("Ready."); return; }
+  ensureAudio();
+  $("mic-button").setAttribute("aria-pressed", "true");
+  $("mic-button").textContent = "■ Stop";
+  setStatus("Starting microphone…");
+  try {
+    mic = await startMic(witnessId, {
+      onPartial: (text) => { $("question").value = text; setStatus("Listening…"); },
+      onFinal: (text, timing) => {
+        stopMic();
+        $("question").value = text;
+        spoken = timing;
+        $("ask-form").requestSubmit();
+      },
+      onError: (message) => { stopMic(); setStatus(`Microphone: ${message}. You can type instead.`); },
+    });
+    setStatus("Listening… ask your question.");
+  } catch (e) {
+    stopMic();
+    setStatus(`Microphone unavailable (${e.message}). You can type instead.`);
+  }
+});
 
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const text = $("question").value.trim();
   if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-  // Audio must be started from a user gesture.
-  audioCtx = audioCtx || new AudioContext();
-  audioCtx.resume();
-  addTurn("counsel", "Counsel", text);
+  ensureAudio();
+  if (mic) stopMic(); // typed while listening: the typed text wins
+  const turn = addTurn("counsel", "Counsel", text);
+  if (spoken) {
+    const ms = spoken.end_of_speech_to_final_ms;
+    const submitted = ms === null ? null : ms + Math.round(performance.now() - spoken.final_at);
+    turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${submitted ?? "?"} ms`));
+    window.__lastSpoken = { end_of_speech_to_submitted_ms: submitted };
+    spoken = null;
+  }
   $("question").value = "";
   setBusy(true);
   setStatus("Witness is considering the question…");

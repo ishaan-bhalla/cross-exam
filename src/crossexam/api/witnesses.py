@@ -1,6 +1,7 @@
-"""Witness registry: witnesses_file lists {id, name, role_label, statement_pdf, voice},
+"""Witness registry: witnesses_file lists {id, name, role_label, statement_pdf, voice, keyterms},
 with statement_pdf relative to data_dir. Statements and retrievers are built once."""
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from crossexam.config import get_settings
@@ -32,6 +33,19 @@ def _pdf(witness: dict) -> Path:
 @lru_cache
 def statement(witness_id: str) -> list[dict]:
     return load_statement(_pdf(_registry()[witness_id]))
+
+
+@lru_cache
+def keyterms(witness_id: str) -> list[str]:
+    """Speech-to-text key terms: the witness file's terms, then every document ID cited in
+    the statement, de-duplicated and capped at stt_max_keyterms."""
+    s = get_settings()
+    terms = list(_registry()[witness_id].get("keyterms", []))
+    if s.doc_id_pattern:
+        pattern = re.compile(s.doc_id_pattern)
+        for p in statement(witness_id):
+            terms.extend(pattern.findall(p["text"]))
+    return list(dict.fromkeys(terms))[:s.stt_max_keyterms]
 
 
 @lru_cache

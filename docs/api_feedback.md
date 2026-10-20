@@ -34,7 +34,16 @@ Context: a web app that answers a barrister's questions in a witness's voice, qu
 
 **Why it matters.** Highlighting the words in sync with the voice needs the timings before each word is spoken. As it is, the client must either delay the audio (our app holds the quote for up to 800 ms, and once hit that cap with the timings arriving 211 ms after it) or start the highlight late. When the timings never arrive, a client that waits for them waits forever. Ours did until we added a timeout.
 
-**Suggestion.** Stream word boundaries incrementally with the audio (per chunk or per sentence), so that each word's timing arrives before or with the audio that contains it. Always send `WordBoundaries` for every flush (empty, or with an error, if it cannot be computed), before or together with `FlushDone`.
+**Missing-timings rate, before and after splitting.** Same 89-word quote, asked 5 times through the app on one reused session:
+
+| How the quote was sent | Runs with no `WordBoundaries` |
+|---|---|
+| One flush (89 words, ~32 s of audio) | 4 of 5 |
+| Six flushes, split at clause punctuation (6, 17, 12, 8, 10 and 36 words) | 0 of 5 (0 of 30 flushes) |
+
+Splitting also lets the first chunk's timings arrive while later chunks are still being generated. The cost: the text has to be split at punctuation, each chunk is synthesised without its neighbours as context, and the natural pause at a clause break must be rebuilt by the client. With the split, a comma pause that was 410 ms in the single-flush audio became the 150 ms our client allows between chunks.
+
+**Suggestion.** Stream word boundaries incrementally with the audio (per chunk or per sentence), so that each word's timing arrives before or with the audio that contains it. Always send `WordBoundaries` for every flush (empty, or with an error, if it cannot be computed), before or together with `FlushDone`. Until then, document a recommended maximum flush length.
 
 ## 4. Word end times look truncated; confidence is not obviously lower on short words
 

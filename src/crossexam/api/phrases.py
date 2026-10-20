@@ -2,8 +2,8 @@
 
 Phrases are synthesised in a single TTS session, one flush per phrase: the account
 allows only about 5 session opens per 30 s, so one session per phrase would hit the
-limit at startup. Each phrase's leading silence is trimmed and its word timings
-shifted to match, then it is kept in memory. If phrase_cache_dir is set, the
+limit at startup. Each phrase's leading silence is trimmed (word timings shifted
+to match) and its trailing silence cut to tts_trim_tail_ms, then it is kept in memory. If phrase_cache_dir is set, the
 untrimmed audio and word timings are also stored there, keyed by voice and a hash
 of the text, so restarts skip synthesis and changing the trim settings needs no purge.
 """
@@ -87,6 +87,7 @@ async def warm(voice: str, texts: list[str]) -> dict[str, int]:
             counts["tts"] += 1
     for text, (pcm, sample_rate, words) in raw.items():
         trimmed, trimmed_ms = tts.trim_leading_silence(pcm, sample_rate)
+        trimmed = tts.trim_trailing_silence(trimmed, sample_rate)
         shifted = [{**w, "start": max(0, round(w["start"] - trimmed_ms)), "end": max(0, round(w["end"] - trimmed_ms))}
                    for w in words]
         _cache[(voice, text)] = Phrase(text, trimmed, sample_rate, shifted, len(trimmed) / 2 / sample_rate * 1000)

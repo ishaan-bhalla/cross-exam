@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float
     llm_max_retries: int
     llm_retry_backoff_seconds: float
+    stt_ws_url: str
+    stt_token_url: str
+    stt_speech_model: str
+    stt_sample_rate: int
+    stt_chunk_ms: int
+    stt_token_expires_seconds: int
+    stt_max_session_seconds: int
+    stt_max_keyterms: int
     tts_ws_url: str
     tts_default_voice: str
     tts_timeout_seconds: float
@@ -26,6 +34,9 @@ class Settings(BaseSettings):
     tts_session_retry_backoff_seconds: float
     tts_silence_threshold: int
     tts_trim_preroll_ms: int
+    tts_trim_tail_ms: int
+    tts_chunk_max_words: int
+    tts_chunk_gap_ms: int
     tts_lead_in_gap_ms: int
     tts_keepalive_seconds: float
     tts_words_wait_seconds: float

@@ -40,3 +40,15 @@ def test_unmatched_word_gets_no_span_and_alignment_continues():
 def test_quote_not_in_paragraph_highlights_nothing():
     out = align_words(_words("Something", "else"), "Something else", PARA_12)
     assert all(w["span"] is None for w in out)
+
+
+def test_chunk_aligned_alone_from_its_offset_maps_to_the_right_words():
+    from crossexam.witness.align import key_count
+    from crossexam.witness.chunking import chunk_quote
+    quote = "I was asked to take over the role of Head of Product & Branch Accounting in June 2006, ceasing my previous role."
+    chunks = chunk_quote(quote, 12)
+    assert len(chunks) == 2
+    start = key_count(chunks[0])          # the first chunk's timings may never arrive
+    spoken = chunks[1].replace("& ", "").split()
+    out = _highlighted(align_words(_words(*spoken), quote, PARA_12, start), PARA_12)
+    assert out == ["ceasing", "my", "previous", "role."]

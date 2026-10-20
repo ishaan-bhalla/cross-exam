@@ -40,9 +40,15 @@ def quote_spans(quote: str, paragraph: str) -> list[tuple[str, int, int]]:
     return out
 
 
-def align_words(words: list[dict], quote: str, paragraph: str) -> list[dict]:
-    """words: TTS words spoken for the quote. Returns them with "span": [start, end] or None."""
-    targets = quote_spans(quote, paragraph)
+def key_count(text: str) -> int:
+    """Number of words in text that alignment considers (those with letters or digits)."""
+    return len(_tokens(text))
+
+
+def align_words(words: list[dict], quote: str, paragraph: str, start: int = 0) -> list[dict]:
+    """words: TTS words spoken for the quote, or for a chunk of it beginning at quote word
+    `start` (see key_count). Returns them with "span": [start, end] or None."""
+    targets = quote_spans(quote, paragraph)[start:]
     j, out = 0, []
     for w in words:
         k, span = _key(w["word"]), None

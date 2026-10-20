@@ -98,6 +98,63 @@ def trim_leading_silence(pcm: bytes, sample_rate: int) -> tuple[bytes, float]:
     return t.feed(pcm), t.trimmed_ms
 
 
+def trim_trailing_silence(pcm: bytes, sample_rate: int, threshold: int | None = None,
+                          tail_ms: int | None = None) -> bytes:
+    """Cut silence after the last sample louder than threshold, keeping tail_ms of it."""
+    if threshold is None or tail_ms is None:
+        s = get_settings()
+        threshold = s.tts_silence_threshold if threshold is None else threshold
+        tail_ms = s.tts_trim_tail_ms if tail_ms is None else tail_ms
+    samples = np.frombuffer(pcm, dtype=np.int16)
+    loud = np.flatnonzero(np.abs(samples.astype(np.int32)) > threshold)
+    if not len(loud):
+        return b""
+    return samples[:loud[-1] + 1 + int(sample_rate * tail_ms / 1000)].tobytes()
+
+
+class GapLimiter:
+    """Streams PCM16 for consecutive parts (e.g. the chunks of a quote), limiting silence.
+
+    The silence before part k's first loud sample, including the end of the previous part,
+    is cut to max_gaps_ms[k]; pauses inside a part are kept; silence after the last loud
+    sample is cut to tail_ms by finish(). shift_ms(k) is how much audio was removed before
+    part k's speech, which callers subtract from that part's word timings.
+    """
+
+    def __init__(self, sample_rate: int, max_gaps_ms: list[float], tail_ms: float, threshold: int):
+        self.sample_rate, self.threshold = sample_rate, threshold
+        self.max_gaps = [int(sample_rate * g / 1000) for g in max_gaps_ms]
+        self.tail = int(sample_rate * tail_ms / 1000)
+        self.pending = np.zeros(0, dtype=np.int16)  # quiet samples not yet emitted
+        self.part = None
+        self.onsets: dict[int, int] = {}  # part -> samples removed before its first loud sample
+        self.removed = 0
+
+    def shift_ms(self, part: int) -> float:
+        return self.onsets.get(part, self.removed) * 1000 / self.sample_rate
+
+    def feed(self, part: int, pcm: bytes) -> bytes:
+        self.part = part
+        samples = np.frombuffer(pcm, dtype=np.int16)
+        loud = np.flatnonzero(np.abs(samples.astype(np.int32)) > self.threshold)
+        if not len(loud):
+            self.pending = np.concatenate([self.pending, samples])
+            return b""
+        quiet = np.concatenate([self.pending, samples[:loud[0]]])
+        if part not in self.onsets:  # first speech of this part: cap the gap before it
+            keep = min(len(quiet), self.max_gaps[part])
+            self.removed += len(quiet) - keep
+            self.onsets[part] = self.removed
+            quiet = quiet[len(quiet) - keep:]
+        out = np.concatenate([quiet, samples[loud[0]:loud[-1] + 1]])
+        self.pending = samples[loud[-1] + 1:]
+        return out.tobytes()
+
+    def finish(self) -> bytes:
+        out, self.pending = self.pending[:self.tail], np.zeros(0, dtype=np.int16)
+        return out.tobytes()
+
+
 class FlushOrder:
     """Maps server flush IDs to part indexes by order of first appearance."""
 
