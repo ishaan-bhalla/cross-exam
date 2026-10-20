@@ -77,6 +77,7 @@ function startAnswer() {
   current = {
     answer: null, words: [], startTime: null, nextTime: null, sources: [], underruns: 0,
     lateWordsMs: 0, done: null, rafId: null, row: null, bandEls: [], spokenUpTo: 0, lastActive: -1,
+    quoteWords: false, heldQuote: [], holdTimer: null, holdReleased: false, quoteHoldMs: 0,
   };
 }
 
@@ -124,6 +125,38 @@ function onAudio(msg) {
   const ch = buffer.getChannelData(0);
   for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768;
 
+  // Hold the quote's audio until its word timings arrive (at most quote_timings_max_wait_ms
+  // beyond the end of what is already queued), so the highlight starts with the voice.
+  if (msg.part === "quote" && !current.quoteWords && !current.holdReleased) {
+    current.heldQuote.push(buffer);
+    if (current.holdTimer === null) {
+      const queuedFor = current.nextTime === null ? 0 : Math.max(0, current.nextTime - audioCtx.currentTime);
+      current.holdTimer = setTimeout(releaseQuote, queuedFor * 1000 + config.quote_timings_max_wait_ms);
+    }
+    return;
+  }
+  schedule(buffer);
+}
+
+function releaseQuote() {
+  if (!current || current.holdReleased) return;
+  current.holdReleased = true;
+  clearTimeout(current.holdTimer);
+  const held = current.heldQuote;
+  current.heldQuote = [];
+  if (!held.length) return;
+  const startAt = Math.max(current.nextTime ?? 0, audioCtx.currentTime + 0.02);
+  if (current.nextTime !== null && startAt > current.nextTime) {
+    // The pause added after the lead-in; shift the clock so word times still line up.
+    const hold = startAt - current.nextTime;
+    current.startTime += hold;
+    current.nextTime += hold;
+    current.quoteHoldMs = hold * 1000;
+  }
+  held.forEach(schedule);
+}
+
+function schedule(buffer) {
   const now = audioCtx.currentTime;
   if (current.startTime === null) {
     current.startTime = now + config.audio_buffer_ms / 1000;
@@ -152,12 +185,16 @@ function audioTimeMs() {
 }
 
 function onWords(msg) {
+  current.words = mergeWords(current.words, msg.words);
+  if (msg.part === "quote") {
+    current.quoteWords = true;
+    releaseQuote(); // shifts the clock if the quote was held, so measure lateness after it
+  }
   // Words that should already have started are late: record by how much.
   if (current.startTime !== null && msg.words.length) {
     const late = audioTimeMs() - msg.words[0].start;
     if (late > current.lateWordsMs) current.lateWordsMs = late;
   }
-  current.words = mergeWords(current.words, msg.words);
   if (msg.part === "quote" && current.row) renderQuote();
 }
 
@@ -220,11 +257,14 @@ function finish() {
     (d.question_to_quote_audio_ms && d.question_to_quote_audio_ms !== d.question_to_first_audio_ms
       ? ` · quote audio ${d.question_to_quote_audio_ms} ms` : "") +
     (d.cached?.length ? ` (${d.cached.join(", ")} cached)` : "") +
+    (current.quoteHoldMs > 0 ? ` · quote held ${Math.round(current.quoteHoldMs)} ms for timings` : "") +
     ` · audio ${(d.duration_ms / 1000).toFixed(1)} s` +
     (current.underruns ? ` · ${current.underruns} audio underrun(s)` : "") +
+    (d.missing_words?.length ? ` · no word timings for ${d.missing_words.join(", ")}` : "") +
     (current.lateWordsMs > 0 ? ` · word timings arrived up to ${Math.round(current.lateWordsMs)} ms late` : "");
   current.turn?.append(el("div", "timing", timing));
-  window.__lastAnswer = { ...d, underruns: current.underruns, late_words_ms: Math.round(current.lateWordsMs) };
+  window.__lastAnswer = { ...d, underruns: current.underruns, late_words_ms: Math.round(current.lateWordsMs),
+    quote_hold_ms: Math.round(current.quoteHoldMs) };
   setStatus("Ready.");
   setBusy(false);
   $("question").focus();
@@ -233,6 +273,7 @@ function finish() {
 function clearHighlight() {
   if (!current) return;
   if (current.rafId) cancelAnimationFrame(current.rafId);
+  clearTimeout(current.holdTimer);
   current.sources.forEach((s) => { try { s.stop(); } catch {} });
   if (current.row) {
     current.row.classList.remove("cited");

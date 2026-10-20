@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     tts_silence_threshold: int
     tts_trim_preroll_ms: int
     tts_lead_in_gap_ms: int
+    tts_keepalive_seconds: float
+    tts_words_wait_seconds: float
+    quote_timings_max_wait_ms: int
     phrase_cache_dir: str
     retrieval_top_k: int
     retrieval_min_score: float

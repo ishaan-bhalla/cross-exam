@@ -6,7 +6,7 @@ import pytest
 from crossexam.api import phrases
 from crossexam.clients import tts
 
-SETTINGS = SimpleNamespace(tts_timeout_seconds=1, tts_silence_threshold=500, tts_trim_preroll_ms=0)
+SETTINGS = SimpleNamespace(tts_timeout_seconds=1, tts_words_wait_seconds=0.05, tts_silence_threshold=500, tts_trim_preroll_ms=0)
 
 
 class FakeWS:
