@@ -49,6 +49,9 @@ body { margin: 0; background: var(--bg); color: var(--text);
 .badge { font-size: 12px; background: var(--badge); border-radius: 10px; padding: 1px 8px; }
 .badge.warn { color: var(--warn); }
 .timing { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.timing pre { margin: 4px 0 0; white-space: pre-wrap; }
+.turn .edit { font: inherit; font-size: 11px; text-transform: none; letter-spacing: 0; border: 0; background: none;
+              color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; }
 
 .ask { display: flex; gap: 8px; margin-top: 8px; }
 .ask textarea { flex: 1; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); resize: vertical; }

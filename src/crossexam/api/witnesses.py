@@ -36,16 +36,21 @@ def statement(witness_id: str) -> list[dict]:
 
 
 @lru_cache
+def cited_ids(witness_id: str) -> list[str]:
+    """Document IDs cited in the statement, in order of first mention."""
+    s = get_settings()
+    if not s.doc_id_pattern:
+        return []
+    pattern = re.compile(s.doc_id_pattern)
+    return list(dict.fromkeys(i for p in statement(witness_id) for i in pattern.findall(p["text"])))
+
+
+@lru_cache
 def keyterms(witness_id: str) -> list[str]:
     """Speech-to-text key terms: the witness file's terms, then every document ID cited in
     the statement, de-duplicated and capped at stt_max_keyterms."""
-    s = get_settings()
-    terms = list(_registry()[witness_id].get("keyterms", []))
-    if s.doc_id_pattern:
-        pattern = re.compile(s.doc_id_pattern)
-        for p in statement(witness_id):
-            terms.extend(pattern.findall(p["text"]))
-    return list(dict.fromkeys(terms))[:s.stt_max_keyterms]
+    terms = list(_registry()[witness_id].get("keyterms", [])) + cited_ids(witness_id)
+    return list(dict.fromkeys(terms))[:get_settings().stt_max_keyterms]
 
 
 @lru_cache

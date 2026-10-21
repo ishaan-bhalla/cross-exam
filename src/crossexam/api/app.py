@@ -1,6 +1,8 @@
 """Web app: serves the frontend from web_dir, the witness API and the examination WebSocket.
 
-WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text"}; the server replies
+WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?}. For a spoken
+question the server first replies {"type": "question", "text", "id_changes"} with document IDs
+normalised (witness.docids); then, for every question,
   {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, routed}
   {"type": "audio", "part": "lead_in" | "quote" | "refusal", "data": base64 PCM16, "sample_rate"}
                                                                   (repeated, in play order)
@@ -36,6 +38,7 @@ from crossexam.clients import tts
 from crossexam.config import get_settings
 from crossexam.witness.align import align_words, key_count
 from crossexam.witness.chunking import chunk_quote
+from crossexam.witness.docids import normalise_ids
 from crossexam.witness.answer import answer, fixed_phrases, spoken_quote
 
 
@@ -59,7 +62,8 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/api/config")
 def config():
     s = get_settings()
-    return {"audio_buffer_ms": s.ui_audio_buffer_ms, "quote_timings_max_wait_ms": s.quote_timings_max_wait_ms}
+    return {"audio_buffer_ms": s.ui_audio_buffer_ms, "quote_timings_max_wait_ms": s.quote_timings_max_wait_ms,
+            "stt_sample_rate": s.stt_sample_rate, "stt_chunk_ms": s.stt_chunk_ms}
 
 
 @app.get("/api/witnesses")
@@ -83,8 +87,12 @@ def stt_session(witness_id: str):
     terms = witnesses.keyterms(witness_id)
     params = {"token": r.json()["token"], "speech_model": s.stt_speech_model, "encoding": "pcm_s16le",
               "sample_rate": s.stt_sample_rate, "keyterms_prompt": json.dumps(terms)}
+    for name, value in (("min_turn_silence", s.stt_min_turn_silence_ms), ("max_turn_silence", s.stt_max_turn_silence_ms),
+                        ("end_of_turn_confidence_threshold", s.stt_end_of_turn_confidence)):
+        if value.strip():
+            params[name] = value.strip()
     return {"url": f"{s.stt_ws_url}?{urlencode(params)}", "sample_rate": s.stt_sample_rate,
-            "chunk_ms": s.stt_chunk_ms, "keyterms": terms}
+            "chunk_ms": s.stt_chunk_ms, "submit_grace_ms": s.stt_submit_grace_ms, "keyterms": terms}
 
 
 @app.get("/api/witnesses/{witness_id}/statement")
@@ -222,7 +230,14 @@ async def examine(ws: WebSocket, witness: str):
                 await ws.send_json({"type": "error", "message": "expected {\"type\": \"question\", \"text\": ...}"})
                 continue
             try:
-                await _examine(ws, w, msg["text"].strip(), tts_conn)
+                question = msg["text"].strip()
+                if msg.get("spoken"):
+                    # Rebuild document IDs the transcript split or misheard, and tell the client
+                    # what was understood so the submitted question shows the corrected ID.
+                    question, changes = normalise_ids(question, witnesses.cited_ids(w["id"]),
+                                                      get_settings().doc_id_snap_max_distance)
+                    await ws.send_json({"type": "question", "text": question, "id_changes": changes})
+                await _examine(ws, w, question, tts_conn)
             except WebSocketDisconnect:
                 raise
             except Exception as e:

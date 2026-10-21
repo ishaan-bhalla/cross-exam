@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     stt_token_expires_seconds: int
     stt_max_session_seconds: int
     stt_max_keyterms: int
+    stt_submit_grace_ms: int
+    stt_min_turn_silence_ms: str
+    stt_max_turn_silence_ms: str
+    stt_end_of_turn_confidence: str
+    doc_id_snap_max_distance: int
     tts_ws_url: str
     tts_default_voice: str
     tts_timeout_seconds: float

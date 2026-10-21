@@ -76,16 +76,17 @@ $("mic-button").addEventListener("click", async () => {
   setStatus("Starting microphone…");
   try {
     mic = await startMic(witnessId, {
-      onPartial: (text) => { $("question").value = text; setStatus("Listening…"); },
-      onFinal: (text, timing) => {
+      onListening: () => setStatus("Listening… ask your question."),
+      onText: (text) => { $("question").value = text; },
+      onSubmit: (text, info) => {
         stopMic();
+        if (!text) { setStatus("Didn't catch that. Try again or type."); return; }
         $("question").value = text;
-        spoken = timing;
+        spoken = info;
         $("ask-form").requestSubmit();
       },
       onError: (message) => { stopMic(); setStatus(`Microphone: ${message}. You can type instead.`); },
     });
-    setStatus("Listening… ask your question.");
   } catch (e) {
     stopMic();
     setStatus(`Microphone unavailable (${e.message}). You can type instead.`);
@@ -99,26 +100,45 @@ $("ask-form").addEventListener("submit", (e) => {
   ensureAudio();
   if (mic) stopMic(); // typed while listening: the typed text wins
   const turn = addTurn("counsel", "Counsel", text);
-  if (spoken) {
-    const ms = spoken.end_of_speech_to_final_ms;
-    const submitted = ms === null ? null : ms + Math.round(performance.now() - spoken.final_at);
-    turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${submitted ?? "?"} ms`));
-    window.__lastSpoken = { end_of_speech_to_submitted_ms: submitted };
-    spoken = null;
+  const voice = spoken;
+  spoken = null;
+  if (voice) {
+    turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${voice.end_of_speech_to_submit_ms ?? "?"} ms`));
+    window.__lastSpoken = { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms, log: voice.log };
+    if (params.has("debug")) {
+      const details = el("details", "timing");
+      details.append(el("summary", null, "voice timeline"),
+        el("pre", null, voice.log.map((e) => `${String(e.t_ms).padStart(6)} ms  ${e.event}${e.detail ? "  " + e.detail : ""}`).join("\n")));
+      turn.append(details);
+    }
   }
   $("question").value = "";
   setBusy(true);
   setStatus("Witness is considering the question…");
   startAnswer();
-  ws.send(JSON.stringify({ type: "question", text }));
+  current.counselTurn = turn;
+  ws.send(JSON.stringify({ type: "question", text, spoken: Boolean(voice) }));
 });
 
 function addTurn(cls, who, text) {
   const turn = el("div", `turn ${cls}`);
-  turn.append(el("div", "who", who));
+  const head = el("div", "who", who);
+  turn.append(head);
   const body = el("div", "text");
   if (text) body.textContent = text;
   turn.append(body);
+  if (cls === "counsel") {
+    const edit = el("button", "edit", "edit");
+    edit.type = "button";
+    edit.title = "Fix this question and ask it again";
+    edit.addEventListener("click", () => {
+      if (mic) stopMic();
+      $("question").value = body.textContent;
+      $("question").focus();
+      setStatus("Edit the question, then press Ask.");
+    });
+    head.append(" ", edit);
+  }
   $("transcript").append(turn);
   turn.scrollIntoView({ block: "end" });
   return turn;
@@ -140,10 +160,22 @@ function handle(msg) {
     return;
   }
   if (!current) return;
-  if (msg.type === "answer") onAnswer(msg);
+  if (msg.type === "question") onQuestionUnderstood(msg);
+  else if (msg.type === "answer") onAnswer(msg);
   else if (msg.type === "audio") onAudio(msg);
   else if (msg.type === "words") onWords(msg);
   else if (msg.type === "done") onDone(msg);
+}
+
+// A spoken question as the server understood it, with document IDs rebuilt.
+function onQuestionUnderstood(msg) {
+  const turn = current.counselTurn;
+  if (!turn) return;
+  turn.querySelector(".text").textContent = msg.text;
+  for (const c of msg.id_changes || []) {
+    const note = c.snapped ? `heard “${c.heard}”, corrected to ${c.id}` : `heard “${c.heard}” as ${c.id}`;
+    turn.append(el("div", "timing", note));
+  }
 }
 
 function onAnswer(msg) {
