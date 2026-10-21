@@ -92,7 +92,9 @@ def stt_session(witness_id: str):
         if value.strip():
             params[name] = value.strip()
     return {"url": f"{s.stt_ws_url}?{urlencode(params)}", "sample_rate": s.stt_sample_rate,
-            "chunk_ms": s.stt_chunk_ms, "submit_grace_ms": s.stt_submit_grace_ms, "keyterms": terms}
+            "chunk_ms": s.stt_chunk_ms, "submit_grace_ms": s.stt_submit_grace_ms, "keyterms": terms,
+            "expires_in_seconds": s.stt_token_expires_seconds,
+            "refresh_margin_seconds": s.stt_token_refresh_margin_seconds}
 
 
 @app.get("/api/witnesses/{witness_id}/statement")

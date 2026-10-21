@@ -1,5 +1,5 @@
 import { activeWordIndex, mergeWords, quotePieces } from "./sync.js";
-import { startMic } from "./mic.js";
+import { prefetchSttSession, startMic } from "./mic.js";
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -25,6 +25,7 @@ async function init() {
   const list = await (await fetch("/api/witnesses")).json();
   const witness = list.find((w) => w.id === params.get("witness")) || list[0];
   witnessId = witness.id;
+  prefetchSttSession(witnessId); // so the mic does not wait for a token
   $("witness-role").textContent = witness.role_label;
   $("witness-name").textContent = witness.name;
   document.title = `Cross-examination: ${witness.name}`;

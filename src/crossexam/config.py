@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     stt_sample_rate: int
     stt_chunk_ms: int
     stt_token_expires_seconds: int
+    stt_token_refresh_margin_seconds: int
     stt_max_session_seconds: int
     stt_max_keyterms: int
     stt_submit_grace_ms: int
@@ -47,6 +48,7 @@ class Settings(BaseSettings):
     tts_words_wait_seconds: float
     quote_timings_max_wait_ms: int
     phrase_cache_dir: str
+    quote_max_words: int
     retrieval_top_k: int
     retrieval_min_score: float
     retriever: str

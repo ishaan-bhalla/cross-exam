@@ -13,6 +13,42 @@
 //   onError(message)
 // Every step is logged with ms since the click, to the console and in info.log / window.__micLog.
 
+// Token pre-fetch. Each token starts one session and must be used within
+// expires_in_seconds, so one is fetched when the page loads, replaced refresh_margin_seconds
+// before it expires, and replaced again as soon as it is used. A click takes the cached token
+// if it is still fresh, and otherwise fetches one itself.
+const tokenCache = { witnessId: null, session: null, fetchedAt: 0, timer: null };
+
+async function fetchSession(witnessId) {
+  const s = await (await fetch(`/api/witnesses/${encodeURIComponent(witnessId)}/stt-session`, { method: "POST" })).json();
+  if (!s.url) throw new Error(s.detail || "could not start speech-to-text");
+  return s;
+}
+
+export async function prefetchSttSession(witnessId) {
+  clearTimeout(tokenCache.timer);
+  tokenCache.witnessId = witnessId;
+  tokenCache.session = null;
+  try {
+    const s = await fetchSession(witnessId);
+    tokenCache.session = s;
+    tokenCache.fetchedAt = performance.now();
+    const refreshIn = Math.max(1, s.expires_in_seconds - s.refresh_margin_seconds) * 1000;
+    tokenCache.timer = setTimeout(() => prefetchSttSession(witnessId), refreshIn);
+  } catch (e) {
+    console.debug("[mic] token pre-fetch failed; will fetch on click", e.message);
+  }
+}
+
+function takeCachedSession(witnessId) {
+  const s = tokenCache.session;
+  if (!s || tokenCache.witnessId !== witnessId) return null;
+  const ageMs = performance.now() - tokenCache.fetchedAt;
+  tokenCache.session = null;
+  prefetchSttSession(witnessId); // tokens are single-use: get the next one now
+  return ageMs < (s.expires_in_seconds - s.refresh_margin_seconds) * 1000 ? { s, ageMs } : null;
+}
+
 export async function startMic(witnessId, { onListening, onText, onSubmit, onError }) {
   const t0 = performance.now();
   const log = [];
@@ -107,14 +143,11 @@ export async function startMic(witnessId, { onListening, onText, onSubmit, onErr
     ctx?.close();
   }
 
-  // Token and socket, in parallel with starting capture.
-  const session = fetch(`/api/witnesses/${encodeURIComponent(witnessId)}/stt-session`, { method: "POST" })
-    .then((r) => r.json())
-    .then((s) => {
-      if (!s.url) throw new Error(s.detail || "could not start speech-to-text");
-      event("token received");
-      return s;
-    });
+  // Token (pre-fetched if possible) and socket, in parallel with starting capture.
+  const cached = takeCachedSession(witnessId);
+  const session = cached
+    ? Promise.resolve(cached.s).then((s) => { event("token from pre-fetch", `fetched ${Math.round(cached.ageMs / 1000)} s ago`); return s; })
+    : fetchSession(witnessId).then((s) => { event("token received", "fetched on click"); return s; });
 
   // Capture. The worklet needs the target rate before the token arrives, so it comes from config.
   const config = await (await fetch("/api/config")).json();

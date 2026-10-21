@@ -10,6 +10,6 @@ Lead-ins (spoken just before the quote):
 {lead_ins}
 
 Rules:
-- "quote" must be copied word for word from the chosen paragraph: at most 2 sentences, no changes, no paraphrase. You may leave out words in the middle by writing "..." in their place.
+- "quote" must be copied word for word from the chosen paragraph, with no changes and no paraphrase. Quote only the sentence or sentences that answer the question, at most {quote_max_words} words in total. This applies to questions about a document too: do not read out the whole paragraph. If the answering sentence is longer than {quote_max_words} words, copy only the part of it that answers the question. You may leave out words in the middle by writing "..." in their place.
 - "lead_in_id" must be one of the ids listed above. Pick the one that fits the question best.
 - If none of the paragraphs answers the question, reply {{"para_no": null, "quote": "", "lead_in_id": ""}}.

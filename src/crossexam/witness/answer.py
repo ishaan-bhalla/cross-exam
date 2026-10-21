@@ -17,6 +17,7 @@ import re
 from crossexam.clients.llm_gateway import chat
 from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retrieval, Retriever
+from crossexam.witness.chunking import CLAUSE_END_RE, sentences
 
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -105,6 +106,26 @@ def quote_matches(quote: str, text: str) -> bool:
     return _matches(_segments(quote), text)
 
 
+def limit_quote(quote: str, max_words: int) -> str:
+    """The quote cut to at most max_words, by whole sentences where possible. If even the
+    first sentence is too long, it is cut at its last clause break (",", ";", ":") within the
+    limit, or at the limit. Every cut keeps a verbatim prefix of the quote, so a quote that
+    verifies still verifies."""
+    if len(quote.split()) <= max_words:
+        return quote
+    kept = []
+    for sent in sentences(quote):
+        if len(kept) + len(sent) > max_words:
+            break
+        kept.extend(sent)
+    if not kept:
+        first = sentences(quote)[0][:max_words]
+        breaks = [i + 1 for i, t in enumerate(first) if CLAUSE_END_RE.search(t)]
+        kept = first[:breaks[-1]] if breaks else first
+        kept[-1] = kept[-1].rstrip(",;:")
+    return " ".join(kept)
+
+
 def _first_sentence(text: str) -> str:
     return SENTENCE_RE.split(text.strip(), 1)[0]
 
@@ -176,7 +197,8 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     context = "\n\n".join(f"[Paragraph {p['para_no']}] {p['text']}" for p in paragraphs)
     menu = "\n".join(f"- {i}: {text}" for i, text in lead_ins.items())
     raw = chat([
-        {"role": "system", "content": template.format(witness_name=witness_name, lead_ins=menu)},
+        {"role": "system", "content": template.format(witness_name=witness_name, lead_ins=menu,
+                                                      quote_max_words=get_settings().quote_max_words)},
         {"role": "user", "content": f"Statement paragraphs:\n\n{context}\n\nQuestion: {question}"},
     ])
     reply = _parse_reply(raw)
@@ -187,7 +209,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     by_no = {p["para_no"]: p for p in paragraphs}
     quote, lead_in_id, para = "", None, None
     if reply is not None:
-        quote = _strip_quote_marks(str(reply.get("quote") or ""))
+        quote = limit_quote(_strip_quote_marks(str(reply.get("quote") or "")), get_settings().quote_max_words)
         lead_in_id = reply.get("lead_in_id")
         try:
             para = by_no.get(int(reply["para_no"]))
@@ -206,7 +228,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     if fallback:
         # The lead-in was chosen for a quote we are discarding, so drop it too.
         para = paragraphs[0]
-        quote = _first_sentence(para["text"])
+        quote = limit_quote(_first_sentence(para["text"]), get_settings().quote_max_words)
         segments, lead_in_id = [quote], None
 
     lead_in = lead_ins.get(lead_in_id, "") if isinstance(lead_in_id, str) else ""
