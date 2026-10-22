@@ -80,9 +80,40 @@ Dense + routing, `DENSE_MIN_SCORE=0.56`, relevance check off, HyDE off, `LLM_TEM
 
 Latency excludes time spent waiting on LLM gateway rate limits (90–186 s per run, recorded separately). The 3 off-topic traps and the unknown-ID question are refused without an LLM call; the 4 plausible traps are refused by the answer step.
 
+### Quote length
+
+Long quotes made long answers: the ¶64 answer read the whole 89-word paragraph, 35 s of audio. The answer prompt now asks for only the sentence(s) that answer the question, within `QUOTE_MAX_WORDS`. The model often ignores this, so when its quote is over the limit, a follow-up LLM call (`prompts/quote_select.txt`) sees the quote split into numbered clauses and picks the ones that answer the question. The chosen clauses are kept in their original order while they fit the limit, joined with "…" where clauses are skipped, so the result still passes quote verification. If the reply is unusable, the quote is trimmed to whole sentences instead.
+
+Answers that needed the follow-up call (3 repeats each, 31 LLM answers per run). Latency excludes rate-limit waits; medians are shown because run 3 at 60 words had two slow gateway calls (10.9 s and 15.0 s) that inflate the means.
+
+| `QUOTE_MAX_WORDS` | Follow-up calls per run | Questions | Latency with follow-up, median (mean) | Latency without, median (mean) |
+|---|---|---|---|---|
+| 40 (`outputs/eval/20261021-234004/`) | 9, 7, 8 | d10, m01, m02, m03, m04, p04, r01, r02, r04 (varied by run) | 2073 ms (2233) | 1038 ms (1158) |
+| 60 (`outputs/eval/20261022-204728/`) | 3, 3, 3 | m02, p04, r01 | 2352 ms (2538) | 1091 ms (1553) |
+
+The follow-up call itself took 0.9–1.2 s. At 60 words, r02 and m04 fit without one and answer the whole question.
+
+The three answers still over 60 words:
+
+| | Question | Before: trimmed to whole sentences (40 words) | After: clause selection (60 words) |
+|---|---|---|---|
+| r01 (¶64, 89 words) | What did you make of POL00055418? | Regarding POL00055418 (Emails: The Horizon Trial), given that the vast majority of post offices were understood not to have significant concerns about Horizon, and because of reassurance from audit risk modelling, feedback from audit, training | I did not have serious concerns about the system myself, but I would have been equally keen to be aware of new concerns arising in case this would enable me and my team to positively support the resolution of something if it became a confirmed issue. |
+| m02 (¶43, 74–105 words) | Looking back, what would you have done differently with the 2010 report? | In hindsight | With the benefit of hindsight I would therefore have summarized the same lists of controls, but would not have made such an assertive executive summary. I should simply have stated that these were the mitigating factors noted from discussions with the report addressees or with their representatives, and allowed those to be considered by the recipients. |
+| p04 (¶56, 76 words) | Did you yourself go and examine the money and goods held at individual outlets? | I did not personally carry out audits. I was, however, responsible early in my time at Post Office Ltd for the Branch Audit Team whose members carried out audits at branches. | I did not personally carry out audits. |
+
+Quality metrics at 60 words matched the final table above in every run but one. In run 3, m03's reply contained two JSON objects (one per paragraph, ¶35 and ¶36, trying to answer both halves of the question). The parser's `\{.*\}` regex spanned both and failed, so the answer fell back to the first sentence of the top paragraph and was marked unverified: grounding was 92% for multi and 99% overall in that run, 100% in the other two. Parsing only the first JSON object would fix it; not yet done.
+
 ### Known failure: p06
 
 "Did your own department rely on the same IT as sub-postmasters in its day-to-day operations?" should be answered by paragraph 28 ("My teams primarily worked using a central SAP finance system, not Horizon…"). Dense ranks paragraph 28 21st, so the answer step never sees it and the witness says the point is not covered. This one question accounts for the paraphrased para accuracy of 88%, the refusal precision of 88% and the overall para accuracy of 96%.
+
+### Known limitation: answers quote one paragraph (m03)
+
+"Why did branches use the other postage button, and how did the stock adjustment project respond?" has two parts, answered in different paragraphs: ¶35 (why branches used "other postage") and ¶37 (how the stock adjustment project responded). An answer quotes a single paragraph, so the witness answers only the first part:
+
+> My recollection is that branches would sometimes select "other postage" as a fast way to process a more complex transaction, with the expectation that later in the day they would reverse the "other postage" transaction and put the correct transaction through.
+
+The eval counts this as correct, because ¶35 is one of the expected paragraphs; the metrics don't check that every part of a question is answered. The same applies to any question whose answer spans paragraphs (the multi category). The model has also tried to answer such a question with two JSON objects, one per paragraph (see "Quote length" above).
 
 ## Held-out results (counsel questions)
 

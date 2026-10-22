@@ -85,7 +85,8 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
                   "relevance_checked": a["relevance"] is not None,
                   "relevance_rejected": a["relevance_rejected"],
                   "relevance_para_no": rel.get("para_no"), "relevance_error": rel.get("error"),
-                  "refused": a["para_no"] is None, "spoken": a["spoken"], "raw": a["raw"]})
+                  "refused": a["para_no"] is None, "quote": a["quote"], "spoken": a["spoken"], "raw": a["raw"],
+                  "shortening": {k: v for k, v in (a["shortening"] or {}).items() if k != "select_raw"} or None})
     else:
         # No answer step: refusals come only from routing and the retrieval gate.
         refused = retrieval.doc_id_unknown or not retriever.passes_gate(retrieval)
