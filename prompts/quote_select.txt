@@ -1,0 +1,10 @@
+A witness at the Post Office Horizon IT Inquiry is answering a question by reading aloud from their witness statement. The passage below is too long to read in full. It is split into numbered clauses.
+
+Question: {question}
+
+Clauses:
+{clauses}
+
+Choose the clauses that best answer the question: as few as possible, at most {max_words} words in total (the word count of each clause is shown). Prefer clauses that give the witness's own answer, view or knowledge over introductory or background clauses. The chosen clauses will be read in their original order.
+
+Reply with JSON only, no other text: {{"clauses": [<clause numbers>]}}

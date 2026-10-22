@@ -5,8 +5,8 @@ long flushes sometimes not at all, so a long quote is sent as several short flus
 
 Splits are made only at whitespace, so a document ID or a number ("£2.8", "1,000") is
 never broken. First at sentence ends (".", "!", "?" or the elision pause "…" followed by
-a space and a capital, digit or quote mark; an abbreviation such as "Ltd." or "Mr." is
-not a sentence end), then any sentence longer than max_words at clause punctuation
+a space and a capital, digit or quote mark; an abbreviation such as "Ltd." or "Mr.", or a
+full stop inside parentheses, is not a sentence end), then any sentence longer than max_words at clause punctuation
 (",", ";", ":", "…"): at the last clause break within max_words, or, if there is none,
 at the first one after it. A sentence with no clause break stays whole.
 """
@@ -26,11 +26,14 @@ def _is_sentence_end(token: str, next_token: str | None) -> bool:
 
 
 def sentences(text: str) -> list[list[str]]:
+    """Sentences as token lists. A full stop inside open parentheses, as in a document title
+    "(Royal Mail Internal Information. Back Office ...)", does not end a sentence."""
     tokens = text.split()
-    out, cur = [], []
+    out, cur, depth = [], [], 0
     for i, tok in enumerate(tokens):
         cur.append(tok)
-        if _is_sentence_end(tok, tokens[i + 1] if i + 1 < len(tokens) else None):
+        depth = max(0, depth + tok.count("(") - tok.count(")"))
+        if depth == 0 and _is_sentence_end(tok, tokens[i + 1] if i + 1 < len(tokens) else None):
             out.append(cur)
             cur = []
     if cur:
@@ -56,3 +59,19 @@ def chunk_quote(text: str, max_words: int | None = None) -> list[str]:
     """Chunks whose concatenation (joined by single spaces) is the whitespace-normalised text."""
     max_words = max_words or get_settings().tts_chunk_max_words
     return [" ".join(c) for sent in sentences(text) for c in _split_long(sent, max_words) if c]
+
+
+def clauses(text: str) -> list[str]:
+    """Every sentence and clause of text, in order: split at sentence ends and after
+    clause punctuation, only at whitespace (so IDs, numbers and abbreviations stay whole)."""
+    out = []
+    for sent in sentences(text):
+        cur = []
+        for i, tok in enumerate(sent):
+            cur.append(tok)
+            if i < len(sent) - 1 and CLAUSE_END_RE.search(tok):
+                out.append(" ".join(cur))
+                cur = []
+        if cur:
+            out.append(" ".join(cur))
+    return out

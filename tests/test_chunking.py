@@ -91,3 +91,16 @@ def test_gap_limiter_caps_silence_between_parts_and_reports_shifts():
 def test_trailing_silence_trim_keeps_a_short_tail():
     pcm = _pcm((50, 0), (200, 9000), (700, 0))
     assert len(trim_trailing_silence(pcm, SR, threshold=500, tail_ms=80)) == 2 * (50 + 200 + 80)
+
+
+def test_full_stop_inside_parentheses_is_not_a_sentence_end():
+    from crossexam.witness.chunking import clauses, sentences
+    text = ("Regarding POL00001697 (Royal Mail Internal Information. Back Office Efficiency Programme-Stock "
+            "Adjustments), and the work related to stock adjustments, my recollection is not that it was "
+            "suggesting Horizon Online functionality was causing discrepancies. It was something else.")
+    assert len(sentences(text)) == 2
+    parts = clauses(text)
+    assert parts[0] == "Regarding POL00001697 (Royal Mail Internal Information. Back Office Efficiency Programme-Stock Adjustments),"
+    assert parts[-1] == "It was something else."
+    # an unmatched ")" does not stop later sentence ends from counting
+    assert len(sentences("See note 2). Then I left. Then I came back.")) == 3

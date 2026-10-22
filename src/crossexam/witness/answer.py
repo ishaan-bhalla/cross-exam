@@ -17,7 +17,8 @@ import re
 from crossexam.clients.llm_gateway import chat
 from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retrieval, Retriever
-from crossexam.witness.chunking import CLAUSE_END_RE, sentences
+import time
+from crossexam.witness.chunking import CLAUSE_END_RE, clauses, sentences
 
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -126,6 +127,53 @@ def limit_quote(quote: str, max_words: int) -> str:
     return " ".join(kept)
 
 
+def join_clauses(parts: list[str], chosen: list[int]) -> str:
+    """The chosen clauses (0-based) in original order; skipped clauses become "…", so the
+    result passes quote verification segment by segment. Trailing clause punctuation is
+    dropped before a gap and at the end."""
+    out, prev = [], None
+    for i in sorted(set(chosen)):
+        if prev is not None and i != prev + 1:
+            out[-1] = out[-1].rstrip(",;:") + "…"
+        out.append(parts[i])
+        prev = i
+    out[-1] = out[-1].rstrip(",;:")
+    return " ".join(out)
+
+
+def select_clauses(quote: str, question: str, max_words: int) -> tuple[str | None, dict]:
+    """Ask the LLM which clauses of an over-long quote answer the question.
+    (shortened quote or None if the reply is unusable, {"ms", "raw", "chosen", "kept"}). Chosen
+    clauses are kept in original order while they fit max_words; None if even the first does not."""
+    s = get_settings()
+    parts = clauses(quote)
+    listing = "\n".join(f"[{i}] ({len(c.split())} words) {c}" for i, c in enumerate(parts, 1))
+    template = (s.resolve(s.prompts_dir) / s.quote_select_prompt).read_text()
+    started = time.perf_counter()
+    info = {"ms": None, "raw": "", "chosen": None, "kept": None}
+    try:
+        info["raw"] = chat([{"role": "user", "content": template.format(
+            question=question, clauses=listing, max_words=max_words)}])
+    except Exception as e:
+        info["raw"] = f"{type(e).__name__}: {e}"
+    info["ms"] = (time.perf_counter() - started) * 1000
+    reply = _parse_reply(info["raw"]) or {}
+    chosen = reply.get("clauses")
+    if not (isinstance(chosen, list) and chosen and all(isinstance(n, int) and 1 <= n <= len(parts) for n in chosen)):
+        return None, info
+    info["chosen"] = sorted(set(chosen))
+    # Keep the chosen clauses, in original order, while they fit the limit.
+    kept, words = [], 0
+    for n in info["chosen"]:
+        size = len(parts[n - 1].split())
+        if words + size > max_words:
+            break
+        kept.append(n - 1)
+        words += size
+    info["kept"] = [n + 1 for n in kept]
+    return (join_clauses(parts, kept) if kept else None), info
+
+
 def _first_sentence(text: str) -> str:
     return SENTENCE_RE.split(text.strip(), 1)[0]
 
@@ -163,6 +211,7 @@ def _base_result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
             "para_corrected": False, "fallback": False, "skipped_llm": False,
             "relevance_rejected": False, "relevance": None, "routed": None, "doc_id_unknown": False,
+            "shortening": None,
             "spoken": "", "raw": ""}
     return {**base, **fields}
 
@@ -208,8 +257,19 @@ def answer(question: str, retriever: Retriever, witness_name: str,
 
     by_no = {p["para_no"]: p for p in paragraphs}
     quote, lead_in_id, para = "", None, None
+    shortening = None  # set when an over-long quote was shortened
     if reply is not None:
-        quote = limit_quote(_strip_quote_marks(str(reply.get("quote") or "")), get_settings().quote_max_words)
+        quote = _strip_quote_marks(str(reply.get("quote") or ""))
+        max_words = get_settings().quote_max_words
+        if len(quote.split()) > max_words:
+            # Too long to read out: pick the clauses that answer the question, else trim.
+            quote_words = len(quote.split())
+            selected, select_info = select_clauses(quote, question, max_words)
+            quote = selected or limit_quote(quote, max_words)
+            shortening = {"from_words": quote_words, "method": "selected" if selected else "trimmed",
+                          "select_ms": round(select_info["ms"]), "chosen": select_info["chosen"],
+                          "kept": select_info["kept"],
+                          "select_raw": select_info["raw"]}
         lead_in_id = reply.get("lead_in_id")
         try:
             para = by_no.get(int(reply["para_no"]))
@@ -236,4 +296,5 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     spoken = f"{lead_in} {SPOKEN_PAUSE.join(segments)}".strip()
     return _result(quote=quote, para_no=para["para_no"], lead_in_id=lead_in_id if lead_in else None,
                    lead_in=lead_in, verified=verified, para_corrected=para_corrected,
-                   fallback=fallback, relevance=relevance, spoken=spoken, raw=raw)
+                   fallback=fallback, relevance=relevance, spoken=spoken, raw=raw,
+                   shortening=shortening)

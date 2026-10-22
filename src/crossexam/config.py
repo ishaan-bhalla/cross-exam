@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     lead_ins_file: str
     hyde_prompt: str
     relevance_check_prompt: str
+    quote_select_prompt: str
     outputs_dir: Path
     processed_dir: Path
     eval_dir: Path
