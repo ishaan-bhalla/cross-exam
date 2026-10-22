@@ -15,13 +15,12 @@ import functools
 import json
 import re
 from crossexam.clients.llm_gateway import chat
+from crossexam.llm_json import parse_json_object
 from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retrieval, Retriever
 import time
 from crossexam.witness.chunking import CLAUSE_END_RE, clauses, sentences
 
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
-JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[\"'“‘(A-Z0-9])")
 ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 # Straight and curly single and double quotes all compare as the same character; so do dashes.
@@ -157,7 +156,7 @@ def select_clauses(quote: str, question: str, max_words: int) -> tuple[str | Non
     except Exception as e:
         info["raw"] = f"{type(e).__name__}: {e}"
     info["ms"] = (time.perf_counter() - started) * 1000
-    reply = _parse_reply(info["raw"]) or {}
+    reply = parse_json_object(info["raw"], required=("clauses",)) or {}
     chosen = reply.get("clauses")
     if not (isinstance(chosen, list) and chosen and all(isinstance(n, int) and 1 <= n <= len(parts) for n in chosen)):
         return None, info
@@ -178,17 +177,6 @@ def _first_sentence(text: str) -> str:
     return SENTENCE_RE.split(text.strip(), 1)[0]
 
 
-def _parse_reply(raw: str) -> dict | None:
-    m = JSON_RE.search(THINK_RE.sub("", raw))
-    if not m:
-        return None
-    try:
-        data = json.loads(m.group(0))
-    except json.JSONDecodeError:
-        return None
-    return data if isinstance(data, dict) else None
-
-
 def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
     """{"answers": bool | None, "para_no": int | None, "raw": str, "error": str | None}.
     answers is None when the check could not be run or parsed; the caller then proceeds."""
@@ -199,7 +187,7 @@ def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
         raw = chat([{"role": "user", "content": template.format(paragraphs=context, question=question)}])
     except Exception as e:
         return {"answers": None, "para_no": None, "raw": "", "error": f"{type(e).__name__}: {e}"}
-    reply = _parse_reply(raw)
+    reply = parse_json_object(raw, required=("answers",))
     if reply is None or not isinstance(reply.get("answers"), bool):
         return {"answers": None, "para_no": None, "raw": raw, "error": "unparseable reply"}
     para_no = reply.get("para_no")
@@ -250,7 +238,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
                                                       quote_max_words=get_settings().quote_max_words)},
         {"role": "user", "content": f"Statement paragraphs:\n\n{context}\n\nQuestion: {question}"},
     ])
-    reply = _parse_reply(raw)
+    reply = parse_json_object(raw, required=("para_no",))
 
     if reply is not None and reply.get("para_no") is None:
         return _result(verified=True, relevance=relevance, spoken=not_covered, raw=raw)
