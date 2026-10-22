@@ -101,7 +101,7 @@ def stt_session(witness_id: str):
 def statement(witness_id: str):
     if not witnesses.get_witness(witness_id):
         raise HTTPException(404, "unknown witness")
-    return [{"para_no": p["para_no"], "page": p["page"], "text": p["text"]}
+    return [{"para_no": p["para_no"], "page": p["page"], "text": p["text"], "section": p.get("section")}
             for p in witnesses.statement(witness_id)]
 
 

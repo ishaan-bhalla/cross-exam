@@ -16,6 +16,7 @@ import json
 import re
 from crossexam.clients.llm_gateway import chat
 from crossexam.llm_json import parse_json_object
+from crossexam.statements.parser import unit_key
 from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retrieval, Retriever
 import time
@@ -190,8 +191,7 @@ def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
     reply = parse_json_object(raw, required=("answers",))
     if reply is None or not isinstance(reply.get("answers"), bool):
         return {"answers": None, "para_no": None, "raw": raw, "error": "unparseable reply"}
-    para_no = reply.get("para_no")
-    return {"answers": reply["answers"], "para_no": para_no if isinstance(para_no, int) else None,
+    return {"answers": reply["answers"], "para_no": unit_key(reply.get("para_no")),
             "raw": raw, "error": None}
 
 
@@ -259,10 +259,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
                           "kept": select_info["kept"],
                           "select_raw": select_info["raw"]}
         lead_in_id = reply.get("lead_in_id")
-        try:
-            para = by_no.get(int(reply["para_no"]))
-        except (TypeError, ValueError):
-            para = None
+        para = by_no.get(unit_key(reply["para_no"]))
     segments = _segments(quote)
 
     verified = bool(para and _matches(segments, para["text"]))

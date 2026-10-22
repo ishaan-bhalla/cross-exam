@@ -8,3 +8,4 @@ fastembed
 pytest
 fastapi
 uvicorn[standard]
+pypdfium2

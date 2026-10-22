@@ -32,10 +32,16 @@ async function init() {
 
   const statement = await (await fetch(`/api/witnesses/${witness.id}/statement`)).json();
   const box = $("statement");
+  let section = null;
   for (const p of statement) {
+    if (p.section && p.section !== section) {
+      box.append(el("div", "section-heading", p.section)); // headings are labels, not paragraphs
+      section = p.section;
+    }
     paragraphs.set(p.para_no, p.text);
     const row = el("div", "para");
-    row.id = `para-${p.para_no}`;
+    row.id = `para-${p.para_no}`; // sub-units too: para-12.1, para-7(a)
+    if (typeof p.para_no === "string") row.classList.add("sub");
     row.append(el("span", "no", p.para_no), el("span", "body", p.text));
     box.append(row);
   }

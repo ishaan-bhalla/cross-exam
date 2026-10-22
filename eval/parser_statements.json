@@ -1,0 +1,25 @@
+{
+  "description": "Witness statements used to test the statement parser on layouts other than Rod Ismay's. Chosen by surveying all 131 statements in data/raw/statements/ (excluding WITN0463*, Ismay's) for variety: text layer quality, numbering style, sub-paragraphs, headings, length and solicitors. Every PDF in the collection has a text layer (each page is a scan with OCR underneath), so the 'scanned' picks are the ones whose text layer is garbled. Paths are relative to statements_dir.",
+  "statements": [
+    {"file": "witn09180100.pdf", "pages": 21, "picked_for": ["image-heavy", "OCR damage"],
+     "why": "Pages 12, 13, 17 and 18 have a garbled text layer (page 13: 11% word-like tokens); re-running OCR recovers whole paragraphs (40-43). Also lettered/roman lists."},
+    {"file": "WITN05290200 - David Smith - Second Witness Statement.pdf", "pages": 22, "picked_for": ["scanned", "OCR damage"],
+     "why": "Poor scan: body text on page 16 is garbled in the text layer ('I ~eppuntd wt ih...'), and the statement of truth reads 'StateTent of Tnnth'."},
+    {"file": "witn06700100.pdf", "pages": 54, "picked_for": ["numbered sub-paragraphs", "long"],
+     "why": "Mostly sub-paragraphs, up to three levels (2.6.1, 19.4.1), with OCR damage in the numbers ('26.3' for 2.6.3)."},
+    {"file": "witn10660100_0.pdf", "pages": 27, "picked_for": ["numbered sub-paragraphs"],
+     "why": "Sub-paragraphs written '6.1.' with a trailing full stop; OCR reads 'I' as '1' ('5. 1 have'). Prepared with Kingsley Napley."},
+    {"file": "witn09380100_0.pdf", "pages": 49, "picked_for": ["lettered sub-paragraphs", "section headings", "long", "different law firm"],
+     "why": "Many lettered list items and headings; wrapped lines that start with a number ('4 in assessing'). DAC Beachcroft LLP."},
+    {"file": "witn08420100.pdf", "pages": 153, "picked_for": ["section headings", "long", "different law firm"],
+     "why": "Heaviest use of headings in the collection, a Part structure, and (a)/(b) lists within paragraphs. Manches LLP."},
+    {"file": "witn09830100.pdf", "pages": 168, "picked_for": ["long", "unusual numbering"],
+     "why": "Longest statement; paragraphs numbered without a full stop ('4 I have addressed...')."},
+    {"file": "witn09910100_1.pdf", "pages": 68, "picked_for": ["section headings", "numbered sub-paragraphs", "long", "different law firm"],
+     "why": "Headings and sub-paragraphs; OCR reads '11. I also' as '11.1 also', which looks like a sub-paragraph. Ashfords LLP."},
+    {"file": "WITN03510100 Sir Geoffrey Mulgan - Witness staement.pdf", "pages": 4, "picked_for": ["short"],
+     "why": "Short; OCR artefacts '11.1 had' (for '11. I had') and '| had' (for 'I had')."},
+    {"file": "witn08540100.pdf", "pages": 5, "picked_for": ["short"],
+     "why": "Short with many paragraphs (about 30); OCR artefacts '11. 1 would', 'Dueto', 'Iwas'."}
+  ]
+}

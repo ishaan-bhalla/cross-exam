@@ -70,6 +70,18 @@ class Settings(BaseSettings):
     quote_select_prompt: str
     outputs_dir: Path
     processed_dir: Path
+    statements_dir: Path
+    ocr_enabled: bool
+    tesseract_cmd: str
+    ocr_dpi: int
+    ocr_min_chars: int
+    ocr_max_junk_ratio: float
+    parser_running_line_min_fraction: float
+    parser_edge_lines: int
+    parser_max_para_gap: int
+    parser_jump_lookahead_lines: int
+    parser_gap_ocr_max_pages: int
+    parser_heading_max_words: int
     eval_dir: Path
     witnesses_file: Path
     web_dir: Path
