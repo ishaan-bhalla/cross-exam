@@ -58,28 +58,11 @@ The words "I did not personally carry out audits." are highlighted in paragraph 
 
 ## 3. Architecture
 
+<p align="center"><img src="docs/answer-flow.svg" alt="How one question is answered: question, retrieval, answer and voice stages, and the four kinds of answer" width="100%"></p>
+
 [![Architecture diagram of ishaan-bhalla/cross-exam](https://gitdiagram.com/ishaan-bhalla/cross-exam/diagram.png)](https://gitdiagram.com/ishaan-bhalla/cross-exam?utm_source=readme&utm_medium=picture)
 
-*Architecture diagram (GitDiagram; click to explore it interactively).*
-
-How one question is answered:
-
-```mermaid
-flowchart LR
-  Q["Counsel asks<br/>(voice or typed)"] --> STT["AssemblyAI streaming STT<br/>key terms from the statement"]
-  STT --> R["Dense retrieval, top 5<br/>or document-ID routing"]
-  Q -- typed --> R
-  R -- "score below gate" --> NC["Refusal"]
-  R --> LLM["LLM Gateway: choose paragraph,<br/>quote and lead-in"]
-  LLM --> V{"Quote verbatim<br/>in a retrieved paragraph?"}
-  V -- yes --> SAY["Speak the quote"]
-  V -- no --> OCR{"Matches allowing<br/>OCR errors?"}
-  OCR -- yes --> SAY
-  OCR -- no --> REF["Referral to the paragraph"]
-  SAY --> TTS["Streaming TTS;<br/>word timings highlight the quote"]
-  REF --> TTS
-  NC --> TTS
-```
+*Top: how one question is answered. Bottom: the code's parts (GitDiagram; click to explore it interactively).*
 
 ## 4. How it works
 

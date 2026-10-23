@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#111"/></marker></defs>
+<rect width="1200" height="640" fill="#F1E8FD"/>
+<text x="48" y="80" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="42" font-weight="800" fill="#111">How one question is answered</text>
+<text x="1152" y="78" text-anchor="end" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" font-weight="800" fill="#7C3AED">~1 s to first audio</text>
+<rect x="52" y="116" width="246" height="212" rx="10" fill="#111"/>
+<rect x="48" y="112" width="246" height="212" rx="10" fill="#fff" stroke="#111" stroke-width="2"/>
+<circle cx="68" cy="137" r="5" fill="#2563EB"/>
+<text x="82" y="143" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#111"><tspan fill="#6B7280">1</tspan>  Question</text>
+<rect x="60" y="162" width="222" height="30" rx="5" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+<text x="71" y="182.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#1E3A8A">Counsel speaks or types</text>
+<rect x="60" y="200" width="222" height="30" rx="5" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+<text x="71" y="220.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#1E3A8A">Streaming speech-to-text</text>
+<rect x="60" y="238" width="222" height="30" rx="5" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+<text x="71" y="258.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#1E3A8A">Key terms from statement</text>
+<rect x="60" y="276" width="222" height="30" rx="5" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+<text x="71" y="296.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#1E3A8A">Document IDs rebuilt</text>
+<line x1="302" y1="218.0" x2="328" y2="218.0" stroke="#111" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="338" y="116" width="246" height="212" rx="10" fill="#111"/>
+<rect x="334" y="112" width="246" height="212" rx="10" fill="#fff" stroke="#111" stroke-width="2"/>
+<circle cx="354" cy="137" r="5" fill="#E11D48"/>
+<text x="368" y="143" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#111"><tspan fill="#6B7280">2</tspan>  Retrieval</text>
+<rect x="346" y="162" width="222" height="30" rx="5" fill="#FFE4E6" stroke="#E11D48" stroke-width="1.5"/>
+<text x="357" y="182.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#881337">Dense search, top 5</text>
+<rect x="346" y="200" width="222" height="30" rx="5" fill="#FFE4E6" stroke="#E11D48" stroke-width="1.5"/>
+<text x="357" y="220.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#881337">Document-ID routing</text>
+<rect x="346" y="238" width="222" height="30" rx="5" fill="#FFE4E6" stroke="#E11D48" stroke-width="1.5"/>
+<text x="357" y="258.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#881337">Refusal gate on top score</text>
+<line x1="588" y1="218.0" x2="614" y2="218.0" stroke="#111" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="624" y="116" width="246" height="212" rx="10" fill="#111"/>
+<rect x="620" y="112" width="246" height="212" rx="10" fill="#fff" stroke="#111" stroke-width="2"/>
+<circle cx="640" cy="137" r="5" fill="#4F46E5"/>
+<text x="654" y="143" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#111"><tspan fill="#6B7280">3</tspan>  Answer</text>
+<rect x="632" y="162" width="222" height="30" rx="5" fill="#E0E7FF" stroke="#6366F1" stroke-width="1.5"/>
+<text x="643" y="182.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#312E81">LLM picks paragraph, quote</text>
+<rect x="632" y="200" width="222" height="30" rx="5" fill="#E0E7FF" stroke="#6366F1" stroke-width="1.5"/>
+<text x="643" y="220.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#312E81">Verbatim check in code</text>
+<rect x="632" y="238" width="222" height="30" rx="5" fill="#E0E7FF" stroke="#6366F1" stroke-width="1.5"/>
+<text x="643" y="258.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#312E81">OCR-tolerant second pass</text>
+<line x1="874" y1="218.0" x2="900" y2="218.0" stroke="#111" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="910" y="116" width="246" height="212" rx="10" fill="#111"/>
+<rect x="906" y="112" width="246" height="212" rx="10" fill="#fff" stroke="#111" stroke-width="2"/>
+<circle cx="926" cy="137" r="5" fill="#0F766E"/>
+<text x="940" y="143" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#111"><tspan fill="#6B7280">4</tspan>  Voice</text>
+<rect x="918" y="162" width="222" height="30" rx="5" fill="#CCFBF1" stroke="#0D9488" stroke-width="1.5"/>
+<text x="929" y="182.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#134E4A">Streaming text-to-speech</text>
+<rect x="918" y="200" width="222" height="30" rx="5" fill="#CCFBF1" stroke="#0D9488" stroke-width="1.5"/>
+<text x="929" y="220.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#134E4A">Cached lead-ins, refusals</text>
+<rect x="918" y="238" width="222" height="30" rx="5" fill="#CCFBF1" stroke="#0D9488" stroke-width="1.5"/>
+<text x="929" y="258.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#134E4A">Words highlighted as read</text>
+<line x1="457.0" y1="330" x2="457.0" y2="380" stroke="#111" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="467.0" y="360" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#4B5563">score below gate</text>
+<line x1="743.0" y1="330" x2="743.0" y2="380" stroke="#111" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="753.0" y="360" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#4B5563">after the check</text>
+<rect x="52" y="390" width="1104" height="150" rx="10" fill="#111"/>
+<rect x="48" y="386" width="1104" height="150" rx="10" fill="#fff" stroke="#111" stroke-width="2"/>
+<circle cx="68" cy="411" r="5" fill="#16A34A"/>
+<text x="82" y="417" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#111">What the witness says</text>
+<rect x="60.0" y="438" width="258.0" height="34" rx="5" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+<text x="71.0" y="460.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" fill="#14532D">Verified quote</text>
+<text x="62.0" y="494" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">found word for word in a</text>
+<text x="62.0" y="513" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">retrieved paragraph</text>
+<rect x="334.0" y="438" width="258.0" height="34" rx="5" fill="#F3E8FF" stroke="#9333EA" stroke-width="1.5"/>
+<text x="345.0" y="460.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" fill="#581C87">OCR-corrected quote</text>
+<text x="336.0" y="494" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">matched once scanning errors</text>
+<text x="336.0" y="513" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">are allowed for</text>
+<rect x="608.0" y="438" width="258.0" height="34" rx="5" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+<text x="619.0" y="460.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" fill="#78350F">Referral to the paragraph</text>
+<text x="610.0" y="494" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">quote didn't verify, so</text>
+<text x="610.0" y="513" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">nothing is quoted</text>
+<rect x="882.0" y="438" width="258.0" height="34" rx="5" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+<text x="893.0" y="460.0" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" fill="#1E293B">Refusal</text>
+<text x="884.0" y="494" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">nothing relevant retrieved, or</text>
+<text x="884.0" y="513" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#4B5563">no answer</text>
+<text x="48" y="610" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#4B5563">Every answer is quoted from the statement, referred or refused · nothing is generated</text>
+</svg>
