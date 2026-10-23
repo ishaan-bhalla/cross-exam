@@ -8,6 +8,7 @@ For lawyers and trainees preparing cross-examination.
 
 | Result | Count | Source |
 |---|---|---|
+| Counsel's real questions from the hearing, never used in development: answered from the right paragraph | **11 of 15**, plus **3 of 5** trap questions refused; every answer a verified quote | [run_20261024_ismay_heldout](eval/results/run_20261024_ismay_heldout.json) |
 | Uploaded statements never used in development: answered from the right unit | **7 of 8**, plus **4 of 4** trap questions refused | [run_20261023_upload_heldout](eval/results/run_20261023_upload_heldout.json) |
 | Example witness (questions used during development): answerable questions answered from the right paragraph | **27 of 28**, in each of 3 runs | [run_20261024_ismay_dev](eval/results/run_20261024_ismay_dev.json) |
 | Answers that were verified quotes | **83 of 83** across 3 runs; nothing unverified was spoken | same |
@@ -26,6 +27,10 @@ A solo project for AssemblyAI's Voice Hackathon, October 2026.
 Practising cross-examination needs a witness who sticks to their evidence. A language model playing the witness will happily invent a convenient answer, and counsel can't tell. That makes it worse than useless for preparation: you rehearse against testimony that doesn't exist.
 
 Here the witness can only answer by quoting their own written statement. The model picks the paragraph and the words; code checks that the words are really there before anything is spoken, and the quoted words are highlighted in the statement as the voice reads them.
+
+[![Architecture diagram of ishaan-bhalla/cross-exam](https://gitdiagram.com/ishaan-bhalla/cross-exam/diagram.png)](https://gitdiagram.com/ishaan-bhalla/cross-exam?utm_source=readme&utm_medium=picture)
+
+*Architecture diagram (GitDiagram; click to explore it interactively). The two flows below show the examination and upload steps in detail.*
 
 **Examination**
 
@@ -144,13 +149,15 @@ Ismay dev, final settings, 3 runs ([run_20261024_ismay_dev](eval/results/run_202
 | Traps refused | 6–7 of 7 | 86–100% |
 | Answerable questions refused | 1 (p06) | |
 
-Upload sets:
+Held-out and upload sets:
 
 | Set | Runs | Right unit | Grounded | Verified (exact) | OCR-corrected | Referrals | Traps refused | Source |
 |---|---|---|---|---|---|---|---|---|
+| Ismay held-out (counsel) | 1 | 11 of 15 | 15 of 15 | 15 | 0 | 0 | 3 of 5 | [ismay_heldout](eval/results/run_20261024_ismay_heldout.json) |
 | Upload dev | 3 | 10 of 14 | 15–16 of 15–16 | 13–14 | 2 | 0 | 4–5 of 6 | [upload_dev](eval/results/run_20261024_upload_dev.json) |
 | Upload held-out | 1 | 7 of 8 | 7 of 8 | 7 | 0 | 0 | 4 of 4 | [upload_heldout](eval/results/run_20261023_upload_heldout.json) |
-| Ismay held-out (counsel) | | <!-- TODO: run eval/ismay_heldout.jsonl --> | | | | | | |
+
+Counsel's questions are harder than the dev set: the right paragraph is ranked first for 8 of 15 (25 of 28 on dev) and in the top 5 for 14 of 15. Of the 4 answerable misses, 2 were refused (h09, whose paragraph ranks 7th, and h11) and 2 quoted a real but wrong paragraph (h14, h20). Two traps were answered with real quotes that don't address them (h04, h16). Seven of the 15 answerable questions are labelled low-confidence in the question file (`label_confidence`); on the 8 high-confidence ones the right paragraph was cited for 7.
 
 The held-out upload run was made before referrals existed: its one ungrounded answer (u4-docref) spoke the first sentence of the right paragraph instead of the reason asked for. That answer is now a referral to ¶51 (replayed from the recorded model reply in [`tests/test_referral.py`](tests/test_referral.py)); the set has not been rerun, since it has been used once.
 
@@ -223,6 +230,7 @@ Right unit is the same because a referral to the expected unit counts as right; 
 |---|---|---|---|---|
 | Answer decided, Ismay dev (text eval, mean of 3 runs) | 35 × 3 | 1,104 ms | 2,505 ms | [ismay_dev](eval/results/run_20261024_ismay_dev.json) |
 | Answer decided, upload dev | 20 × 3 | 1,049 ms | 2,095 ms | [upload_dev](eval/results/run_20261024_upload_dev.json) |
+| Answer decided, Ismay held-out (counsel) | 20 | 1,087 ms | 1,782 ms | [ismay_heldout](eval/results/run_20261024_ismay_heldout.json) |
 | Spoken: question to first audio, all | 35 | 1,063 ms | 2,250 ms | [ismay_live](eval/results/run_20261024_ismay_live.json) |
 | Spoken: question to first audio, answered | 27 | 1,097 ms | 2,796 ms | same |
 | Spoken: question to the quote's first audio | 27 | 1,428 ms | 3,092 ms | same |
@@ -242,6 +250,8 @@ The live run excludes rate-limit waits; with them, 2 of the 35 questions waited 
 | Cost in US dollars | not measured (rates not known; set `COST_*` in `.env`) | |
 
 Refusals and lead-ins are pre-synthesised at startup, so a refusal decided before the LLM costs no tokens and no live TTS.
+
+Why cost is not measured: AssemblyAI's [pricing page](https://www.assemblyai.com/pricing) (updated 28 Sep 2026) lists streaming STT `universal-3-6-pro` at $0.45 per hour, billed on how long the session is open rather than on audio sent, so it is a cost per examination, not per answer. Neither the LLM used (`qwen3.5-4b-32k-fast`) nor the streaming TTS preview is on the price list, so the per-answer cost can't be worked out from public rates.
 
 ### Stability across repeats
 
@@ -291,17 +301,19 @@ Other variants are the same commands with a setting overridden, as each result f
 | **m03**: "Why did branches use the other postage button, and how did the stock adjustment project respond?" | Answers only the first half, from ¶35. | An answer quotes one unit; the second half is in ¶37. The eval counts it as right because ¶35 is expected. |
 | **u2-para** (uploaded): "Before 2014, who had the final say on stopping a postmaster from running their branch while a shortfall was looked into?" | Quotes ¶106 ("The decision to suspend a subpostmaster or not was based on the discussion held by me with the Contract Advisor."): a verified quote, but the wrong paragraph. | The paraphrase avoids every word of ¶99 ("suspend", "contract", "Contract Advisor"), which ranks 119th. Verification proves the words are in the statement, not that they answer the question. |
 | **t06**: "Did you provide any evidence in the case against Lee Castleton?" | Refused in 1 of 3 runs; in 2 it quotes ¶65 ("I didn't have input into prosecution cases, except in so far as my teams may be providing data…"). | A plausible trap passes the score gate, and the model's choice varies at temperature 0. The quote is real, but the statement never mentions Castleton. |
+| **h16** (counsel, held-out): "You were aware by this time about the Callendar Square bug, weren't you?" | Quotes ¶28 ("My teams primarily worked using a central SAP finance system, not Horizon…"). | The same failure as t06 on a real question: the statement never mentions the bug, but the question's Horizon wording scores above the gate. |
+| **h20** (counsel, held-out): "What were the 'compassionate factors' that were borne in mind?" | Quotes ¶43 on management perception of Horizon allegations: verified, but the answer is in ¶45. | ¶45 is ranked first, but the model chose a neighbouring paragraph. |
 
 **Caveats**
-- **Small sets:** 35 dev, 20 + 12 upload questions. One question moves a rate by about 4 to 13 points.
-- **Tuned on one witness:** the refusal gate (`DENSE_MIN_SCORE=0.56`) was chosen on the Ismay dev set. On uploads the margin between the highest off-topic score and the lowest answerable score was 0.07 ([results log](docs/results.md)).
-- **The held-out Ismay set has not been run yet.** <!-- TODO: result -->
+- **Small sets:** 35 dev, 20 held-out counsel, 20 + 12 upload questions. One question moves a rate by about 4 to 13 points.
+- **Dev numbers are optimistic:** on counsel's real questions the right paragraph was cited for 11 of 15 (73%), against 27 of 28 (96%) on the dev set the settings were tuned on.
+- **Tuned on one witness:** the refusal gate (`DENSE_MIN_SCORE=0.56`) was chosen on the Ismay dev set. On uploads the margin between the highest off-topic score and the lowest answerable score was 0.07 ([results log](docs/results.md)). On counsel's questions there is no margin: traps scored up to 0.709 and answerable questions as low as 0.606, so the gate alone can't separate them.
 - **Preview TTS:** the streaming TTS WebSocket had no public documentation; the protocol was worked out by probing ([`docs/api_feedback.md`](docs/api_feedback.md)) and may change.
 - **One model, no fallback:** a gateway outage or long rate limit stops answers.
 
 **What's next**
 - Answers that quote more than one paragraph, for multi-part questions (m03).
-- Named cases and people: refuse or redirect when the question names someone the statement never mentions (t06).
+- Named cases, people and events: refuse or redirect when the question names something the statement never mentions (t06, h16).
 - Confronting one witness with another's evidence: put a passage from a second statement to the witness and have them answer from their own.
 
 ## Getting started
@@ -315,7 +327,7 @@ Other variants are the same commands with a setting overridden, as each result f
 **Install**
 
 ```bash
-git clone <this repo> && cd cross-exams
+git clone https://github.com/ishaan-bhalla/cross-exam.git && cd cross-exam
 conda env create -f environment.yml -p ./venv
 conda activate ./venv
 pip install -e .
@@ -380,5 +392,5 @@ Python 3.11 · FastAPI · fastembed (BAAI/bge-small-en-v1.5) · pypdf, pypdfium2
 
 ## Contact
 
-- LinkedIn: <!-- TODO: LinkedIn URL -->
-- Email: <!-- TODO: email -->
+- LinkedIn: [linkedin.com/in/bhalla-ishaan](https://www.linkedin.com/in/bhalla-ishaan)
+- Email: [bhallaishaan23@gmail.com](mailto:bhallaishaan23@gmail.com)

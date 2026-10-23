@@ -1,0 +1,1423 @@
+{
+ "name": "ismay_heldout",
+ "date": "2026-10-24T01:52:01",
+ "source": "outputs/eval/20261024-015201",
+ "layout": "single",
+ "git": {
+  "commit": "156c12740c2d1f650b592aaa77ecef9df17e6f94",
+  "dirty": false
+ },
+ "model": "qwen3.5-4b-32k-fast",
+ "temperature": 0.0,
+ "settings": {
+  "llm_gateway_url": "https://llm-gateway.assemblyai.com/v1/chat/completions",
+  "llm_model": "qwen3.5-4b-32k-fast",
+  "llm_max_tokens": "300",
+  "llm_temperature": "0.0",
+  "llm_timeout_seconds": "30.0",
+  "llm_max_retries": "4",
+  "llm_retry_backoff_seconds": "2.0",
+  "stt_ws_url": "wss://streaming.assemblyai.com/v3/ws",
+  "stt_token_url": "https://streaming.assemblyai.com/v3/token",
+  "stt_speech_model": "universal-3-6-pro",
+  "stt_sample_rate": "16000",
+  "stt_chunk_ms": "100",
+  "stt_token_expires_seconds": "60",
+  "stt_token_refresh_margin_seconds": "10",
+  "stt_max_session_seconds": "600",
+  "stt_submit_grace_ms": "1200",
+  "stt_min_turn_silence_ms": "",
+  "stt_max_turn_silence_ms": "",
+  "stt_end_of_turn_confidence": "",
+  "doc_id_snap_max_distance": "1",
+  "tts_ws_url": "wss://streaming-tts.assemblyai.com/v1/ws",
+  "tts_default_voice": "charles",
+  "tts_voices": "charles:British,anna:British,paul:British,vera:British,george:American,jane:American,michael:American,mary:American,alba:American,eve:American,jean:American",
+  "tts_timeout_seconds": "10.0",
+  "tts_sample_rate": "24000",
+  "tts_session_retries": "3",
+  "tts_session_retry_backoff_seconds": "1.0",
+  "tts_silence_threshold": "500",
+  "tts_trim_preroll_ms": "40",
+  "tts_trim_tail_ms": "100",
+  "tts_chunk_max_words": "12",
+  "tts_chunk_gap_ms": "400",
+  "tts_lead_in_gap_ms": "250",
+  "tts_keepalive_seconds": "10.0",
+  "tts_words_wait_seconds": "2.0",
+  "quote_timings_max_wait_ms": "1000",
+  "phrase_cache_dir": "data/tts_cache",
+  "quote_max_words": "60",
+  "retrieval_top_k": "5",
+  "reranker_enabled": "False",
+  "reranker_model": "BAAI/bge-reranker-base",
+  "rerank_candidates": "20",
+  "retrieval_min_score": "2.0",
+  "retriever": "dense",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_query_prefix": "Represent this sentence for searching relevant passages: ",
+  "embedding_cache_dir": "data/models",
+  "rrf_k": "60",
+  "dense_weight": "0.5",
+  "dense_min_score": "0.56",
+  "hyde_enabled": "False",
+  "relevance_check_enabled": "False",
+  "doc_id_pattern": "\\b[A-Z]{3,4}\\d{8}\\b",
+  "data_dir": "data",
+  "prompts_dir": "prompts",
+  "witness_answer_prompt": "witness_answer.txt",
+  "lead_ins_file": "lead_ins.json",
+  "hyde_prompt": "hyde.txt",
+  "relevance_check_prompt": "relevance_check.txt",
+  "quote_select_prompt": "quote_select.txt",
+  "ocr_verify_enabled": "True",
+  "ocr_verify_max_edit_ratio": "0.25",
+  "ocr_verify_max_edits": "2",
+  "ocr_verify_max_merge": "3",
+  "ocr_verify_min_exact_fraction": "0.7",
+  "ocr_verify_confusable": "il1,o0",
+  "outputs_dir": "outputs",
+  "processed_dir": "data/processed",
+  "statements_dir": "data/raw/statements",
+  "ocr_enabled": "True",
+  "tesseract_cmd": "tesseract",
+  "ocr_dpi": "300",
+  "ocr_min_chars": "200",
+  "ocr_max_junk_ratio": "0.04",
+  "parser_running_line_min_fraction": "0.3",
+  "parser_edge_lines": "6",
+  "parser_max_para_gap": "3",
+  "parser_jump_lookahead_lines": "80",
+  "parser_gap_ocr_max_pages": "12",
+  "parser_heading_max_words": "12",
+  "eval_dir": "eval",
+  "upload_max_mb": "50",
+  "upload_workers": "2",
+  "persist_uploads": "False",
+  "uploads_dir": "data/uploads",
+  "uploads_per_client": "3",
+  "upload_ttl_minutes": "60",
+  "conversation_max_turns": "100",
+  "profile_prompt": "profile.txt",
+  "profile_opening_units": "12",
+  "profile_max_roles": "4",
+  "profile_max_tokens": "800",
+  "subunit_context_enabled": "True",
+  "subunit_context_max_words": "30",
+  "witnesses_file": "witnesses/witnesses.json",
+  "web_dir": "src/crossexam/web",
+  "api_host": "127.0.0.1",
+  "api_port": "8000",
+  "ui_audio_buffer_ms": "200",
+  "cost_llm_input_per_million_tokens": "",
+  "cost_llm_output_per_million_tokens": "",
+  "cost_tts_per_million_chars": "",
+  "cost_stt_per_hour": ""
+ },
+ "environment": {
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "cpu": "Apple M3 Pro",
+  "memory_gb": 36,
+  "python": "3.11.17"
+ },
+ "notes": null,
+ "llm": true,
+ "repeats": 1,
+ "runs": [
+  {
+   "overall": {
+    "n": 20,
+    "hit_at_1": 0.5333333333333333,
+    "hit_at_k": 0.9333333333333333,
+    "refused": 5,
+    "routed": 0,
+    "doc_id_unknown": 0,
+    "refusal_precision": 0.6,
+    "refusal_recall": 0.6,
+    "mean_top_dense_answerable": 0.7074226816495259,
+    "mean_top_dense_trap": 0.6873088598251342,
+    "latency_mean_ms": 1152.955,
+    "latency_p50_ms": 1086.6,
+    "latency_p95_ms": 1781.5,
+    "rate_limit_wait_ms": 0.0,
+    "para_accuracy": 0.7333333333333333,
+    "grounding_rate": 1.0,
+    "referrals": 0,
+    "referral_rate": 0.0,
+    "ocr_corrected": 0,
+    "ocr_corrected_rate": 0.0,
+    "para_corrected": 2,
+    "skipped_llm": 0,
+    "relevance_rejected": 0,
+    "relevance_rejected_answerable": 0,
+    "counts": {
+     "questions": 20,
+     "answerable": 15,
+     "traps": 5,
+     "hit_at_1": 8,
+     "hit_at_k": 14,
+     "unit_correct": 11,
+     "answered": 15,
+     "grounded": 15,
+     "verified": 15,
+     "ocr_corrected": 0,
+     "referrals": 0,
+     "refused": 5,
+     "refused_traps": 3,
+     "traps_refused": 3
+    },
+    "usage": {
+     "answers": 20,
+     "totals": {
+      "llm_calls": 21,
+      "llm_input_tokens": 18309,
+      "llm_output_tokens": 1069,
+      "tts_chars": 3168
+     },
+     "mean_per_answer": {
+      "llm_calls": 1.05,
+      "llm_input_tokens": 915.45,
+      "llm_output_tokens": 53.45,
+      "tts_chars": 158.4
+     },
+     "cost_usd_total": null,
+     "cost_usd_mean_per_answer": null,
+     "rates": {
+      "llm_input": null,
+      "llm_output": null,
+      "tts": null,
+      "stt": null
+     }
+    },
+    "mean_input_tokens": 915.45,
+    "mean_output_tokens": 53.45,
+    "mean_tts_chars": 158.4
+   },
+   "by_category": {
+    "counsel": {
+     "n": 20,
+     "hit_at_1": 0.5333333333333333,
+     "hit_at_k": 0.9333333333333333,
+     "refused": 5,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": 0.6,
+     "refusal_recall": 0.6,
+     "mean_top_dense_answerable": 0.7074226816495259,
+     "mean_top_dense_trap": 0.6873088598251342,
+     "latency_mean_ms": 1152.955,
+     "latency_p50_ms": 1086.6,
+     "latency_p95_ms": 1781.5,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.7333333333333333,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 2,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 20,
+      "answerable": 15,
+      "traps": 5,
+      "hit_at_1": 8,
+      "hit_at_k": 14,
+      "unit_correct": 11,
+      "answered": 15,
+      "grounded": 15,
+      "verified": 15,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 5,
+      "refused_traps": 3,
+      "traps_refused": 3
+     },
+     "usage": {
+      "answers": 20,
+      "totals": {
+       "llm_calls": 21,
+       "llm_input_tokens": 18309,
+       "llm_output_tokens": 1069,
+       "tts_chars": 3168
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.05,
+       "llm_input_tokens": 915.45,
+       "llm_output_tokens": 53.45,
+       "tts_chars": 158.4
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 915.45,
+     "mean_output_tokens": 53.45,
+     "mean_tts_chars": 158.4
+    }
+   }
+  }
+ ],
+ "aggregate": {
+  "overall": {
+   "n": {
+    "mean": 20,
+    "min": 20,
+    "max": 20,
+    "values": [
+     20
+    ]
+   },
+   "hit_at_1": {
+    "mean": 0.5333333333333333,
+    "min": 0.5333333333333333,
+    "max": 0.5333333333333333,
+    "values": [
+     0.5333333333333333
+    ]
+   },
+   "hit_at_k": {
+    "mean": 0.9333333333333333,
+    "min": 0.9333333333333333,
+    "max": 0.9333333333333333,
+    "values": [
+     0.9333333333333333
+    ]
+   },
+   "refused": {
+    "mean": 5,
+    "min": 5,
+    "max": 5,
+    "values": [
+     5
+    ]
+   },
+   "routed": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "doc_id_unknown": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "refusal_precision": {
+    "mean": 0.6,
+    "min": 0.6,
+    "max": 0.6,
+    "values": [
+     0.6
+    ]
+   },
+   "refusal_recall": {
+    "mean": 0.6,
+    "min": 0.6,
+    "max": 0.6,
+    "values": [
+     0.6
+    ]
+   },
+   "mean_top_dense_answerable": {
+    "mean": 0.7074226816495259,
+    "min": 0.7074226816495259,
+    "max": 0.7074226816495259,
+    "values": [
+     0.7074226816495259
+    ]
+   },
+   "mean_top_dense_trap": {
+    "mean": 0.6873088598251342,
+    "min": 0.6873088598251342,
+    "max": 0.6873088598251342,
+    "values": [
+     0.6873088598251342
+    ]
+   },
+   "latency_mean_ms": {
+    "mean": 1152.955,
+    "min": 1152.955,
+    "max": 1152.955,
+    "values": [
+     1152.955
+    ]
+   },
+   "latency_p50_ms": {
+    "mean": 1086.6,
+    "min": 1086.6,
+    "max": 1086.6,
+    "values": [
+     1086.6
+    ]
+   },
+   "latency_p95_ms": {
+    "mean": 1781.5,
+    "min": 1781.5,
+    "max": 1781.5,
+    "values": [
+     1781.5
+    ]
+   },
+   "rate_limit_wait_ms": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "values": [
+     0.0
+    ]
+   },
+   "para_accuracy": {
+    "mean": 0.7333333333333333,
+    "min": 0.7333333333333333,
+    "max": 0.7333333333333333,
+    "values": [
+     0.7333333333333333
+    ]
+   },
+   "grounding_rate": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "values": [
+     1.0
+    ]
+   },
+   "referrals": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "referral_rate": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "values": [
+     0.0
+    ]
+   },
+   "ocr_corrected": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "ocr_corrected_rate": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "values": [
+     0.0
+    ]
+   },
+   "para_corrected": {
+    "mean": 2,
+    "min": 2,
+    "max": 2,
+    "values": [
+     2
+    ]
+   },
+   "skipped_llm": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "relevance_rejected": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "relevance_rejected_answerable": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "mean_input_tokens": {
+    "mean": 915.45,
+    "min": 915.45,
+    "max": 915.45,
+    "values": [
+     915.45
+    ]
+   },
+   "mean_output_tokens": {
+    "mean": 53.45,
+    "min": 53.45,
+    "max": 53.45,
+    "values": [
+     53.45
+    ]
+   },
+   "mean_tts_chars": {
+    "mean": 158.4,
+    "min": 158.4,
+    "max": 158.4,
+    "values": [
+     158.4
+    ]
+   },
+   "counts": {
+    "questions": {
+     "mean": 20,
+     "min": 20,
+     "max": 20,
+     "values": [
+      20
+     ]
+    },
+    "answerable": {
+     "mean": 15,
+     "min": 15,
+     "max": 15,
+     "values": [
+      15
+     ]
+    },
+    "traps": {
+     "mean": 5,
+     "min": 5,
+     "max": 5,
+     "values": [
+      5
+     ]
+    },
+    "hit_at_1": {
+     "mean": 8,
+     "min": 8,
+     "max": 8,
+     "values": [
+      8
+     ]
+    },
+    "hit_at_k": {
+     "mean": 14,
+     "min": 14,
+     "max": 14,
+     "values": [
+      14
+     ]
+    },
+    "unit_correct": {
+     "mean": 11,
+     "min": 11,
+     "max": 11,
+     "values": [
+      11
+     ]
+    },
+    "answered": {
+     "mean": 15,
+     "min": 15,
+     "max": 15,
+     "values": [
+      15
+     ]
+    },
+    "grounded": {
+     "mean": 15,
+     "min": 15,
+     "max": 15,
+     "values": [
+      15
+     ]
+    },
+    "verified": {
+     "mean": 15,
+     "min": 15,
+     "max": 15,
+     "values": [
+      15
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "refused": {
+     "mean": 5,
+     "min": 5,
+     "max": 5,
+     "values": [
+      5
+     ]
+    },
+    "refused_traps": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3
+     ]
+    },
+    "traps_refused": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3
+     ]
+    }
+   }
+  },
+  "by_category": {
+   "counsel": {
+    "n": {
+     "mean": 20,
+     "min": 20,
+     "max": 20,
+     "values": [
+      20
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.5333333333333333,
+     "min": 0.5333333333333333,
+     "max": 0.5333333333333333,
+     "values": [
+      0.5333333333333333
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.9333333333333333,
+     "min": 0.9333333333333333,
+     "max": 0.9333333333333333,
+     "values": [
+      0.9333333333333333
+     ]
+    },
+    "refused": {
+     "mean": 5,
+     "min": 5,
+     "max": 5,
+     "values": [
+      5
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 0.6,
+     "min": 0.6,
+     "max": 0.6,
+     "values": [
+      0.6
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.6,
+     "min": 0.6,
+     "max": 0.6,
+     "values": [
+      0.6
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7074226816495259,
+     "min": 0.7074226816495259,
+     "max": 0.7074226816495259,
+     "values": [
+      0.7074226816495259
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.6873088598251342,
+     "min": 0.6873088598251342,
+     "max": 0.6873088598251342,
+     "values": [
+      0.6873088598251342
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1152.955,
+     "min": 1152.955,
+     "max": 1152.955,
+     "values": [
+      1152.955
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1086.6,
+     "min": 1086.6,
+     "max": 1086.6,
+     "values": [
+      1086.6
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1781.5,
+     "min": 1781.5,
+     "max": 1781.5,
+     "values": [
+      1781.5
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.7333333333333333,
+     "min": 0.7333333333333333,
+     "max": 0.7333333333333333,
+     "values": [
+      0.7333333333333333
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 2,
+     "min": 2,
+     "max": 2,
+     "values": [
+      2
+     ]
+    },
+    "skipped_llm": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 915.45,
+     "min": 915.45,
+     "max": 915.45,
+     "values": [
+      915.45
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 53.45,
+     "min": 53.45,
+     "max": 53.45,
+     "values": [
+      53.45
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 158.4,
+     "min": 158.4,
+     "max": 158.4,
+     "values": [
+      158.4
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 20,
+      "min": 20,
+      "max": 20,
+      "values": [
+       20
+      ]
+     },
+     "answerable": {
+      "mean": 15,
+      "min": 15,
+      "max": 15,
+      "values": [
+       15
+      ]
+     },
+     "traps": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5
+      ]
+     },
+     "hit_at_1": {
+      "mean": 8,
+      "min": 8,
+      "max": 8,
+      "values": [
+       8
+      ]
+     },
+     "hit_at_k": {
+      "mean": 14,
+      "min": 14,
+      "max": 14,
+      "values": [
+       14
+      ]
+     },
+     "unit_correct": {
+      "mean": 11,
+      "min": 11,
+      "max": 11,
+      "values": [
+       11
+      ]
+     },
+     "answered": {
+      "mean": 15,
+      "min": 15,
+      "max": 15,
+      "values": [
+       15
+      ]
+     },
+     "grounded": {
+      "mean": 15,
+      "min": 15,
+      "max": 15,
+      "values": [
+       15
+      ]
+     },
+     "verified": {
+      "mean": 15,
+      "min": 15,
+      "max": 15,
+      "values": [
+       15
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0
+      ]
+     },
+     "refused": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5
+      ]
+     },
+     "refused_traps": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3
+      ]
+     },
+     "traps_refused": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3
+      ]
+     }
+    }
+   }
+  }
+ },
+ "per_question": [
+  {
+   "id": "h01",
+   "category": "counsel",
+   "question": "What work did you do for the Post Office when you were at Ernst & Young?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1781.5
+    }
+   ]
+  },
+  {
+   "id": "h02",
+   "category": "counsel",
+   "question": "You joined the Post Office in September 2003 and left in March 2016, and so served in the Post Office for 13 years?",
+   "expected_paras": [
+    5,
+    17
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 17,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 974.1
+    }
+   ]
+  },
+  {
+   "id": "h03",
+   "category": "counsel",
+   "question": "Your work as Head of Risk and Control and, as we've said, that was from September 2003 until June 2006. What was the nature of your role as Head of Risk and Control?",
+   "expected_paras": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 5,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1049.3
+    }
+   ]
+  },
+  {
+   "id": "h04",
+   "category": "counsel",
+   "question": "Did you attend board meetings of Post Office Limited?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 5,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1086.6
+    }
+   ]
+  },
+  {
+   "id": "h05",
+   "category": "counsel",
+   "question": "What was the Branch Audit Team?",
+   "expected_paras": [
+    6,
+    56
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 56,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1098.3
+    }
+   ]
+  },
+  {
+   "id": "h06",
+   "category": "counsel",
+   "question": "When you joined, was it striking to you that the Post Office did not have a risk, audit or compliance committee?",
+   "expected_paras": [
+    8
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 8,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 4,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1109.5
+    }
+   ]
+  },
+  {
+   "id": "h07",
+   "category": "counsel",
+   "question": "Did it ever occur to you or anyone else that applied their brain to the issue that the losses might not be caused by postmaster conduct?",
+   "expected_paras": [
+    40
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 40,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 4,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1064.4
+    }
+   ]
+  },
+  {
+   "id": "h08",
+   "category": "counsel",
+   "question": "What research or inquiry did you undertake to determine whether the Horizon System should be on the risk register or should not be on the risk register?",
+   "expected_paras": [
+    75
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 75,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1099.3
+    }
+   ]
+  },
+  {
+   "id": "h09",
+   "category": "counsel",
+   "question": "Was there any, in your three years in this post, discussion about Fujitsu employees having unrestricted and unauditable access to the Post Office Horizon System?",
+   "expected_paras": [
+    54
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 7,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 997.0
+    }
+   ]
+  },
+  {
+   "id": "h10",
+   "category": "counsel",
+   "question": "Was there, in your time, in the three years that you held this role, a policy document that governed the way in which audits were to be conducted, for example the need to keep an open mind and the duty to follow all reasonable lines of investigation?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1021.6
+    }
+   ]
+  },
+  {
+   "id": "h11",
+   "category": "counsel",
+   "question": "Can you recall a phrase in this period, namely \"ARQ data\"?",
+   "expected_paras": [
+    71
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": false,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 945.2
+    }
+   ]
+  },
+  {
+   "id": "h12",
+   "category": "counsel",
+   "question": "As well as financial auditing, did Ernst & Young produce service audit reports that concerned the Horizon processing environment?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 948.6
+    }
+   ]
+  },
+  {
+   "id": "h13",
+   "category": "counsel",
+   "question": "What did the role of Head of P&BA involve when you took it over?",
+   "expected_paras": [
+    12,
+    13,
+    14
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 12,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1110.3
+    }
+   ]
+  },
+  {
+   "id": "h14",
+   "category": "counsel",
+   "question": "Would you agree that internal auditors would be a vital source of assurance within the corporation?",
+   "expected_paras": [
+    64
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 56,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 4,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1011.3
+    }
+   ]
+  },
+  {
+   "id": "h15",
+   "category": "counsel",
+   "question": "The position had changed. You were now looking to conduct a general due diligence exercise, which would \"confirm our belief in the robustness of the system\". That's what you did, wasn't it?",
+   "expected_paras": [
+    38,
+    39
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 38,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1076.1
+    }
+   ]
+  },
+  {
+   "id": "h16",
+   "category": "counsel",
+   "question": "You were aware by this time about the Callendar Square bug, weren't you?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 28,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1115.1
+    }
+   ]
+  },
+  {
+   "id": "h17",
+   "category": "counsel",
+   "question": "By this time, there were ten bugs that were known about. I want to understand whether you knew about them: a bug called the receipts and payments mismatch bug?",
+   "expected_paras": [
+    48
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 48,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1037.5
+    }
+   ]
+  },
+  {
+   "id": "h18",
+   "category": "counsel",
+   "question": "On what basis did you remain satisfied that all money that was missing had been stolen?",
+   "expected_paras": [
+    40,
+    43
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 40,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1087.2
+    }
+   ]
+  },
+  {
+   "id": "h19",
+   "category": "counsel",
+   "question": "You now know that the Horizon System was significantly compromised by a series of bugs, errors and defects that had been the effect of causing accounting discrepancies that were wrongly attributed to the criminal actions of subpostmasters that led, in some cases, to their conviction and imprisonment. With the benefit of reflection, do you agree that the decision not to commission a fully independent investigation and audit of the Horizon System in 2010 and, instead, for you to prepare a report that had as its object to demonstrate the robustness and reliability of Horizon, was a crass mistake?",
+   "expected_paras": [
+    42,
+    43,
+    76,
+    78
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 43,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2246.1
+    }
+   ]
+  },
+  {
+   "id": "h20",
+   "category": "counsel",
+   "question": "What were the \"compassionate factors\" that were borne in mind?",
+   "expected_paras": [
+    45
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 43,
+     "para_correct": false,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1200.1
+    }
+   ]
+  }
+ ]
+}
