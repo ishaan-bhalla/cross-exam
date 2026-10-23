@@ -39,7 +39,7 @@ def test_invalid_json_returns_none():
         assert parse_json_object(raw, REQ) is None
 
 
-def test_invalid_reply_still_uses_the_answer_fallback(monkeypatch):
+def test_invalid_reply_becomes_a_referral_to_the_top_unit(monkeypatch):
     from crossexam.retrieval.retriever import Retrieval
     from crossexam.witness import answer as A
     settings = SimpleNamespace(prompts_dir=PROJECT_ROOT / "prompts", witness_answer_prompt="witness_answer.txt",
@@ -51,5 +51,5 @@ def test_invalid_reply_still_uses_the_answer_fallback(monkeypatch):
     retrieval = Retrieval(query="q", ranking=hits, hits=hits, gate_score=0.8, top_dense_score=0.8)
     retriever = SimpleNamespace(passes_gate=lambda r: True)
     result = A.answer("When did you leave?", retriever, "Rod Ismay", retrieval=retrieval)
-    assert result["fallback"] is True and result["verified"] is False
-    assert result["para_no"] == 17 and result["quote"] == "I left Post Office Ltd in March 2016."
+    assert result["referral"] is True and result["verified"] is False
+    assert result["para_no"] == 17 and result["quote"] is None

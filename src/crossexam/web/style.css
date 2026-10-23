@@ -33,6 +33,7 @@ body { margin: 0; background: var(--bg); color: var(--text);
 .para { display: grid; grid-template-columns: 2.5em 1fr; gap: 6px; padding: 6px 8px; border-radius: 6px; margin: 2px 0; }
 .para .no { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .para.cited { background: var(--cited); }
+.para.referred { background: var(--band); }
 .para.sub { padding-left: 2.2em; }
 .section-heading { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin: 14px 8px 4px; }
 /* Quote pieces abut with no padding, margin or radius so the band is continuous,

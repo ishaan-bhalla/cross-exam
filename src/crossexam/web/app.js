@@ -190,12 +190,12 @@ function onAnswer(msg) {
   const turn = addTurn("witness", "Witness");
   const body = turn.querySelector(".text");
   if (msg.lead_in) body.append(el("span", "lead-in", msg.lead_in + " "));
-  body.append(el("span", "quote", msg.refused ? msg.spoken : msg.quote));
+  body.append(el("span", "quote", msg.refused || msg.referral ? msg.spoken : msg.quote));
   const badges = el("div", "badges");
   if (msg.refused) badges.append(el("span", "badge", "Not in statement"));
   else {
     badges.append(el("span", "badge", `¶ ${msg.para_no}`));
-    if (!msg.verified) badges.append(el("span", "badge warn", "Quote not verified"));
+    if (msg.referral) badges.append(el("span", "badge warn", "Referred, not quoted"));
     if (msg.routed === "doc_id") badges.append(el("span", "badge", "Document reference"));
   }
   turn.append(badges);
@@ -204,7 +204,8 @@ function onAnswer(msg) {
 
   if (!msg.refused) {
     current.row = $(`para-${msg.para_no}`);
-    current.row.classList.add("cited");
+    // A referral quotes nothing, so the whole unit is banded instead of word by word.
+    current.row.classList.add(msg.referral ? "referred" : "cited");
     current.row.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 }
@@ -367,7 +368,7 @@ function clearHighlight() {
   clearTimeout(current.holdTimer);
   current.sources.forEach((s) => { try { s.stop(); } catch {} });
   if (current.row) {
-    current.row.classList.remove("cited");
+    current.row.classList.remove("cited", "referred");
     current.row.querySelector(".body").textContent = paragraphs.get(current.answer.para_no);
   }
 }

@@ -79,8 +79,9 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
         rel = a["relevance"] or {}
         r.update({"para_no": a["para_no"],
                   "para_correct": (a["para_no"] in expected) if answerable else None,
-                  "verified": a["verified"], "fallback": a["fallback"],
-                  "verified_no_fallback": a["verified"] and not a["fallback"],
+                  "verified": a["verified"], "referral": a["referral"],
+                  # grounded: no unverified words were spoken (a verified quote, a refusal or a referral)
+                  "grounded": a["verified"] or a["referral"],
                   "para_corrected": a["para_corrected"], "skipped_llm": a["skipped_llm"],
                   "relevance_checked": a["relevance"] is not None,
                   "relevance_rejected": a["relevance_rejected"],
@@ -90,8 +91,8 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
     else:
         # No answer step: refusals come only from routing and the retrieval gate.
         refused = retrieval.doc_id_unknown or not retriever.passes_gate(retrieval)
-        r.update({"para_no": None, "para_correct": None, "verified": None, "fallback": None,
-                  "verified_no_fallback": None, "para_corrected": None,
+        r.update({"para_no": None, "para_correct": None, "verified": None, "referral": None,
+                  "grounded": None, "para_corrected": None,
                   "skipped_llm": refused, "relevance_checked": False, "relevance_rejected": None,
                   "refused": refused})
     waited = rate_limit_wait_seconds() - waited_before
@@ -122,7 +123,9 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
          "rate_limit_wait_ms": sum(r["rate_limit_wait_ms"] for r in rows)}
     if use_llm:
         s["para_accuracy"] = _ratio(sum(r["para_correct"] for r in answerable), len(answerable))
-        s["grounding_rate"] = _ratio(sum(r["verified_no_fallback"] for r in non_refused), len(non_refused))
+        s["grounding_rate"] = _ratio(sum(r["grounded"] for r in non_refused), len(non_refused))
+        s["referrals"] = sum(r["referral"] for r in rows)
+        s["referral_rate"] = _ratio(s["referrals"], len(non_refused))
         s["para_corrected"] = sum(r["para_corrected"] for r in rows)
         s["skipped_llm"] = sum(r["skipped_llm"] for r in rows)
         s["relevance_rejected"] = sum(r["relevance_rejected"] for r in rows)
@@ -154,6 +157,7 @@ def table_columns(use_llm: bool) -> list[tuple[str, str, str]]:
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%")]
     if use_llm:
         cols += [("para acc", "para_accuracy", "%"), ("grounded", "grounding_rate", "%"),
+                 ("referrals", "referrals", "d"), ("referral %", "referral_rate", "%"),
                  ("corrected", "para_corrected", "d"), ("skip llm", "skipped_llm", "d"),
                  ("rel rej", "relevance_rejected", "d")]
     cols += [("routed", "routed", "d"), ("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),

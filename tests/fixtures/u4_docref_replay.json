@@ -1,0 +1,45 @@
+{
+ "source": "outputs/eval/upload_spotcheck/20261023-144035/results.jsonl, u4-docref (witn10660100_0.pdf)",
+ "question": "Turning to POL00021482, why did you want to learn more about Horizon at that point?",
+ "routed": "doc_id",
+ "hits": [
+  {
+   "para_no": 51,
+   "score": 0.7769,
+   "page": 19,
+   "text": "When I first became the chairman of POL, I did request to further my understanding of the Horizon system. I have been asked about the purpose of my request. I believe that my first POL board meeting was 19 June 2003 - or this certainly would have been one of the first meetings. As can be seen in POL board minutes dated 19 June 2004 [POL00021482], I wanted to learn more about Horizon (see POLB03137). I was interested in the capabilities of Horizon because of the POL board's strategic plans for growth into the financial services market. In particular, we were focusing on offering banking products, insurance and travel products, and foreign exchange. These products were significantly higher value items than the products the Post Office had historically sold. I recall asking questions of the board as to whether Horizon was suitable for this. During my induction, I was told categorically by everyone I met (e.g. the executive team, the crown offices, and Post Offices I visited in East London) that Horizon was a significant improvement on what had existed before. However, we were entering into a completely different world with different products and I wanted to understand whether the system had been designed with these products in mind, whether it was reliable, and whether it was capable of handling transaction of much higher value. I also wanted to be confident that Horizon was resilient enough to adapt to new products."
+  },
+  {
+   "para_no": 72,
+   "score": 0.7041,
+   "page": 25,
+   "text": "As I did not know anything about the issues with Horizon at the time, I do not think there is more I could have done at the time either. Since concerns started to circulate about Horizon in the public domain, I have wondered what our board might have missed during my tenure."
+  },
+  {
+   "para_no": 53,
+   "score": 0.6868,
+   "page": 20,
+   "text": "Throughout the POL board meetings during my tenure, there were regular references to Horizon. My recollection is that these were all forward-looking discussions, i.e. how the system could help to further POL's expansion into new markets, the introduction of the IMPACT accounting system, and the extension of the current contract with Fujitsu in 2010. There were significant savings to be made by extending the Horizon contract. It is important to stress however that the extension of the contract with Fujitsu was only being discussed on the basis that it was working properly, which was my belief at that time."
+  },
+  {
+   "para_no": 73,
+   "score": 0.6844,
+   "page": 25,
+   "text": "By the time I was in post, my understanding was that Horizon was up and running successfully, and embedded in the organisation. It is therefore hard to say what I would have done differently with hindsight, as my understanding of the situation now is in stark contrast with my understanding at the time."
+  },
+  {
+   "para_no": 48,
+   "score": 0.6668,
+   "page": 19,
+   "text": "I have been asked if I was aware of any bugs, errors or defects or concerns with the integrity of Horizon or complaints about the same. I was not."
+  }
+ ],
+ "raw": "{\"para_no\": 51, \"quote\": \"I wanted to learn more about Horizon because of the POL board's strategic plans for growth into the financial services market. In particular, we were focusing on offering banking products, insurance and travel products, and foreign exchange. These products were significantly higher value items than the products the Post Office had historically sold. I recall asking questions of the board as to whether Horizon was suitable for this. I wanted to understand whether the system had been designed with these products in mind, whether it was reliable, and whether it was capable of handling transaction of much higher value. I also wanted to be confident that Horizon was resilient enough to adapt to new products.\", \"lead_in_id\": \"c1\"}",
+ "shortening_chosen": [
+  7,
+  8,
+  9,
+  10,
+  11
+ ]
+}

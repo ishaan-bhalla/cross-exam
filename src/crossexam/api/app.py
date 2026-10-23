@@ -3,8 +3,8 @@
 WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?}. For a spoken
 question the server first replies {"type": "question", "text", "id_changes"} with document IDs
 normalised (witness.docids); then, for every question,
-  {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, routed}
-  {"type": "audio", "part": "lead_in" | "quote" | "refusal", "data": base64 PCM16, "sample_rate"}
+  {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, referral, routed}
+  {"type": "audio", "part": "lead_in" | "quote" | "refusal" | "referral", "data": base64 PCM16, "sample_rate"}
                                                                   (repeated, in play order)
   {"type": "words", "part": ..., "words": [{word, start, end, span}]}
   {"type": "done", answer_latency_ms, question_to_first_audio_ms, question_to_quote_audio_ms,
@@ -12,7 +12,8 @@ normalised (witness.docids); then, for every question,
    missing_words: [parts whose word timings never arrived]}
 or {"type": "error", "message"}. Word start/end are ms from the start of this answer's audio
 (before any hold the browser adds); span is [start, end] character offsets into paragraph
-para_no's text, or None (not highlighted).
+para_no's text, or None (not highlighted). A referral (the quote failed verification) has
+quote null and para_no the referred unit; its phrase names that unit, so it is synthesised live.
 
 Latency: one TTS session per examination is opened when the WebSocket connects and reused
 for every answer (tts.PersistentSession), so no answer waits for a connection and
@@ -175,9 +176,11 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
     result = await asyncio.to_thread(answer, question, witnesses.retriever(witness["id"]), witness["name"])
     answer_latency_ms = (time.perf_counter() - received) * 1000
     refused = result["para_no"] is None
+    referral = result["referral"]
     await ws.send_json({"type": "answer", "para_no": result["para_no"], "quote": result["quote"],
                         "lead_in": result["lead_in"], "spoken": result["spoken"],
-                        "verified": result["verified"], "refused": refused, "routed": result["routed"]})
+                        "verified": result["verified"], "refused": refused, "referral": referral,
+                        "routed": result["routed"]})
     out = AudioOut(ws, received)
     cached, live = [], []  # live: [{"kind", "text", "label", "start"}], one per flush
 
@@ -189,6 +192,8 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
             cached.append("refusal")
         else:
             live = [{"kind": "refusal", "text": result["spoken"]}]
+    elif referral:
+        live = [{"kind": "referral", "text": result["spoken"]}]
     else:
         lead = phrases.get(voice, result["lead_in"]) if result["lead_in"] else None
         if lead:
@@ -212,7 +217,7 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
         wait_started = time.perf_counter()
         session = await tts_conn.ensure()  # normally already open: no wait
         tts_wait_ms = (time.perf_counter() - wait_started) * 1000
-        paragraph = None if refused else next(
+        paragraph = None if refused or referral else next(
             p["text"] for p in witnesses.statement(witness["id"]) if p["para_no"] == result["para_no"])
         # Silence allowed before each part's speech: a short pre-roll before the first,
         # the lead-in gap between a live lead-in and the quote, a short pause between chunks.
@@ -238,7 +243,7 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
                 await out.send(limiter.finish(), session.sample_rate, live[-1]["kind"])
                 time_to_first_audio_ms = round(event["time_to_first_audio_ms"])
                 missing_words = [live[i]["label"] for i in event["missing_words"]]
-    if quote_audio_ms is None and not refused:
+    if quote_audio_ms is None and not refused and not referral:
         quote_audio_ms = out.first_audio_ms
 
     await ws.send_json({"type": "done", "answer_latency_ms": round(answer_latency_ms),

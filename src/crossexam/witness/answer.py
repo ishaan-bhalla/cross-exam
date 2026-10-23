@@ -8,8 +8,9 @@ the witness says it is not covered. Otherwise the LLM picks a
 paragraph, copies a quote from it (optionally elided with "...") and picks a
 lead-in id from a fixed menu. The quote is checked against the chosen
 paragraph, then against the other retrieved paragraphs; if it matches none,
-the answer falls back to the first sentence of the top-ranked paragraph and
-is marked unverified.
+nothing is quoted: the witness refers counsel to a paragraph instead (the REFERRAL
+phrase), naming the model's chosen unit if it is one of the retrieved units, else
+the top-ranked one. The answer is then marked as a referral, unverified.
 """
 import functools
 import json
@@ -22,7 +23,6 @@ from crossexam.retrieval.retriever import Retrieval, Retriever
 import time
 from crossexam.witness.chunking import CLAUSE_END_RE, clauses, sentences
 
-SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[\"'“‘(A-Z0-9])")
 ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 # Straight and curly single and double quotes all compare as the same character; so do dashes.
 QUOTE_CHARS = str.maketrans({"‘": '"', "’": '"', "“": '"', "”": '"', "'": '"',
@@ -38,7 +38,7 @@ DEFAULT_DEMEANOURS = ("confident", "neutral")
 
 def _load_prompt() -> tuple[str, dict[str, str]]:
     """(system prompt template, fixed phrases) from the prompt file. The header above
-    the "---" line holds one "KEY: phrase" per line (NOT_COVERED, NOT_RECOGNISED)."""
+    the "---" line holds one "KEY: phrase" per line (NOT_COVERED, NOT_RECOGNISED, REFERRAL)."""
     s = get_settings()
     header, template = (s.resolve(s.prompts_dir) / s.witness_answer_prompt).read_text().split("\n---\n", 1)
     phrases = dict((k.strip(), v.strip()) for k, v in
@@ -47,12 +47,13 @@ def _load_prompt() -> tuple[str, dict[str, str]]:
 
 
 def fixed_phrases() -> list[str]:
-    """Every phrase the witness can say verbatim: lead-ins without placeholders, and the
-    fixed refusal phrases. These can be synthesised ahead of time."""
+    """Every phrase the witness can say verbatim: lead-ins and fixed phrases without
+    placeholders. These can be synthesised ahead of time; the referral, which names a
+    paragraph, is synthesised live like the n2 lead-in."""
     s = get_settings()
     lead_ins = json.loads((s.resolve(s.prompts_dir) / s.lead_ins_file).read_text())
-    texts = [li["text"] for li in lead_ins if "{" not in li["text"]]
-    return list(dict.fromkeys(texts + list(_load_prompt()[1].values())))
+    texts = [li["text"] for li in lead_ins] + list(_load_prompt()[1].values())
+    return list(dict.fromkeys(t for t in texts if "{" not in t))
 
 
 def _load_lead_ins(demeanour: str | None) -> dict[str, str]:
@@ -174,10 +175,6 @@ def select_clauses(quote: str, question: str, max_words: int) -> tuple[str | Non
     return (join_clauses(parts, kept) if kept else None), info
 
 
-def _first_sentence(text: str) -> str:
-    return SENTENCE_RE.split(text.strip(), 1)[0]
-
-
 def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
     """{"answers": bool | None, "para_no": int | None, "raw": str, "error": str | None}.
     answers is None when the check could not be run or parsed; the caller then proceeds."""
@@ -197,7 +194,7 @@ def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
 
 def _base_result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
-            "para_corrected": False, "fallback": False, "skipped_llm": False,
+            "para_corrected": False, "referral": False, "skipped_llm": False,
             "relevance_rejected": False, "relevance": None, "routed": None, "doc_id_unknown": False,
             "shortening": None,
             "spoken": "", "raw": ""}
@@ -211,8 +208,9 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     relevance_check overrides the relevance_check_enabled setting.
 
     Returns {quote, para_no, lead_in_id, lead_in, verified, para_corrected,
-    fallback, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
-    the answer LLM's reply text and relevance the check's result (or None).
+    referral, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
+    the answer LLM's reply text and relevance the check's result (or None). A referral
+    has quote None, verified False and para_no the referred unit.
     """
     template, phrases = _load_prompt()
     not_covered = phrases["NOT_COVERED"]
@@ -269,17 +267,17 @@ def answer(question: str, retriever: Retriever, witness_name: str,
         if len(others) == 1:
             para, verified, para_corrected = others[0], True, True
 
-    fallback = not verified
-    if fallback:
-        # The lead-in was chosen for a quote we are discarding, so drop it too.
-        para = paragraphs[0]
-        quote = limit_quote(_first_sentence(para["text"]), get_settings().quote_max_words)
-        segments, lead_in_id = [quote], None
+    if not verified:
+        # Nothing verified, so nothing is quoted; the lead-in was chosen for the quote, so it goes too.
+        para = para or paragraphs[0]
+        return _result(quote=None, para_no=para["para_no"], referral=True, relevance=relevance,
+                       spoken=phrases["REFERRAL"].format(para_no=para["para_no"]), raw=raw,
+                       shortening=shortening)
 
     lead_in = lead_ins.get(lead_in_id, "") if isinstance(lead_in_id, str) else ""
     lead_in = lead_in.format(para_no=para["para_no"])
     spoken = f"{lead_in} {SPOKEN_PAUSE.join(segments)}".strip()
     return _result(quote=quote, para_no=para["para_no"], lead_in_id=lead_in_id if lead_in else None,
                    lead_in=lead_in, verified=verified, para_corrected=para_corrected,
-                   fallback=fallback, relevance=relevance, spoken=spoken, raw=raw,
+                   relevance=relevance, spoken=spoken, raw=raw,
                    shortening=shortening)

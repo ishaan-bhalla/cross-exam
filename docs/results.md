@@ -225,6 +225,19 @@ Rerank latency was measured separately with `retrieve()` alone over the 53 spot-
 
 **Decision: off.** The rule was: turn it on only if it improves the spot check without lowering Ismay's paragraph accuracy, and adds under about 300 ms. Neither model passes. Both lower Ismay's paragraph accuracy (96% → 93% and 89%), neither improves spot-check unit accuracy (67% → 58% and 67%), and bge-reranker-base adds about 1.5 s per question. MiniLM's added latency (213 ms mean) would have fit, but its accuracy didn't. `RERANKER_ENABLED=false` stays the default. The code is kept so other models can be tried.
 
+### Referrals instead of the first-sentence fallback
+
+After the held-out upload run (below), a quote that fails verification is no longer replaced by the top paragraph's first sentence. The witness refers to a paragraph instead ("I'd refer you to paragraph {N} of my statement."; `REFERRAL` in `prompts/witness_answer.txt`). The result has `referral: true`, `verified: false`, `quote: null` and `para_no` set to the referred unit. `fallback` was removed.
+
+**Metric changes:**
+- **Grounded** now means no unverified words were spoken, so a referral counts as grounded.
+- **Referrals** are reported as a count, plus a rate over non-refused answers.
+- **Unit accuracy:** a referral to an expected unit counts as correct; a referral to any other unit does not.
+
+Tables above this section were produced before the change. Their "fallbacks" column is the old fallback, and all of them show 0 except the held-out row.
+
+**Ismay dev set rerun** (3 repeats, `outputs/eval/20261023-145042`): hit@1 89%, hit@k 96%, para accuracy 96%, grounded 100%, 0 referrals, refusal precision 87% (86–88), refusal recall 95% (86–100), mean / p95 1103 / 2140 ms. Retrieval, para accuracy and grounding are unchanged, as expected with 0 fallbacks before. As in the reranker runs, refusal recall varies because trap t06 was answered in 1 of 3 runs.
+
 ## Uploaded statements (held-out result)
 
 **This is the upload result.** 12 new questions on 2 statements not used before (`eval/upload_heldout.jsonl`), written and checked before anything was run on them: expected units, plus a grep of each trap's key terms and synonyms. The question mix is the same as the spot check: per statement, 3 answerable (direct, paraphrased, and a third, a sub-unit question for the first statement), 1 document reference, 1 off-topic trap and 1 on-topic trap. Final settings (dense, `DENSE_MIN_SCORE=0.56`, reranker off), one run, via the upload endpoint. Results are in `outputs/eval/upload_spotcheck/20261023-144035/`.
@@ -254,6 +267,8 @@ With 8 answerable questions and 4 traps, one question moves the overall figures 
 | u5-docref | You've been shown POL00108521. What was your position in that email chain? | 71 | 71 (routed; ¶28's document list ranked first, ¶71 second) | yes |
 | u5-trap-off | Which football team do you support? | – | refused (dense gate, 0.522) | yes |
 | u5-trap-on | What did you know about the Capture software…? | – | refused (answer step; gate 0.702 passed) | yes |
+
+**The fallback was changed after this run, because of u4-docref.** When a quote failed verification, the witness used to quote the first sentence of the top paragraph. Here that sentence ("When I first became the chairman of POL, I did request to further my understanding of the Horizon system.") was verbatim but did not give the reason asked for. Now nothing is quoted: the witness says "I'd refer you to paragraph {N} of my statement.", naming the model's chosen unit if it was retrieved, else the top retrieved unit. The UI bands the whole unit and shows "Referred, not quoted". Replaying the recorded model reply for u4-docref (`tests/test_referral.py`) now gives "I'd refer you to paragraph 51 of my statement.". Under the new metrics that counts as grounded (no unverified words spoken) and as unit-correct (¶51 is expected), so this run would read grounded 100%, unit accuracy 88% (unchanged), 1 referral. The held-out set was not rerun: it has been used once, and these figures come from replaying the recorded reply, not from a new run.
 
 **Compared with the spot check:**
 - **Retrieval:** one miss (u4-para, paraphrased), the same kind as there.

@@ -36,7 +36,7 @@ def main():
     result = answer(a.question, retriever, a.witness, a.demeanour, retrieval=retrieval)
     print("\nLLM raw reply:\n" + (result["raw"] or "(LLM skipped: retrieval below refusal gate)"))
     print(f"\nAnswer (para {result['para_no']}): {result['spoken']}")
-    print(f"verified: {result['verified']}  para_corrected: {result['para_corrected']}  "
+    print(f"verified: {result['verified']}  referral: {result['referral']}  para_corrected: {result['para_corrected']}  "
           f"skipped_llm: {result['skipped_llm']}  relevance_rejected: {result['relevance_rejected']}")
     if result["relevance"]:
         print(f"relevance check: {result['relevance']['raw'] or result['relevance']['error']}")
