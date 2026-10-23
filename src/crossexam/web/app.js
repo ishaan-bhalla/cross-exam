@@ -20,17 +20,32 @@ function el(tag, cls, text) {
   return e;
 }
 
+// The page is replaced by a notice when the witness cannot be examined (expired, unknown, unconfirmed).
+function showGone(title, text) {
+  $("exam").hidden = true;
+  $("gone").hidden = false;
+  $("gone-title").textContent = title;
+  $("gone-text").textContent = text;
+  document.title = `${title} · Cross-examine`;
+}
+
 async function init() {
   config = await (await fetch("/api/config")).json();
   const list = await (await fetch("/api/witnesses")).json();
-  const witness = list.find((w) => w.id === params.get("witness")) || list[0];
+  const wanted = params.get("witness");
+  const witness = wanted ? list.find((w) => w.id === wanted) : list[0];
+  const res = await fetch(`/api/witnesses/${encodeURIComponent(witness?.id ?? wanted)}/statement`);
+  if (res.status === 410) return showGone("This witness is no longer available", (await res.json()).detail);
+  if (!witness || !res.ok) return showGone("Witness not found", "This witness is not available. Upload the statement again, or try the example witness.");
+  if (witness.uploaded && !witness.profile_confirmed) location.replace(`/?upload=${encodeURIComponent(witness.id)}`);
   witnessId = witness.id;
   prefetchSttSession(witnessId); // so the mic does not wait for a token
+  // Role first, then name: the values the user confirmed for an upload.
   $("witness-role").textContent = witness.role_label;
   $("witness-name").textContent = witness.name;
-  document.title = `Cross-examination: ${witness.name}`;
+  document.title = `${witness.name} · Cross-examine`;
 
-  const statement = await (await fetch(`/api/witnesses/${witness.id}/statement`)).json();
+  const statement = await res.json();
   const box = $("statement");
   let section = null;
   for (const p of statement) {
@@ -56,6 +71,7 @@ function connect(witnessId) {
 }
 
 function setStatus(text) { $("status").textContent = text; }
+function setMicLabel(text) { $("mic-button").querySelector(".label").textContent = text; }
 function setBusy(busy) {
   $("ask-button").disabled = busy;
   $("question").disabled = busy;
@@ -72,14 +88,14 @@ function stopMic() {
   mic?.stop();
   mic = null;
   $("mic-button").setAttribute("aria-pressed", "false");
-  $("mic-button").textContent = "🎤 Speak";
+  setMicLabel("Speak");
 }
 
 $("mic-button").addEventListener("click", async () => {
   if (mic) { stopMic(); setStatus("Ready."); return; }
   ensureAudio();
   $("mic-button").setAttribute("aria-pressed", "true");
-  $("mic-button").textContent = "■ Stop";
+  setMicLabel("Stop");
   setStatus("Starting microphone…");
   try {
     mic = await startMic(witnessId, {
@@ -110,7 +126,7 @@ $("ask-form").addEventListener("submit", (e) => {
   const voice = spoken;
   spoken = null;
   if (voice) {
-    turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${voice.end_of_speech_to_submit_ms ?? "?"} ms`));
+    if (params.has("debug")) turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${voice.end_of_speech_to_submit_ms ?? "?"} ms`));
     window.__lastSpoken = { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms, log: voice.log };
     if (params.has("debug")) {
       const details = el("details", "timing");
@@ -162,6 +178,7 @@ function startAnswer() {
 
 function handle(msg) {
   if (msg.type === "error") {
+    if (msg.status === 410) return showGone("This witness is no longer available", msg.message);
     setStatus(`Error: ${msg.message}`);
     setBusy(false);
     return;
@@ -190,12 +207,12 @@ function onAnswer(msg) {
   const turn = addTurn("witness", "Witness");
   const body = turn.querySelector(".text");
   if (msg.lead_in) body.append(el("span", "lead-in", msg.lead_in + " "));
-  body.append(el("span", "quote", msg.refused || msg.referral ? msg.spoken : msg.quote));
+  body.append(el("span", msg.referral ? "quote referral" : "quote", msg.refused || msg.referral ? msg.spoken : msg.quote));
   const badges = el("div", "badges");
   if (msg.refused) badges.append(el("span", "badge", "Not in statement"));
   else {
     badges.append(el("span", "badge", `¶ ${msg.para_no}`));
-    if (msg.referral) badges.append(el("span", "badge warn", "Referred, not quoted"));
+    if (msg.referral) badges.append(el("span", "badge referral", "Referred, not quoted"));
     if (msg.routed === "doc_id") badges.append(el("span", "badge", "Document reference"));
   }
   turn.append(badges);
@@ -354,7 +371,7 @@ function finish() {
     (current.underruns ? ` · ${current.underruns} audio underrun(s)` : "") +
     (d.missing_words?.length ? ` · no word timings for ${d.missing_words.join(", ")}` : "") +
     (current.lateWordsMs > 0 ? ` · word timings arrived up to ${Math.round(current.lateWordsMs)} ms late` : "");
-  current.turn?.append(el("div", "timing", timing));
+  if (params.has("debug")) current.turn?.append(el("div", "timing", timing)); // latency, for development
   window.__lastAnswer = { ...d, underruns: current.underruns, late_words_ms: Math.round(current.lateWordsMs),
     quote_hold_ms: Math.round(current.quoteHoldMs) };
   setStatus("Ready.");

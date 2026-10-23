@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     doc_id_snap_max_distance: int
     tts_ws_url: str
     tts_default_voice: str
+    tts_voices: str
     tts_timeout_seconds: float
     tts_sample_rate: int
     tts_session_retries: int
@@ -90,6 +91,8 @@ class Settings(BaseSettings):
     upload_workers: int
     persist_uploads: bool
     uploads_dir: Path
+    uploads_per_client: int
+    upload_ttl_minutes: int
     profile_prompt: str
     profile_opening_units: int
     profile_max_roles: int

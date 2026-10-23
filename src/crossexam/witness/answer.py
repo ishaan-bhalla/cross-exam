@@ -38,12 +38,17 @@ DEFAULT_DEMEANOURS = ("confident", "neutral")
 
 def _load_prompt() -> tuple[str, dict[str, str]]:
     """(system prompt template, fixed phrases) from the prompt file. The header above
-    the "---" line holds one "KEY: phrase" per line (NOT_COVERED, NOT_RECOGNISED, REFERRAL)."""
+    the "---" line holds one "KEY: phrase" per line (NOT_COVERED, NOT_RECOGNISED, REFERRAL, SAMPLE)."""
     s = get_settings()
     header, template = (s.resolve(s.prompts_dir) / s.witness_answer_prompt).read_text().split("\n---\n", 1)
     phrases = dict((k.strip(), v.strip()) for k, v in
                    (line.split(":", 1) for line in header.splitlines() if ":" in line))
     return template, phrases
+
+
+def fixed_phrase(key: str) -> str:
+    """One phrase from the prompt file's header, e.g. "SAMPLE"."""
+    return _load_prompt()[1][key]
 
 
 def fixed_phrases() -> list[str]:

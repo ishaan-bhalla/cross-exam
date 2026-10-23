@@ -1,5 +1,9 @@
 """Web app: serves the frontend from web_dir, the witness API and the examination WebSocket.
 
+Uploaded witnesses belong to the visitor who uploaded them (cookie VISITOR_COOKIE); another
+visitor gets 404, an expired upload 410, and the examination refuses an upload whose profile
+has not been confirmed (POST /api/witnesses/{id}/confirm).
+
 WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?}. For a spoken
 question the server first replies {"type": "question", "text", "id_changes"} with document IDs
 normalised (witness.docids); then, for every question,
@@ -28,12 +32,15 @@ quote's word timings arrive, for at most quote_timings_max_wait_ms.
 import asyncio
 import base64
 import json
+import secrets
+import struct
 import time
 from urllib.parse import urlencode
 import requests
 from contextlib import asynccontextmanager
 import logging
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 from crossexam.api import phrases, uploads, witnesses
 from crossexam.statements.parser import ocr_available
@@ -42,7 +49,9 @@ from crossexam.config import get_settings
 from crossexam.witness.align import align_words, key_count
 from crossexam.witness.chunking import chunk_quote
 from crossexam.witness.docids import normalise_ids
-from crossexam.witness.answer import answer, fixed_phrases, spoken_quote
+from crossexam.witness.answer import answer, fixed_phrase, fixed_phrases, spoken_quote
+
+VISITOR_COOKIE = "cx_visitor"
 
 
 log = logging.getLogger("crossexam")
@@ -78,43 +87,144 @@ def config():
     s = get_settings()
     return {"audio_buffer_ms": s.ui_audio_buffer_ms, "quote_timings_max_wait_ms": s.quote_timings_max_wait_ms,
             "stt_sample_rate": s.stt_sample_rate, "stt_chunk_ms": s.stt_chunk_ms,
-            "upload_max_mb": s.upload_max_mb, "ocr_available": s.ocr_enabled and ocr_available()}
+            "upload_max_mb": s.upload_max_mb, "ocr_available": s.ocr_enabled and ocr_available(),
+            "uploads_per_client": s.uploads_per_client, "upload_ttl_minutes": s.upload_ttl_minutes}
+
+
+def voices() -> list[dict]:
+    """[{"id", "accent"}] from tts_voices ("voice:accent,...")."""
+    pairs = [v.split(":", 1) for v in get_settings().tts_voices.split(",") if v.strip()]
+    return [{"id": v[0].strip(), "accent": v[1].strip() if len(v) > 1 else ""} for v in pairs]
+
+
+def _public_record(record: dict) -> dict:
+    return {k: v for k, v in record.items() if k not in ("visitor", "last_active")}
+
+
+def check_access(witness_id: str, visitor: str | None) -> dict:
+    """The witness, or HTTPException: 404 if unknown or another visitor's upload, 410 if expired."""
+    w = witnesses.get_witness(witness_id)
+    if w and not w.get("uploaded"):
+        return w
+    record = uploads.get(witness_id, visitor)
+    if record and record["stage"] == "expired":
+        raise HTTPException(410, uploads.EXPIRED_MESSAGE)
+    w = witnesses.get_witness(witness_id)
+    if not record or not w:
+        raise HTTPException(404, "unknown witness")
+    return w
 
 
 @app.get("/api/witnesses")
-def list_witnesses():
-    return witnesses.list_witnesses()
+def list_witnesses(request: Request):
+    uploads.expire_stale()
+    return witnesses.list_witnesses(request.cookies.get(VISITOR_COOKIE))
+
+
+@app.get("/api/voices")
+def list_voices():
+    return {"voices": voices(), "default": get_settings().tts_default_voice}
+
+
+@app.get("/api/voices/{voice}/sample")
+async def voice_sample(voice: str):
+    """A short sample of the voice as WAV, synthesised once and then served from the phrase cache."""
+    if voice not in {v["id"] for v in voices()}:
+        raise HTTPException(404, "unknown voice")
+    text = fixed_phrase("SAMPLE")
+    if not phrases.get(voice, text):
+        await phrases.warm(voice, [text])
+    phrase = phrases.get(voice, text)
+    header = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 36 + len(phrase.pcm), b"WAVE", b"fmt ", 16, 1, 1,
+                         phrase.sample_rate, phrase.sample_rate * 2, 2, 16, b"data", len(phrase.pcm))
+    return Response(header + phrase.pcm, media_type="audio/wav", headers={"Cache-Control": "max-age=86400"})
 
 
 @app.post("/api/witnesses/upload", status_code=202)
-async def upload_statement(file: UploadFile = File(...)):
+async def upload_statement(request: Request, response: Response, file: UploadFile = File(...)):
     """Start processing an uploaded statement PDF. Returns the upload record (poll its
-    status_url); the witness_id is usable once the stage is "ready"."""
+    status_url); the draft profile is in it once the stage is "ready"."""
     s = get_settings()
+    visitor = request.cookies.get(VISITOR_COOKIE) or secrets.token_urlsafe(16)
+    response.set_cookie(VISITOR_COOKIE, visitor, httponly=True, samesite="lax", max_age=30 * 24 * 3600)
+    open_now = uploads.active_count(visitor)
+    if open_now >= s.uploads_per_client:
+        raise HTTPException(429, f"You already have {open_now} statements open, the most allowed at once. "
+                                 "Remove one from the front page, or wait for one to expire after "
+                                 f"{s.upload_ttl_minutes} minutes without use.")
     limit = s.upload_max_mb * 1024 * 1024
     data = await file.read(limit + 1)
     if len(data) > limit:
         raise HTTPException(413, f"file is larger than the {s.upload_max_mb} MB limit")
     if not data.startswith(b"%PDF-"):
         raise HTTPException(415, "only PDF files can be uploaded")
-    record = uploads.start(file.filename or "statement.pdf", data)
-    return {**record, "status_url": f"/api/uploads/{record['id']}"}
+    record = uploads.start(file.filename or "statement.pdf", data, visitor)
+    return {**_public_record(record), "status_url": f"/api/uploads/{record['id']}"}
+
+
+@app.get("/api/uploads")
+def my_uploads(request: Request):
+    """This visitor's uploads that have not expired, newest first."""
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    mine = []
+    for w in witnesses.list_witnesses(visitor):
+        record = uploads.get(w["id"], visitor, touch=False) if w.get("uploaded") else None
+        if record and record.get("visitor") == visitor:
+            mine.append({"id": w["id"], "name": w["name"], "filename": record["filename"], "stage": record["stage"],
+                         "started_at": record["started_at"]})
+    return sorted(mine, key=lambda r: -r["started_at"])
 
 
 @app.get("/api/uploads/{upload_id}")
-def upload_status(upload_id: str):
-    record = uploads.get(upload_id)
+def upload_status(upload_id: str, request: Request):
+    record = uploads.get(upload_id, request.cookies.get(VISITOR_COOKIE))
     if not record:
         raise HTTPException(404, "unknown upload")
-    return record
+    return _public_record(record)
+
+
+@app.delete("/api/uploads/{upload_id}", status_code=204)
+def remove_upload(upload_id: str, request: Request):
+    if not uploads.get(upload_id, request.cookies.get(VISITOR_COOKIE)):
+        raise HTTPException(404, "unknown upload")
+    uploads.remove(upload_id)
+
+
+class Role(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    organisation: str | None = Field(None, max_length=200)
+    from_: str | None = Field(None, alias="from", max_length=60)
+    to: str | None = Field(None, max_length=60)
+
+
+class Confirmation(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    role_label: str = Field(min_length=1, max_length=300)
+    roles: list[Role] = Field(default_factory=list, max_length=20)
+    voice: str
+
+
+@app.post("/api/witnesses/{witness_id}/confirm", status_code=202)
+def confirm_witness(witness_id: str, body: Confirmation, request: Request):
+    """Confirm an uploaded witness's profile and voice; poll the upload until "confirmed"."""
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    w = check_access(witness_id, visitor)
+    if not w.get("uploaded"):
+        raise HTTPException(400, "only uploaded witnesses are confirmed")
+    if body.voice not in {v["id"] for v in voices()}:
+        raise HTTPException(422, "unknown voice")
+    if uploads.get(witness_id, visitor)["stage"] not in ("ready", "confirmed", "error"):
+        raise HTTPException(409, "this statement is not ready to confirm")
+    roles = [{"title": r.title.strip(), "organisation": r.organisation, "from": r.from_, "to": r.to} for r in body.roles]
+    uploads.confirm(witness_id, body.name.strip(), body.role_label.strip(), roles, body.voice)
+    return _public_record(uploads.get(witness_id, visitor))
 
 
 @app.post("/api/witnesses/{witness_id}/stt-session")
-def stt_session(witness_id: str):
+def stt_session(witness_id: str, request: Request):
     """A temporary speech-to-text token, as a ready-to-use WebSocket URL. The API key stays
     on the server; the token is single-use and expires after stt_token_expires_seconds."""
-    if not witnesses.get_witness(witness_id):
-        raise HTTPException(404, "unknown witness")
+    check_access(witness_id, request.cookies.get(VISITOR_COOKIE))
     s = get_settings()
     r = requests.get(s.stt_token_url, headers={"Authorization": s.assemblyai_api_key},
                      params={"expires_in_seconds": s.stt_token_expires_seconds,
@@ -136,9 +246,8 @@ def stt_session(witness_id: str):
 
 
 @app.get("/api/witnesses/{witness_id}/statement")
-def statement(witness_id: str):
-    if not witnesses.get_witness(witness_id):
-        raise HTTPException(404, "unknown witness")
+def statement(witness_id: str, request: Request):
+    check_access(witness_id, request.cookies.get(VISITOR_COOKIE))
     return [{"para_no": p["para_no"], "page": p["page"], "text": p["text"], "section": p.get("section")}
             for p in witnesses.statement(witness_id)]
 
@@ -258,10 +367,14 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
 
 @app.websocket("/ws/examine")
 async def examine(ws: WebSocket, witness: str):
-    w = witnesses.get_witness(witness)
+    visitor = ws.cookies.get(VISITOR_COOKIE)
     await ws.accept()
-    if not w:
-        await ws.send_json({"type": "error", "message": f"unknown witness {witness!r}"})
+    try:
+        w = check_access(witness, visitor)
+        if w.get("uploaded") and not w.get("profile_confirmed"):
+            raise HTTPException(409, "Confirm this witness's profile before the examination starts.")
+    except HTTPException as e:
+        await ws.send_json({"type": "error", "message": e.detail, "status": e.status_code})
         await ws.close()
         return
     tts_conn = tts.PersistentSession(w["voice"])
@@ -272,6 +385,11 @@ async def examine(ws: WebSocket, witness: str):
             msg = await ws.receive_json()
             if msg.get("type") != "question" or not str(msg.get("text", "")).strip():
                 await ws.send_json({"type": "error", "message": "expected {\"type\": \"question\", \"text\": ...}"})
+                continue
+            try:
+                check_access(w["id"], visitor)  # counts as activity, and stops if it expired
+            except HTTPException as e:
+                await ws.send_json({"type": "error", "message": e.detail, "status": e.status_code})
                 continue
             try:
                 question = msg["text"].strip()

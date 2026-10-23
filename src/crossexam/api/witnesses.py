@@ -15,6 +15,7 @@ from crossexam.statements import keyterms as statement_terms
 from crossexam.statements.parser import load_statement
 
 PUBLIC_FIELDS = ("id", "name", "role_label", "voice")
+UPLOAD_FIELDS = PUBLIC_FIELDS + ("profile_confirmed",)
 
 _uploaded: dict[str, dict] = {}  # id -> {"witness", "statement", "retriever", "keyterms", "cited_ids"}
 
@@ -30,9 +31,16 @@ def register_upload(witness: dict, paragraphs: list[dict], retriever: Retriever,
                                 "keyterms": terms, "cited_ids": statement_terms.cited_ids(paragraphs)}
 
 
-def list_witnesses() -> list[dict]:
+def unregister(witness_id: str):
+    _uploaded.pop(witness_id, None)
+
+
+def list_witnesses(visitor: str | None = None, uploads: bool = True) -> list[dict]:
+    """Configured witnesses, then (if uploads) the uploads this visitor may see: their own, and
+    any reloaded by persist_uploads (which have no visitor)."""
     configured = [{k: w[k] for k in PUBLIC_FIELDS} for w in _registry().values()]
-    uploaded = [{**{k: u["witness"].get(k) for k in PUBLIC_FIELDS}, "uploaded": True} for u in _uploaded.values()]
+    uploaded = [{**{k: u["witness"].get(k) for k in UPLOAD_FIELDS}, "uploaded": True} for u in _uploaded.values()
+                if uploads and u["witness"].get("visitor") in (None, visitor)]
     return configured + uploaded
 
 

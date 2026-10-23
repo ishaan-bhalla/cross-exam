@@ -148,3 +148,78 @@ def test_upload_end_to_end(client, settings, file, units, needs_ocr):
     assert len(got) == units
     assert status["witness_id"] in [w["id"] for w in client.get("/api/witnesses").json()]
     assert _data_snapshot(settings) == before, "an upload wrote to data/"
+
+
+# ------------------------------------------------------------------ limits, expiry, confirm (no LLM or TTS)
+
+@pytest.fixture
+def fake_processing(monkeypatch, settings):
+    """Uploads that are ready at once with a one-unit statement, and a voice that warms instantly."""
+    from crossexam.api import phrases, uploads, witnesses
+
+    def process(upload_id, filename, data, visitor=None):
+        units = [{"para_no": 1, "page": 1, "text": "I was Head of Audit at Post Office Ltd.", "section": None}]
+        witnesses.register_upload({"id": upload_id, "name": "JANE DOE", "role_label": "Head of Audit",
+                                   "voice": "charles", "uploaded": True, "profile_confirmed": False,
+                                   "visitor": visitor}, units, retriever=None, terms=[])
+        uploads._update(upload_id, stage="ready", preamble="Witness Name: JANE DOE",
+                        profile={"name": "JANE DOE", "roles": [], "dropped": [], "role_label": "Head of Audit"})
+
+    async def warm(voice, texts):
+        return {}
+    monkeypatch.setattr(uploads, "_process", process)
+    monkeypatch.setattr(phrases, "warm", warm)
+    monkeypatch.setattr(uploads, "_executor", lambda: SimpleNamespace(submit=lambda fn, *a: fn(*a)))
+    return uploads
+
+
+def _new_client():
+    from fastapi.testclient import TestClient
+    from crossexam.api.app import app
+    return TestClient(app)
+
+
+def _pdf_upload(c):
+    return c.post("/api/witnesses/upload", files={"file": ("s.pdf", b"%PDF-1.7 fake", "application/pdf")})
+
+
+def test_each_visitor_may_have_uploads_per_client_open(fake_processing, settings, monkeypatch):
+    from crossexam.config import get_settings
+    monkeypatch.setattr(get_settings(), "uploads_per_client", 2)
+    a, b = _new_client(), _new_client()
+    assert [_pdf_upload(a).status_code for _ in range(3)] == [202, 202, 429]
+    assert _pdf_upload(b).status_code == 202                       # another visitor has their own limit
+    first = a.get("/api/uploads").json()[-1]["id"]
+    assert b.get(f"/api/uploads/{first}").status_code == 404       # and cannot see a's uploads
+    assert b.get(f"/api/witnesses/{first}/statement").status_code == 404
+    assert first not in [w["id"] for w in b.get("/api/witnesses").json()]
+    assert a.delete(f"/api/uploads/{first}").status_code == 204    # removing one frees a place
+    assert _pdf_upload(a).status_code == 202
+
+
+def test_unused_upload_expires(fake_processing, settings, monkeypatch):
+    import time as _time
+    c = _new_client()
+    upload_id = _pdf_upload(c).json()["id"]
+    assert c.get(f"/api/witnesses/{upload_id}/statement").status_code == 200
+    fake_processing._uploads[upload_id]["last_active"] = _time.time() - settings.upload_ttl_minutes * 60 - 1
+    r = c.get(f"/api/witnesses/{upload_id}/statement")
+    assert r.status_code == 410 and r.json()["detail"] == "This upload has expired, please upload again."
+    status = c.get(f"/api/uploads/{upload_id}").json()
+    assert status["stage"] == "expired" and status["profile"] is None and status["preamble"] is None
+    with c.websocket_connect(f"/ws/examine?witness={upload_id}") as ws:
+        assert ws.receive_json() == {"type": "error", "message": "This upload has expired, please upload again.", "status": 410}
+
+
+def test_examination_waits_for_confirmation(fake_processing, settings):
+    c = _new_client()
+    upload_id = _pdf_upload(c).json()["id"]
+    with c.websocket_connect(f"/ws/examine?witness={upload_id}") as ws:
+        assert ws.receive_json()["status"] == 409
+    body = {"name": "Jane Doe", "role_label": "Head of Audit, Post Office Ltd", "voice": "anna",
+            "roles": [{"title": "Head of Audit", "organisation": "Post Office Ltd", "from": None, "to": None}]}
+    assert c.post(f"/api/witnesses/{upload_id}/confirm", json={**body, "voice": "nobody"}).status_code == 422
+    assert c.post(f"/api/witnesses/{upload_id}/confirm", json=body).status_code == 202
+    assert c.get(f"/api/uploads/{upload_id}").json()["stage"] == "confirmed"
+    w = next(w for w in c.get("/api/witnesses").json() if w["id"] == upload_id)
+    assert (w["name"], w["role_label"], w["voice"], w["profile_confirmed"]) == ("Jane Doe", body["role_label"], "anna", True)

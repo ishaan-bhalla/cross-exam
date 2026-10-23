@@ -3,28 +3,135 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cross-examination</title>
+  <title>Cross-examine a witness statement</title>
+  <meta name="description" content="Practise cross-examination: question a witness who answers only by quoting their written statement, with every quote marked in the statement as it is spoken.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Cross-examine a witness statement">
+  <meta property="og:description" content="Practise cross-examination: question a witness who answers only by quoting their written statement, with every quote marked in the statement as it is spoken.">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#f5f6f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/newsreader-400_600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-400_600-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="layout">
-    <section class="left">
-      <div class="witness-card" id="witness-card">
-        <div class="role" id="witness-role"></div>
-        <div class="name" id="witness-name"></div>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-current="page"><span class="mark" aria-hidden="true"></span>Cross-examine</a>
+    <nav aria-label="Main"><a href="#upload" id="nav-upload">Upload</a><a href="examine.html?witness=ismay" id="nav-example">Example witness</a></nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- 1. Front page -->
+    <div class="home" id="view-home">
+      <div class="intro">
+        <h1>Cross-examine a witness on their own statement.</h1>
+        <p class="lede">Ask questions aloud or in writing. The witness answers only by quoting their written statement, and each quote is marked in the statement as it is spoken.</p>
       </div>
-      <div class="statement" id="statement" aria-label="Witness statement"></div>
-    </section>
-    <section class="right">
-      <div class="transcript" id="transcript" aria-live="polite"></div>
-      <form class="ask" id="ask-form">
-        <textarea id="question" rows="2" placeholder="Ask the witness a question…" required></textarea>
-        <button type="button" id="mic-button" aria-pressed="false" title="Ask by voice">🎤 Speak</button>
-        <button type="submit" id="ask-button">Ask</button>
-      </form>
-      <div class="status" id="status"></div>
-    </section>
+
+      <aside class="specimen" aria-label="How an answer looks">
+        <p class="ask-line"><b>Counsel:</b> Why did you write the report?</p>
+        <figure>
+          <div class="p"><span class="no">41</span><span id="specimen-text">The report was requested, and I wrote it, in an environment where challenges were made about Horizon, but <span id="specimen-quote">there was no ready document available which pulled together reasons for assurance.</span></span></div>
+          <figcaption>Rod Ismay, first witness statement, paragraph 41. The marked words are the witness's answer.</figcaption>
+        </figure>
+      </aside>
+
+      <div class="choices">
+        <section class="panel" id="upload" aria-labelledby="upload-title">
+          <h2 id="upload-title">Upload a witness statement</h2>
+          <p>A PDF of a numbered witness statement. Scanned pages are read with OCR.</p>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="file" accept="application/pdf,.pdf" class="visually-hidden">
+            <label class="btn primary" for="file">Choose a PDF</label>
+            <span class="hint" id="drop-hint">or drop it here. Up to <span id="max-mb">50</span> MB.</span>
+          </div>
+          <div class="alert" id="upload-error" role="alert" hidden></div>
+        </section>
+
+        <section class="panel example" aria-labelledby="example-title">
+          <h2 id="example-title">Try the example witness (Rod Ismay)</h2>
+          <p>His first statement to the Post Office Horizon IT Inquiry, ready to question.</p>
+          <div class="who"><div class="role" id="example-role">Head of Product &amp; Branch Accounting, Post Office (2006–2016)</div><div class="name" id="example-name">Rod Ismay</div></div>
+          <a class="btn" id="example-link" href="examine.html?witness=ismay">Examine Rod Ismay</a>
+        </section>
+      </div>
+
+      <section class="open-uploads" id="open-uploads" aria-labelledby="open-title" hidden>
+        <h2 id="open-title">Your open statements</h2>
+        <ul id="open-list"></ul>
+      </section>
+
+      <p class="privacy">
+        <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="1" y="7" width="12" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Your statement is processed in memory and not stored. Its text is sent to AssemblyAI (LLM Gateway, speech) to run the examination. <span id="ttl-note"></span></span>
+      </p>
+    </div>
+
+    <!-- 2. Upload progress -->
+    <div class="flow" id="view-progress" hidden>
+      <h2 class="title" role="heading" aria-level="1" id="progress-title" tabindex="-1">Reading the statement</h2>
+      <p class="sub" id="progress-file"></p>
+      <ol class="stages" id="stages"></ol>
+      <div class="meter" aria-hidden="true"><span id="meter"></span></div>
+      <p class="visually-hidden" role="status" id="progress-live"></p>
+      <div class="alert" id="progress-error" role="alert" hidden></div>
+      <p class="actions" id="progress-actions" hidden><a class="btn primary" href="/">Upload another statement</a></p>
+    </div>
+
+    <!-- 3. Confirm -->
+    <div class="flow" id="view-confirm" hidden>
+      <h2 class="title" role="heading" aria-level="1" id="confirm-title" tabindex="-1">Check the witness</h2>
+      <p class="sub">Drafted from the statement. Correct anything that is wrong; nothing starts until you confirm. Use “Source” to see where a value appears.</p>
+      <div class="confirm">
+        <form id="confirm-form" novalidate>
+          <div class="field">
+            <label for="f-name">Name</label>
+            <div class="row"><input id="f-name" name="name" required autocomplete="off" maxlength="120"><a class="source linkish" data-for="f-name" href="#preview">Source</a></div>
+          </div>
+          <div class="field">
+            <label for="f-label">Role label <span class="note">(shown above the name during the examination)</span></label>
+            <div class="row"><input id="f-label" name="role_label" required autocomplete="off" maxlength="300"></div>
+          </div>
+          <div id="roles"></div>
+          <p class="note" id="no-roles" hidden>No roles left. The role label above is what will be shown.</p>
+          <div id="dropped-box" hidden>
+            <p class="note">Left out of the draft because they do not appear in the statement:</p>
+            <ul class="dropped" id="dropped"></ul>
+          </div>
+          <fieldset class="voices" id="voices">
+            <legend class="legend">Voice</legend>
+          </fieldset>
+          <div class="alert" id="confirm-error" role="alert" hidden></div>
+          <p class="actions">
+            <button class="btn primary" type="submit" id="confirm-button">Confirm and start the examination</button>
+            <button class="btn" type="button" id="discard">Discard this upload</button>
+          </p>
+        </form>
+        <section class="preview" id="preview" aria-labelledby="preview-title">
+          <h2 id="preview-title">Statement</h2>
+          <p class="note preview-note">The title page comes first: names are often only there.</p>
+          <div class="doc statement-text" id="preview-doc" tabindex="0" role="region" aria-label="Statement preview"></div>
+        </section>
+      </div>
+    </div>
   </main>
-  <script type="module" src="app.js"></script>
+
+  <template id="role-template">
+    <fieldset class="role">
+      <legend></legend>
+      <div class="field"><label>Title</label><div class="row"><input data-k="title" required maxlength="200" autocomplete="off"><a class="source linkish" href="#preview">Source</a></div></div>
+      <div class="field"><label>Organisation</label><div class="row"><input data-k="organisation" maxlength="200" autocomplete="off"><a class="source linkish" href="#preview">Source</a></div></div>
+      <div class="pair">
+        <div class="field"><label>From</label><div class="row"><input data-k="from" maxlength="60" autocomplete="off"><a class="source linkish" href="#preview">Source</a></div></div>
+        <div class="field"><label>To</label><div class="row"><input data-k="to" maxlength="60" autocomplete="off"><a class="source linkish" href="#preview">Source</a></div></div>
+      </div>
+      <p class="role-head"><span></span><button type="button" class="btn small remove">Remove role</button></p>
+    </fieldset>
+  </template>
+
+  <script type="module" src="home.js"></script>
 </body>
 </html>

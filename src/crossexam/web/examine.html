@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Examination · Cross-examine</title>
+  <meta name="description" content="Question a witness who answers only from their written statement.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Examination · Cross-examine">
+  <meta property="og:description" content="Question a witness who answers only from their written statement.">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#f5f6f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/newsreader-400_600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="exam-page">
+  <a class="skip" href="#question">Skip to the question box</a>
+  <header class="topbar">
+    <a class="wordmark" href="/"><span class="mark" aria-hidden="true"></span>Cross-examine</a>
+    <nav aria-label="Main"><a href="/">Choose another witness</a></nav>
+  </header>
+  <main class="layout" id="exam">
+    <section class="left" aria-labelledby="witness-role">
+      <div class="witness-card" id="witness-card">
+        <h1 class="role" id="witness-role"></h1>
+        <div class="name" id="witness-name"></div>
+      </div>
+      <div class="statement statement-text" id="statement" role="region" aria-label="Witness statement" tabindex="0"></div>
+    </section>
+    <section class="right" aria-label="Examination">
+      <div class="transcript" id="transcript" aria-live="polite"></div>
+      <form class="ask" id="ask-form">
+        <label class="visually-hidden" for="question">Question for the witness</label>
+        <textarea id="question" rows="2" placeholder="Ask the witness a question" required></textarea>
+        <button type="button" class="btn" id="mic-button" aria-pressed="false" title="Ask by voice"><span class="rec" aria-hidden="true"></span><span class="label">Speak</span></button>
+        <button type="submit" class="btn primary" id="ask-button">Ask</button>
+      </form>
+      <div class="status" id="status" role="status"></div>
+    </section>
+  </main>
+  <main class="gone" id="gone" hidden>
+    <h2 class="title" role="heading" aria-level="1" id="gone-title">This witness is no longer available</h2>
+    <p id="gone-text">This upload has expired, please upload again.</p>
+    <p><a class="btn primary" href="/">Upload a statement</a></p>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
