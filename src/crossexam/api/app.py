@@ -7,7 +7,7 @@ has not been confirmed (POST /api/witnesses/{id}/confirm).
 WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?}. For a spoken
 question the server first replies {"type": "question", "text", "id_changes"} with document IDs
 normalised (witness.docids); then, for every question,
-  {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, referral, routed}
+  {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, referral, ocr_corrected, routed}
   {"type": "audio", "part": "lead_in" | "quote" | "refusal" | "referral", "data": base64 PCM16, "sample_rate"}
                                                                   (repeated, in play order)
   {"type": "words", "part": ..., "words": [{word, start, end, span}]}
@@ -289,6 +289,7 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
     await ws.send_json({"type": "answer", "para_no": result["para_no"], "quote": result["quote"],
                         "lead_in": result["lead_in"], "spoken": result["spoken"],
                         "verified": result["verified"], "refused": refused, "referral": referral,
+                        "ocr_corrected": result["ocr_corrected"],
                         "routed": result["routed"]})
     out = AudioOut(ws, received)
     cached, live = [], []  # live: [{"kind", "text", "label", "start"}], one per flush
@@ -345,7 +346,8 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
             elif event["type"] == "words":
                 part = live[event["part"]]
                 words = event["words"]
-                words = align_words(words, result["quote"], paragraph, part["start"]) if part["kind"] == "quote" \
+                words = align_words(words, result["quote"], paragraph, part["start"], result["ocr_spans"]) \
+                    if part["kind"] == "quote" \
                     else [{**w, "span": None} for w in words]
                 await out.words(part["kind"], words, live_start_ms - limiter.shift_ms(event["part"]))
             elif event["type"] == "done":

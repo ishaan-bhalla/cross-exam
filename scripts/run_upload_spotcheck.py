@@ -99,7 +99,7 @@ def main():
 
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%"), ("unit acc", "para_accuracy", "%"),
             ("grounded", "grounding_rate", "%"), ("ref prec", "refusal_precision", "%"), ("ref rec", "refusal_recall", "%"),
-            ("referrals", "referrals", "d"), ("referral %", "referral_rate", "%"), ("shorten", "quote_shortening_calls", "d"), ("gate ref", "gate_refused_answerable", "d"),
+            ("referrals", "referrals", "d"), ("ocr corr", "ocr_corrected", "d"), ("shorten", "quote_shortening_calls", "d"), ("gate ref", "gate_refused_answerable", "d"),
             ("ocr q", "quotes_with_ocr_marks", "d"), ("mean ms", "latency_mean_ms", "f"), ("p95 ms", "latency_p95_ms", "f")]
     print(f"\n{'':<18}" + "".join(f"{h:>10}" for h, _, _ in cols))
     for key, g in list(summary["by_statement"].items()) + [("overall", summary["overall"])]:

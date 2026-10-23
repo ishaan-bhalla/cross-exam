@@ -7,8 +7,10 @@ asked whether any retrieved paragraph directly answers the question; if not,
 the witness says it is not covered. Otherwise the LLM picks a
 paragraph, copies a quote from it (optionally elided with "...") and picks a
 lead-in id from a fixed menu. The quote is checked against the chosen
-paragraph, then against the other retrieved paragraphs; if it matches none,
-nothing is quoted: the witness refers counsel to a paragraph instead (the REFERRAL
+paragraph, then against the other retrieved paragraphs. If it matches none exactly, an
+OCR-tolerant check (witness.ocr_match) is tried the same way: on a match the model's wording is
+spoken, the original words are highlighted (ocr_spans), and the answer is marked ocr_corrected
+(verified stays False: it is not verbatim). If that fails too, nothing is quoted: the witness refers counsel to a paragraph instead (the REFERRAL
 phrase), naming the model's chosen unit if it is one of the retrieved units, else
 the top-ranked one. The answer is then marked as a referral, unverified.
 """
@@ -22,6 +24,7 @@ from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retrieval, Retriever
 import time
 from crossexam.witness.chunking import CLAUSE_END_RE, clauses, sentences
+from crossexam.witness.ocr_match import ocr_align
 
 ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 # Straight and curly single and double quotes all compare as the same character; so do dashes.
@@ -199,7 +202,7 @@ def _relevance_check(question: str, paragraphs: list[dict]) -> dict:
 
 def _base_result(**fields) -> dict:
     base = {"quote": "", "para_no": None, "lead_in_id": None, "lead_in": "", "verified": False,
-            "para_corrected": False, "referral": False, "skipped_llm": False,
+            "para_corrected": False, "referral": False, "ocr_corrected": False, "ocr_spans": None, "skipped_llm": False,
             "relevance_rejected": False, "relevance": None, "routed": None, "doc_id_unknown": False,
             "shortening": None,
             "spoken": "", "raw": ""}
@@ -213,7 +216,7 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     relevance_check overrides the relevance_check_enabled setting.
 
     Returns {quote, para_no, lead_in_id, lead_in, verified, para_corrected,
-    referral, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
+    referral, ocr_corrected, ocr_spans, skipped_llm, relevance_rejected, relevance, spoken, raw}; raw is
     the answer LLM's reply text and relevance the check's result (or None). A referral
     has quote None, verified False and para_no the referred unit.
     """
@@ -272,7 +275,17 @@ def answer(question: str, retriever: Retriever, witness_name: str,
         if len(others) == 1:
             para, verified, para_corrected = others[0], True, True
 
-    if not verified:
+    ocr_spans = None
+    if not verified and segments and get_settings().ocr_verify_enabled:
+        # Second pass, OCR-tolerant: the chosen paragraph, else the only other one that matches.
+        tolerant = {id(p): s for p in paragraphs if (s := ocr_align(quote, p["text"]))}
+        if para is not None and id(para) in tolerant:
+            ocr_spans = tolerant[id(para)]
+        elif len(tolerant) == 1:
+            para = next(p for p in paragraphs if id(p) in tolerant)
+            ocr_spans, para_corrected = tolerant[id(para)], True
+
+    if not verified and ocr_spans is None:
         # Nothing verified, so nothing is quoted; the lead-in was chosen for the quote, so it goes too.
         para = para or paragraphs[0]
         return _result(quote=None, para_no=para["para_no"], referral=True, relevance=relevance,
@@ -284,5 +297,6 @@ def answer(question: str, retriever: Retriever, witness_name: str,
     spoken = f"{lead_in} {SPOKEN_PAUSE.join(segments)}".strip()
     return _result(quote=quote, para_no=para["para_no"], lead_in_id=lead_in_id if lead_in else None,
                    lead_in=lead_in, verified=verified, para_corrected=para_corrected,
+                   ocr_corrected=ocr_spans is not None, ocr_spans=ocr_spans,
                    relevance=relevance, spoken=spoken, raw=raw,
                    shortening=shortening)

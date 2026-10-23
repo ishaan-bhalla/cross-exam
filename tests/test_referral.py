@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 from crossexam.config import PROJECT_ROOT
 from crossexam.retrieval.retriever import Retrieval
-from crossexam.witness import answer as A
+from crossexam.witness import answer as A, ocr_match
 
 FIXTURES = Path(__file__).parent / "fixtures"
 HITS = [{"para_no": 17, "page": 5, "score": 0.8, "text": "I left Post Office Ltd in March 2016. Then I retired."},
@@ -18,8 +18,11 @@ HITS = [{"para_no": 17, "page": 5, "score": 0.8, "text": "I left Post Office Ltd
 def settings(monkeypatch):
     s = SimpleNamespace(prompts_dir=PROJECT_ROOT / "prompts", witness_answer_prompt="witness_answer.txt",
                         lead_ins_file="lead_ins.json", quote_select_prompt="quote_select.txt", quote_max_words=60,
-                        relevance_check_enabled=False, resolve=lambda p: p)
+                        relevance_check_enabled=False, ocr_verify_enabled=True, ocr_verify_max_edit_ratio=0.25,
+                        ocr_verify_max_edits=2, ocr_verify_max_merge=3, ocr_verify_min_exact_fraction=0.7,
+                        ocr_verify_confusable="il1,o0", resolve=lambda p: p)
     monkeypatch.setattr(A, "get_settings", lambda: s)
+    monkeypatch.setattr(ocr_match, "get_settings", lambda: s)  # on, so these quotes fail both passes
     return s
 
 

@@ -238,6 +238,21 @@ Tables above this section were produced before the change. Their "fallbacks" col
 
 **Ismay dev set rerun** (3 repeats, `outputs/eval/20261023-145042`): hit@1 89%, hit@k 96%, para accuracy 96%, grounded 100%, 0 referrals, refusal precision 87% (86–88), refusal recall 95% (86–100), mean / p95 1103 / 2140 ms. Retrieval, para accuracy and grounding are unchanged, as expected with 0 fallbacks before. As in the reranker runs, refusal recall varies because trap t06 was answered in 1 of 3 runs.
 
+### OCR-tolerant verification (second pass)
+
+**The cause.** Two questions on Roper's statement (`witn09180100`, mostly OCR) became referrals. In both, the model's raw reply quoted the right paragraph but corrected its OCR errors, so the exact match failed:
+- "What was your role at the Post Office, and when did you start?" got ¶3. The text layer reads `2" April 1979`; the model quoted `2nd April 1979`, and the exact match broke at character 30.
+- "Do you work as a field support advisor?" got ¶1. The text layer reads `lama former employee`; the model quoted `I am a former employee`, and the exact match broke at character 1.
+
+**The change.** An OCR-tolerant check (`witness/ocr_match.py`, `OCR_VERIFY_*` settings) now runs only after exact verification fails, on the chosen paragraph first and otherwise on the only other retrieved paragraph that matches. It aligns every quote word to a contiguous run of paragraph words, with no inserted or missing words. A word may differ by OCR-confusable characters (`il1`, `o0`) and, only on words that look OCR-damaged, by up to 25% of its length (at most 2 edits). Edits never touch digits. Words may be split or merged ("lama" ↔ "I am a") only if the letters match. At least 70% of the words must match exactly.
+
+On a match, the witness speaks the model's wording, the original span is highlighted, and the answer is marked `ocr_corrected` with an "OCR-corrected" badge. `verified` stays false, since the quote is not verbatim. Grounded counts verified, OCR-corrected and referred answers; OCR-corrected answers get their own count in the eval tables. Tests (`tests/test_ocr_match.py`) cover the two recorded Roper replies, plus a reworded quote, an invented word, a changed year and an inserted "not", all of which must fail.
+
+**Results:**
+- **The two Roper questions, live:** both are now OCR-corrected quotes from ¶3 and ¶1, not referrals.
+- **Upload spot check** (dev set, 3 repeats, `outputs/eval/upload_spotcheck/20261023-162858`): 0 referrals and 0 OCR-corrected answers, so none of its 18 questions was a referral to convert. Unit accuracy 67%, grounded 100%, refusal precision 100%, refusal recall 78%, mean / p95 1015 / 2225 ms. Unit accuracy and grounding are unchanged from the earlier runs. The two Roper questions above are not in this set.
+- **Ismay dev set** (3 repeats, `outputs/eval/20261023-161618`): hit@1 89%, hit@k 96%, para accuracy 96%, grounded 100%, 0 OCR-corrected, 0 referrals, refusal precision 88%, refusal recall 100%. This is unchanged, as expected for a statement with no OCR.
+
 ## Uploaded statements (held-out result)
 
 **This is the upload result.** 12 new questions on 2 statements not used before (`eval/upload_heldout.jsonl`), written and checked before anything was run on them: expected units, plus a grep of each trap's key terms and synonyms. The question mix is the same as the spot check: per statement, 3 answerable (direct, paraphrased, and a third, a sub-unit question for the first statement), 1 document reference, 1 off-topic trap and 1 on-topic trap. Final settings (dense, `DENSE_MIN_SCORE=0.56`, reranker off), one run, via the upload endpoint. Results are in `outputs/eval/upload_spotcheck/20261023-144035/`.

@@ -45,10 +45,13 @@ def key_count(text: str) -> int:
     return len(_tokens(text))
 
 
-def align_words(words: list[dict], quote: str, paragraph: str, start: int = 0) -> list[dict]:
+def align_words(words: list[dict], quote: str, paragraph: str, start: int = 0,
+                spans: list[tuple[str, int, int]] | None = None) -> list[dict]:
     """words: TTS words spoken for the quote, or for a chunk of it beginning at quote word
-    `start` (see key_count). Returns them with "span": [start, end] or None."""
-    targets = quote_spans(quote, paragraph)[start:]
+    `start` (see key_count). Returns them with "span": [start, end] or None. spans, for an
+    OCR-corrected quote, gives each quote word's paragraph span (witness.ocr_match.ocr_align)
+    in place of looking the quote up verbatim."""
+    targets = (spans if spans is not None else quote_spans(quote, paragraph))[start:]
     j, out = 0, []
     for w in words:
         k, span = _key(w["word"]), None

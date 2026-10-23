@@ -213,6 +213,11 @@ function onAnswer(msg) {
   else {
     badges.append(el("span", "badge", `¶ ${msg.para_no}`));
     if (msg.referral) badges.append(el("span", "badge referral", "Referred, not quoted"));
+    if (msg.ocr_corrected) {
+      const badge = el("span", "badge ocr", "OCR-corrected");
+      badge.title = "The statement's scanned text has OCR errors; the witness reads it corrected, and the original words are highlighted.";
+      badges.append(badge);
+    }
     if (msg.routed === "doc_id") badges.append(el("span", "badge", "Document reference"));
   }
   turn.append(badges);

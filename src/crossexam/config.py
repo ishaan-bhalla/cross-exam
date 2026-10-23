@@ -72,6 +72,12 @@ class Settings(BaseSettings):
     hyde_prompt: str
     relevance_check_prompt: str
     quote_select_prompt: str
+    ocr_verify_enabled: bool
+    ocr_verify_max_edit_ratio: float
+    ocr_verify_max_edits: int
+    ocr_verify_max_merge: int
+    ocr_verify_min_exact_fraction: float
+    ocr_verify_confusable: str
     outputs_dir: Path
     processed_dir: Path
     statements_dir: Path
