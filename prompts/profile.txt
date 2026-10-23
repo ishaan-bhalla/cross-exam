@@ -1,0 +1,13 @@
+Below is the opening of a witness statement. Extract a short profile of the witness.
+
+Copy names, job titles, organisations and dates exactly as they are written in the text. Do not infer, expand or reword anything. If the text does not state something, use null for that field, or leave that role out.
+
+- "name": the witness's full name.
+- "organisation": the organisation the witness worked for in the roles the statement is about.
+- "roles": the jobs or positions the witness held that the text states, with "title", "organisation" and the dates "from" and "to" as written (for example "September 2003", "2016"). The roles most relevant to the statement first, at most {max_roles}.
+
+Reply with JSON only, no other text:
+{{"name": "...", "organisation": "...", "roles": [{{"title": "...", "organisation": "...", "from": "...", "to": "..."}}]}}
+
+Text:
+{text}

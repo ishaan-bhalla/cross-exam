@@ -31,9 +31,11 @@ import time
 from urllib.parse import urlencode
 import requests
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+import logging
+from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from crossexam.api import phrases, witnesses
+from crossexam.api import phrases, uploads, witnesses
+from crossexam.statements.parser import ocr_available
 from crossexam.clients import tts
 from crossexam.config import get_settings
 from crossexam.witness.align import align_words, key_count
@@ -42,8 +44,19 @@ from crossexam.witness.docids import normalise_ids
 from crossexam.witness.answer import answer, fixed_phrases, spoken_quote
 
 
+log = logging.getLogger("crossexam")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    s = get_settings()
+    if s.ocr_enabled and not ocr_available():
+        log.warning("OCR unavailable: Tesseract (%r) or pypdfium2 not found. Statements will be parsed "
+                    "from their text layer only; install tesseract (conda-forge) for scanned pages.",
+                    s.tesseract_cmd)
+    loaded = await asyncio.to_thread(uploads.load_persisted)
+    if loaded:
+        print(f"reloaded {loaded} persisted upload(s)")
     # Parse statements, load the embedding model and pre-synthesise fixed phrases
     # before the first question.
     for w in witnesses.list_witnesses():
@@ -63,12 +76,36 @@ app = FastAPI(lifespan=lifespan)
 def config():
     s = get_settings()
     return {"audio_buffer_ms": s.ui_audio_buffer_ms, "quote_timings_max_wait_ms": s.quote_timings_max_wait_ms,
-            "stt_sample_rate": s.stt_sample_rate, "stt_chunk_ms": s.stt_chunk_ms}
+            "stt_sample_rate": s.stt_sample_rate, "stt_chunk_ms": s.stt_chunk_ms,
+            "upload_max_mb": s.upload_max_mb, "ocr_available": s.ocr_enabled and ocr_available()}
 
 
 @app.get("/api/witnesses")
 def list_witnesses():
     return witnesses.list_witnesses()
+
+
+@app.post("/api/witnesses/upload", status_code=202)
+async def upload_statement(file: UploadFile = File(...)):
+    """Start processing an uploaded statement PDF. Returns the upload record (poll its
+    status_url); the witness_id is usable once the stage is "ready"."""
+    s = get_settings()
+    limit = s.upload_max_mb * 1024 * 1024
+    data = await file.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(413, f"file is larger than the {s.upload_max_mb} MB limit")
+    if not data.startswith(b"%PDF-"):
+        raise HTTPException(415, "only PDF files can be uploaded")
+    record = uploads.start(file.filename or "statement.pdf", data)
+    return {**record, "status_url": f"/api/uploads/{record['id']}"}
+
+
+@app.get("/api/uploads/{upload_id}")
+def upload_status(upload_id: str):
+    record = uploads.get(upload_id)
+    if not record:
+        raise HTTPException(404, "unknown upload")
+    return record
 
 
 @app.post("/api/witnesses/{witness_id}/stt-session")

@@ -83,6 +83,17 @@ class Settings(BaseSettings):
     parser_gap_ocr_max_pages: int
     parser_heading_max_words: int
     eval_dir: Path
+    upload_max_mb: int
+    upload_workers: int
+    persist_uploads: bool
+    uploads_dir: Path
+    profile_prompt: str
+    profile_opening_units: int
+    profile_max_roles: int
+    profile_max_tokens: int
+    keyterms_min_acronym_count: int
+    subunit_context_enabled: bool
+    subunit_context_max_words: int
     witnesses_file: Path
     web_dir: Path
     api_host: str

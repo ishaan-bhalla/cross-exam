@@ -31,11 +31,13 @@ The body ends at "Statement of Truth" (OCR variants tolerated). Each unit is
 string ("12.1", "12(a)") for sub-units.
 """
 import hashlib
+import io
 import json
 import re
 import subprocess
 import tempfile
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
 from pypdf import PdfReader
 from crossexam.config import get_settings
@@ -98,16 +100,35 @@ def _needs_ocr(text: str) -> bool:
     return len(text.strip()) < s.ocr_min_chars or junk_ratio(text) >= s.ocr_max_junk_ratio
 
 
-def _ocr_page(pdf_path: Path, index: int) -> str | None:
+Source = Path | str | bytes       # a PDF on disk, or its bytes (an upload held in memory)
+Progress = Callable[..., None]     # progress(stage, **details); stages: "reading", "ocr", "parsing"
+
+
+def _reader(source: Source) -> PdfReader:
+    return PdfReader(io.BytesIO(source) if isinstance(source, bytes) else source)
+
+
+def ocr_available() -> bool:
+    """Whether page OCR can run: pypdfium2 importable and the Tesseract command found."""
+    import shutil
+    try:
+        import pypdfium2  # noqa: F401
+    except ImportError:
+        return False
+    return shutil.which(get_settings().tesseract_cmd) is not None
+
+
+def _ocr_page(source: Source, index: int) -> str | None:
     """Tesseract text for one page, or None if OCR is unavailable."""
     s = get_settings()
     try:
         import pypdfium2 as pdfium
     except ImportError:
         return None
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory() as tmp:  # removed afterwards: nothing is kept
         png = Path(tmp) / "page.png"
-        pdfium.PdfDocument(str(pdf_path))[index].render(scale=s.ocr_dpi / 72).to_pil().save(png)
+        doc = pdfium.PdfDocument(source if isinstance(source, bytes) else str(source))
+        doc[index].render(scale=s.ocr_dpi / 72).to_pil().save(png)
         try:
             run = subprocess.run([s.tesseract_cmd, str(png), "-", "--psm", "6"],
                                  capture_output=True, text=True, timeout=120)
@@ -116,11 +137,16 @@ def _ocr_page(pdf_path: Path, index: int) -> str | None:
     return run.stdout if run.returncode == 0 else None
 
 
-def page_texts(pdf_path: Path) -> tuple[list[str], list[int]]:
+def page_texts(source: Source, progress: Progress | None = None) -> tuple[list[str], list[int]]:
     """(text per page, 1-based numbers of pages whose text came from OCR)."""
     s = get_settings()
-    reader = PdfReader(pdf_path)
-    texts = [p.extract_text() or "" for p in reader.pages]
+    progress = progress or (lambda *a, **k: None)
+    reader = _reader(source)
+    pages = len(reader.pages)
+    texts = []
+    for i, page in enumerate(reader.pages):
+        progress("reading", page=i + 1, pages=pages)
+        texts.append(page.extract_text() or "")
     # Where paragraph numbers sit in their own column, plain extraction puts them on lines
     # of their own, away from their text; layout extraction keeps each number on its line.
     for i, t in enumerate(texts):
@@ -132,7 +158,8 @@ def page_texts(pdf_path: Path) -> tuple[list[str], list[int]]:
     if s.ocr_enabled:
         for i in range(last + 1):
             if _needs_ocr(texts[i]):
-                ocr = _ocr_page(pdf_path, i)
+                progress("ocr", page=i + 1, pages=pages)
+                ocr = _ocr_page(source, i)
                 if ocr and (len(texts[i].strip()) < s.ocr_min_chars or junk_ratio(ocr) < junk_ratio(texts[i])):
                     texts[i] = ocr
                     ocr_pages.append(i + 1)
@@ -377,10 +404,13 @@ def _missing(b: "_Builder") -> int:
     return sum(last - first + 1 for first, last, _, _ in b.gaps)
 
 
-def parse_pdf(pdf_path: Path) -> list[dict]:
-    pdf_path = Path(pdf_path)
+def parse_statement(source: Source, progress: Progress | None = None) -> dict:
+    """{"paragraphs", "preamble" (text before paragraph 1: witness name, statement title),
+    "pages", "ocr_pages", "warnings"} for a PDF path or its bytes. Nothing is written to disk."""
     s = get_settings()
-    texts, ocr_pages = page_texts(pdf_path)
+    report = progress or (lambda *a, **k: None)
+    texts, ocr_pages = page_texts(source, progress)
+    report("parsing", pages=len(texts))
     b = _parse_texts(texts)
     # Paragraph numbers missing from the text layer: re-read the pages around each gap with
     # OCR and parse again, keeping whichever parse is missing fewer numbers.
@@ -389,17 +419,24 @@ def parse_pdf(pdf_path: Path) -> list[dict]:
     if s.ocr_enabled and gap_pages:
         retry = list(texts)
         for p in gap_pages:
-            ocr = _ocr_page(pdf_path, p - 1)
+            report("ocr", page=p, pages=len(texts))
+            ocr = _ocr_page(source, p - 1)
             if ocr:
                 retry[p - 1] = ocr
         b2 = _parse_texts(retry)
         if _missing(b2) < _missing(b):
             b, ocr_pages = b2, sorted(set(ocr_pages) | set(gap_pages))
-    if ocr_pages:
-        print(f"OCR used for pages {ocr_pages}")
-    for w in b.warnings:
+    return {"paragraphs": b.finish(), "preamble": " ".join(b.preamble), "pages": len(texts),
+            "ocr_pages": ocr_pages, "warnings": b.warnings}
+
+
+def parse_pdf(pdf_path: Source) -> list[dict]:
+    result = parse_statement(pdf_path)
+    if result["ocr_pages"]:
+        print(f"OCR used for pages {result['ocr_pages']}")
+    for w in result["warnings"]:
         print(f"warning: {w}")
-    return b.finish()
+    return result["paragraphs"]
 
 
 def _cache_key() -> str:

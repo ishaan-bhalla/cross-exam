@@ -9,3 +9,4 @@ pytest
 fastapi
 uvicorn[standard]
 pypdfium2
+python-multipart

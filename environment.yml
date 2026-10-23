@@ -4,5 +4,6 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - tesseract   # OCR for scanned statement pages (optional: parsing works without it)
   - pip:
       - -r requirements.txt

@@ -10,7 +10,7 @@ def rate_limit_wait_seconds() -> float:
     return _rate_limit_wait_seconds
 
 
-def chat(messages: list[dict], model: str | None = None) -> str:
+def chat(messages: list[dict], model: str | None = None, max_tokens: int | None = None) -> str:
     """Retries on 429 (rate limit), waiting Retry-After if given, else exponential backoff."""
     global _rate_limit_wait_seconds
     s = get_settings()
@@ -21,7 +21,7 @@ def chat(messages: list[dict], model: str | None = None) -> str:
             json={
                 "model": model or s.llm_model,
                 "messages": messages,
-                "max_tokens": s.llm_max_tokens,
+                "max_tokens": max_tokens or s.llm_max_tokens,
                 "temperature": s.llm_temperature,
             },
             timeout=s.llm_timeout_seconds,

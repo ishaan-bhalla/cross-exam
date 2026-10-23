@@ -38,7 +38,7 @@ class Retrieval:
 class Retriever:
     def __init__(self, paragraphs: list[dict], statement_id: str, kind: str | None = None,
                  hyde: bool | None = None, top_k: int | None = None, min_score: float | None = None,
-                 dense_weight: float | None = None):
+                 dense_weight: float | None = None, persist_index: bool = True):
         s = get_settings()
         self.kind = kind or s.retriever
         if self.kind not in KINDS:
@@ -50,7 +50,7 @@ class Retriever:
         self.min_score = default_min if min_score is None else min_score
         self.paragraphs = paragraphs
         self.bm25 = BM25Index(paragraphs) if self.kind in ("bm25", "hybrid") else None
-        self.dense = DenseIndex(paragraphs, statement_id) if self.kind in ("dense", "hybrid") else None
+        self.dense = DenseIndex(paragraphs, statement_id, persist=persist_index) if self.kind in ("dense", "hybrid") else None
         self.doc_id_re = re.compile(s.doc_id_pattern, re.IGNORECASE) if s.doc_id_pattern else None
 
     def _doc_ids(self, question: str) -> list[str]:
