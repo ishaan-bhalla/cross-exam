@@ -121,6 +121,8 @@ The eval counts this as correct, because ¶35 is one of the expected paragraphs;
 
 ## Uploaded statements (spot check)
 
+**Now a development set for uploads.** These 18 questions were used to decide the reranker experiment below, so they are no longer a clean test; the upload result is the held-out set further down.
+
 **A small spot check, not a benchmark:** 18 questions on 3 uploaded statements, 3 repeats at temperature 0 (54 answers). With 4 answerable questions per statement, one question moves a statement's accuracy by 25 points. No retrieval or prompt settings were changed because of it; in particular, `DENSE_MIN_SCORE=0.56` is still the value tuned on Ismay alone.
 
 **Statements** (from the parser test set):
@@ -164,7 +166,7 @@ Answers were identical in all 3 runs except u2-sub (different quote, same wrong 
 | u2-trap-on | What did you know about Fujitsu's ability to access branch accounts remotely? | – (mislabelled) | 161 ×3 | "…I was not aware that Fujitsu could put an entry into a branch account remotely via Horizon…" | counted wrong; actually right (see above) |
 | u3-direct | Were you given any specific training on Horizon when you joined…? | 21 | 21 ×3 | "I was not provided with any specific training relating to Horizon." | yes |
 | u3-para | How did you come to be brought into the organisation in the first place? | 7, 6 | 7 ×3 | "I was recruited to POL by a former colleague, Belinda Crowe, … she contacted me on Linkedln…" | yes (quote shortened by clause selection) |
-| u3-answer | Did you read Deloitte's Project Bramble reports when they were produced? | 238 | 235, 235, 240 | "…I would have been aware of Project Bramble in the background…" / "I did not give the reports … to anyone…" | no: ¶238 ranked just outside the top 5 |
+| u3-answer | Did you read Deloitte's Project Bramble reports when they were produced? | 238 | 235, 235, 240 | "…I would have been aware of Project Bramble in the background…" / "I did not give the reports … to anyone…" | no: ¶238 ranked 15th by dense score |
 | u3-docref | Can you help us with POL00149601? What was your part in it? | 41 | 41 ×3 | "I believe that I drafted the instructions to Tom Weisselberg KC [POL00149601]." | yes |
 | u3-trap-off | Where do you like to go on holiday? | – | refused ×3 (dense gate) | – | yes |
 | u3-trap-on | What was your involvement in the prosecution of Seema Misra? | – | refused, 178, 178 | "I was aware that there had been an influx of referrals made to the CCRC in March 2015, but I had very little involvement…" | no (2 of 3 runs): plausible trap answered from a related paragraph |
@@ -184,6 +186,80 @@ Answers were identical in all 3 runs except u2-sub (different quote, same wrong 
 - **Answerable questions:** it refused none. Their top dense scores were 0.629–0.857.
 - **Off-topic traps:** it refused all three, at 0.499, 0.521 and 0.555. The last is 0.005 below the threshold.
 - **Margin:** the lowest answerable score (0.629) and the highest off-topic score (0.555) are 0.07 apart. That's a thin margin on 9 questions. A threshold tuned on one witness may not carry over, and this check is too small to retune it.
+
+### Reranker experiment (not enabled)
+
+**Setup:** optional cross-encoder reranking (`RERANKER_ENABLED`, `RERANKER_MODEL`, `RERANK_CANDIDATES=20`), using fastembed's `TextCrossEncoder`. The top 20 units by dense score are reordered by the cross-encoder, and the top `RETRIEVAL_TOP_K` are kept. The refusal gate still uses the top dense score, and questions routed by document ID are not reranked. Each unit is scored on the same text the dense index embeds, so a sub-unit carries its section and its parent's lead-in. Two models were tried: `Xenova/ms-marco-MiniLM-L-6-v2` (0.08 GB) and `BAAI/bge-reranker-base` (1.04 GB). Everything ran on CPU, with 3 repeats per set and the other settings unchanged.
+
+**Ismay dev set** (n=35 × 3; `outputs/eval/20261023-135958`, `-141303`, `-142604`):
+
+| | hit@1 | hit@k | para accuracy | grounded | refusal precision | refusal recall | mean / p95 latency |
+|---|---|---|---|---|---|---|---|
+| off | 89% | 96% | 96% | 100% | 86% (86–88) | 90% (86–100) | 1135 / 2236 ms |
+| MiniLM-L-6 | 75% | 93% | 93% | 100% | 75% | 86% | 1240 / 2187 ms |
+| bge-reranker-base | 82% | 89% | 89% | 100% | 67% | 86% | 2154 / 2710 ms |
+
+**Upload spot check** (n=18 × 3; `outputs/eval/upload_spotcheck/20261023-141302`, `-142603`, `-143545`):
+
+| | hit@1 | hit@k | unit accuracy | grounded | refusal precision | refusal recall | mean / p95 latency |
+|---|---|---|---|---|---|---|---|
+| off | 50% | 67% | 67% | 100% | 100% | 78% | 1225 / 2701 ms |
+| MiniLM-L-6 | 58% | 67% | 58% | 100% | 83% | 83% | 1265 / 2139 ms |
+| bge-reranker-base | 50% | 67% | 67% | 100% | 83% | 83% | 2985 / 4899 ms |
+
+**Where the expected unit ranks** (full ranking, retrieval only):
+
+| | u1-para | u2-para | u2-sub | u3-answer | Ismay p06 |
+|---|---|---|---|---|---|
+| off (dense) | 8 | 119 | 67 | 15 | 21 |
+| MiniLM-L-6 | 5 | 119 | 67 | 8 | 21 |
+| bge-reranker-base | 11 | 119 | 67 | 5 | 21 |
+
+Rerank latency was measured separately with `retrieve()` alone over the 53 spot-check and Ismay questions. Dense alone took 3.9 ms (mean) / 4.9 ms (p95). With MiniLM it was 213 / 506 ms, and with bge-reranker-base 1476 / 3117 ms.
+
+**What happened:**
+- **Out of reach:** three of the five misses are outside the 20 candidates (u2-para at 119, u2-sub at 67, p06 at 21), so no reranker can reach them. These are failures of dense recall, not of ordering.
+- **MiniLM** lifted u1-para into the top 5, but the answer step still quoted ¶28, so unit accuracy didn't change. It lifted u3-answer from 15th to 8th, still outside the top 5. It pushed u3-para (¶7) out of the top 5. On Ismay it lost p03, which was then refused.
+- **bge-reranker-base** fixed u3-answer (rank 5, answered from ¶238), but lost u3-para. On Ismay it lost p03 and p04, both then refused. That is the refusal precision drop: answerable questions refused because the right paragraph was no longer in the top 5.
+- **The leaked Ismay trap** in the off row is t06, in 1 of 3 runs, in every configuration. Earlier runs refused it every time, so this is answer-step variation, not a reranker effect.
+
+**Decision: off.** The rule was: turn it on only if it improves the spot check without lowering Ismay's paragraph accuracy, and adds under about 300 ms. Neither model passes. Both lower Ismay's paragraph accuracy (96% → 93% and 89%), neither improves spot-check unit accuracy (67% → 58% and 67%), and bge-reranker-base adds about 1.5 s per question. MiniLM's added latency (213 ms mean) would have fit, but its accuracy didn't. `RERANKER_ENABLED=false` stays the default. The code is kept so other models can be tried.
+
+## Uploaded statements (held-out result)
+
+**This is the upload result.** 12 new questions on 2 statements not used before (`eval/upload_heldout.jsonl`), written and checked before anything was run on them: expected units, plus a grep of each trap's key terms and synonyms. The question mix is the same as the spot check: per statement, 3 answerable (direct, paraphrased, and a third, a sub-unit question for the first statement), 1 document reference, 1 off-topic trap and 1 on-topic trap. Final settings (dense, `DENSE_MIN_SCORE=0.56`, reranker off), one run, via the upload endpoint. Results are in `outputs/eval/upload_spotcheck/20261023-144035/`.
+
+- `witn10660100_0`: chairman of POL 2003–07. 111 units with sub-units to three levels (34.8.1); 1 page re-read by OCR; ready in 6.6 s.
+- `witn09910100_1`: Programme Director of the Mediation Scheme. 109 units, no OCR; ready in 8.8 s.
+
+| | hit@1 | hit@k | unit accuracy | grounded | refusal precision | refusal recall | fallbacks | mean / p95 latency |
+|---|---|---|---|---|---|---|---|---|
+| witn10660100_0 | 75% | 75% | 75% | 75% | 100% | 100% | 1 | 1114 / 2344 ms |
+| witn09910100_1 | 75% | 100% | 100% | 100% | 100% | 100% | 0 | 1364 / 2606 ms |
+| **Overall** | 75% | 88% | 88% | 88% | 100% | 100% | 1 | 1239 / 2344 ms |
+
+With 8 answerable questions and 4 traps, one question moves the overall figures by 12 to 25 points.
+
+| | Question | Expected | Answered from | Right? |
+|---|---|---|---|---|
+| u4-direct | While you were chairman, were you aware of any bugs, errors or defects in Horizon? | 48, 50, 54 | 48 ("I was not.") | yes |
+| u4-para | When did anyone first suggest to you that the computer system itself might be to blame for money going missing? | 54 | 52 | no: ¶54 not in the top 5; ¶52 (the 2003 IT briefing) quoted instead |
+| u4-sub | What did you do in the brewing business before you moved into airports? | 6.2 | 6.2 | yes (sub-unit ranked 1st) |
+| u4-docref | Turning to POL00021482, why did you want to learn more about Horizon? | 51 | 51, fallback | right unit, not grounded: the model reworded the start of its quote ("I wanted to learn more about Horizon because…" for "I was interested in the capabilities of Horizon because…"), verification failed, and the fallback quoted ¶51's first sentence, which doesn't give the reason |
+| u4-trap-off | Do you play golf? | – | refused (dense gate, 0.549) | yes |
+| u4-trap-on | What did you make of Second Sight's interim report? | – | refused (answer step; gate 0.621 passed) | yes |
+| u5-direct | Did you receive any training on the Horizon IT System during your time at POL? | 16 | 16 | yes |
+| u5-para | Did anyone at Fujitsu tell you there was a back door … in an emergency? | 21, 22 | 21 | yes |
+| u5-answer | How many people were in your team on the Scheme at its largest? | 44 | 44 ("my team comprised 7 people at its largest") | yes |
+| u5-docref | You've been shown POL00108521. What was your position in that email chain? | 71 | 71 (routed; ¶28's document list ranked first, ¶71 second) | yes |
+| u5-trap-off | Which football team do you support? | – | refused (dense gate, 0.522) | yes |
+| u5-trap-on | What did you know about the Capture software…? | – | refused (answer step; gate 0.702 passed) | yes |
+
+**Compared with the spot check:**
+- **Retrieval:** one miss (u4-para, paraphrased), the same kind as there.
+- **Sub-units:** the sub-unit question was answered correctly this time.
+- **Grounding:** the new failure is a fallback, the first on uploads. The quote shown is still verbatim, but it is not the answer.
+- **Traps:** none leaked. Both on-topic traps passed the dense gate (0.621, 0.702), so they were refused by the answer step, not the gate.
 
 ## Held-out results (counsel questions)
 

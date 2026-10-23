@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     phrase_cache_dir: str
     quote_max_words: int
     retrieval_top_k: int
+    reranker_enabled: bool
+    reranker_model: str
+    rerank_candidates: int
     retrieval_min_score: float
     retriever: str
     embedding_model: str

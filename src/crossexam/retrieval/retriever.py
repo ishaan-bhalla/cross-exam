@@ -6,6 +6,10 @@ dense score for the question (or the configured ranking if there is no dense
 index), and the configured ranking fills the rest; HyDE is skipped and the gate
 passes. If none of the cited IDs is in the statement, doc_id_unknown is set.
 
+Reranking (reranker_enabled): the top rerank_candidates of the ranking are reordered by a
+cross-encoder (retrieval.rerank). Questions routed by document ID are not reranked, and the gate
+still uses the dense score, so routing and refusals are unchanged by it.
+
 The gate compares a retriever-specific score with a threshold: the top BM25
 score against retrieval_min_score for bm25, and the top dense cosine
 similarity against dense_min_score for dense and hybrid.
@@ -17,6 +21,7 @@ from crossexam.config import get_settings
 from crossexam.retrieval.bm25 import BM25Index
 from crossexam.retrieval.dense import DenseIndex
 from crossexam.retrieval.hybrid import fuse
+from crossexam.retrieval.rerank import rerank
 
 KINDS = ("bm25", "dense", "hybrid")
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
@@ -38,7 +43,8 @@ class Retrieval:
 class Retriever:
     def __init__(self, paragraphs: list[dict], statement_id: str, kind: str | None = None,
                  hyde: bool | None = None, top_k: int | None = None, min_score: float | None = None,
-                 dense_weight: float | None = None, persist_index: bool = True):
+                 dense_weight: float | None = None, persist_index: bool = True,
+                 reranker: str | None = None):
         s = get_settings()
         self.kind = kind or s.retriever
         if self.kind not in KINDS:
@@ -52,6 +58,9 @@ class Retriever:
         self.bm25 = BM25Index(paragraphs) if self.kind in ("bm25", "hybrid") else None
         self.dense = DenseIndex(paragraphs, statement_id, persist=persist_index) if self.kind in ("dense", "hybrid") else None
         self.doc_id_re = re.compile(s.doc_id_pattern, re.IGNORECASE) if s.doc_id_pattern else None
+        # reranker: a model name, "off", or None for the reranker_enabled / reranker_model settings
+        self.reranker = None if reranker == "off" else reranker or (s.reranker_model if s.reranker_enabled else None)
+        self.rerank_candidates = s.rerank_candidates
 
     def _doc_ids(self, question: str) -> list[str]:
         if not self.doc_id_re:
@@ -87,6 +96,8 @@ class Retriever:
         gate = bm25_ranking[0]["score"] if self.kind == "bm25" else top_dense
 
         if not doc_ids:
+            if self.reranker:
+                ranking = rerank(question, ranking, self.paragraphs, self.reranker, self.rerank_candidates)
             return Retrieval(query, ranking, ranking[:self.top_k], gate, top_dense, hyde_error)
         lowered = [d.lower() for d in doc_ids]
         matched = {h["para_no"] for h in ranking if any(d in h["text"].lower() for d in lowered)}
