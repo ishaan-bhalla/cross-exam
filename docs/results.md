@@ -119,6 +119,72 @@ Dev eval after the fix (3 repeats, `outputs/eval/20261022-210024/`): **grounding
 
 The eval counts this as correct, because ¶35 is one of the expected paragraphs; the metrics don't check that every part of a question is answered. The same applies to any question whose answer spans paragraphs (the multi category). The model has also tried to answer such a question with two JSON objects, one per paragraph (see "Quote length" above).
 
+## Uploaded statements (spot check)
+
+**A small spot check, not a benchmark:** 18 questions on 3 uploaded statements, 3 repeats at temperature 0 (54 answers). With 4 answerable questions per statement, one question moves a statement's accuracy by 25 points. No retrieval or prompt settings were changed because of it; in particular, `DENSE_MIN_SCORE=0.56` is still the value tuned on Ismay alone.
+
+**Statements** (from the parser test set):
+- `witn09180100`: Jeffrey Roper, auditor. Mostly OCR: 15 of 21 pages re-read.
+- `witn06700100`: John Breeden. Sub-paragraphs such as 2.6.1 and 103.9.
+- `witn09830100`: Patrick Bourke. Long and clean: 168 pages, 294 units.
+
+**Questions:** `eval/upload_spotcheck.jsonl`, written before anything was run, each with the expected unit(s) and why. Per statement:
+- 3 answerable: direct, paraphrased, and a third (for Breeden, one whose answer is only in a sub-unit)
+- 1 document reference
+- 2 traps: one off-topic, and one on-topic for the Inquiry that the witness doesn't cover
+
+**Method:** each PDF went through `POST /api/witnesses/upload` and was polled until ready (16.6 s, 19.0 s and 22.0 s). The questions then went to the session witness's retriever and the normal answer pipeline, the one the examination WebSocket calls (`scripts/run_upload_spotcheck.py`). Results are in `outputs/eval/upload_spotcheck/20261023-134735/`.
+
+| | hit@1 | hit@k | unit accuracy | grounded | refusal precision | refusal recall | fallbacks | quote-shortening calls | gate refused answerable | mean / p95 latency |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Roper (OCR) | 75% | 75% | 75% | 100% | 100% | 100% | 0 | 0 | 0 | 988 / 1149 ms |
+| Breeden (sub-paragraphs) | 25% | 50% | 50% | 100% | 100% | 50% | 0 | 0 | 0 | 1051 / 1921 ms |
+| Bourke (long, clean) | 50% | 75% | 75% | 100% | 100% | 67% | 0 | 3 | 0 | 1072 / 2212 ms |
+| **Overall** | 50% | 67% | 67% | 100% | 100% | 72% | 0 | 3 | 0 | 1037 / 2163 ms |
+
+Answers were identical in all 3 runs except u2-sub (different quote, same wrong unit), u3-answer (¶235 twice, then ¶240) and u3-trap-on (refused once, answered twice). Latency excludes 156 s of rate-limit waiting.
+
+**One labelling error, mine.** u2-trap-on ("What did you know about Fujitsu's ability to access branch accounts remotely?") was meant as a trap, chosen because "remote access" does not appear in Breeden's statement. But ¶161 covers it in other words: "I was not aware that Fujitsu could put an entry into a branch account remotely via Horizon". The system answered from ¶161, correctly. Counting it as answerable with ¶161 expected, the overall figures would be: unit accuracy 69% (9 of 13 answerable), refusal recall 87% (13 of 15 trap answers), and Breeden's refusal recall 100%. The table above keeps the labels as they were written before the run.
+
+### Each question
+
+| | Question | Expected | Answered from (3 runs) | Quote (shortened here) | Right? |
+|---|---|---|---|---|---|
+| u1-direct | During any audit you conducted, were errors ever attributed to the Horizon IT system? | 56, 68 | 56 ×3 | "At no point during any audit conducted by me … were errors attributed to the Horizon IT System." | yes |
+| u1-para | How did the business decide which branches you would visit, and how often…? | 23, 27 | 28 ×3 | "Crown branches were generally audited every 2 years…" | no: 23 and 27 not retrieved; ¶28 is a related detail |
+| u1-answer | When did you first learn that Ms Hall had been prosecuted? | 66 | 66 ×3 | "Until this request for a statement by the Inquiry, I had no knowledge that Ms Hall had been prosecuted." | yes |
+| u1-docref | Turning to POL00091046, can you tell us what that document is? | 44(i), 58 | 44(i) ×3 | "audit report of 3 September 2010" | yes (routed; cited at sub-unit level) |
+| u1-trap-off | Which football team do you support? | – | refused ×3 (dense gate) | – | yes |
+| u1-trap-on | What was your involvement in the … Mediation Scheme? | – | refused ×3 (answer step) | – | yes |
+| u2-direct | Was there any right of appeal against a decision to suspend a subpostmaster? | 127 | 127 ×3 | "There was no appeal against the decision to suspend a subpostmaster." | yes |
+| u2-para | Before 2014, who had the final say on stopping a postmaster from running their branch…? | 99 | 106 ×3 | "The decision to suspend a subpostmaster or not was based on the discussion held by me with the Contract Advisor." | no: ¶99 not retrieved; ¶106 describes the later, two-tier process |
+| u2-sub | Did the auditor's own view … play any part in whether a subpostmaster was suspended? | 103.9 | 152.2 ×3 | "…when further information came to light on the day of the audit, this decision was reversed." (a different case) | no: 103.9 not retrieved (103.5 was) |
+| u2-docref | You refer to POL00088579 … Why did you come to write it? | 47, 77 | 47 ×3 | "…the previous owner and author were no longer with POL and the document needed to be updated…" | yes, despite the OCR-damaged ID in ¶47 |
+| u2-trap-off | What do you do with your spare time now that you have retired? | – | refused ×3 (dense gate, 0.555 vs 0.56) | – | yes |
+| u2-trap-on | What did you know about Fujitsu's ability to access branch accounts remotely? | – (mislabelled) | 161 ×3 | "…I was not aware that Fujitsu could put an entry into a branch account remotely via Horizon…" | counted wrong; actually right (see above) |
+| u3-direct | Were you given any specific training on Horizon when you joined…? | 21 | 21 ×3 | "I was not provided with any specific training relating to Horizon." | yes |
+| u3-para | How did you come to be brought into the organisation in the first place? | 7, 6 | 7 ×3 | "I was recruited to POL by a former colleague, Belinda Crowe, … she contacted me on Linkedln…" | yes (quote shortened by clause selection) |
+| u3-answer | Did you read Deloitte's Project Bramble reports when they were produced? | 238 | 235, 235, 240 | "…I would have been aware of Project Bramble in the background…" / "I did not give the reports … to anyone…" | no: ¶238 ranked just outside the top 5 |
+| u3-docref | Can you help us with POL00149601? What was your part in it? | 41 | 41 ×3 | "I believe that I drafted the instructions to Tom Weisselberg KC [POL00149601]." | yes |
+| u3-trap-off | Where do you like to go on holiday? | – | refused ×3 (dense gate) | – | yes |
+| u3-trap-on | What was your involvement in the prosecution of Seema Misra? | – | refused, 178, 178 | "I was aware that there had been an influx of referrals made to the CCRC in March 2015, but I had very little involvement…" | no (2 of 3 runs): plausible trap answered from a related paragraph |
+
+### What it shows
+- **Retrieval is the weak point, not grounding.** Every quote verified, and no answer fell back. All four wrong answers to answerable questions are retrieval misses: the expected unit wasn't in the top 5, and the answer step then quoted a neighbouring paragraph rather than refusing.
+- **Paraphrase:** 2 of 3 paraphrased questions missed. That's a weaker showing than on the Ismay dev set (88%), but there are only 3 questions here.
+- **Sub-unit retrieval:** one sub-unit question, and it missed. "103.9 The Auditor's opinion;" is three words, and even with its parent's lead-in prefixed ("Factors considered would include the following") a sibling, 103.5, ranked higher. A lettered sub-unit was cited correctly through document-ID routing (u1-docref, 44(i)).
+- **Document references:** 3 of 3, every run. In u2-docref the ID in ¶47 is OCR-damaged ("POLO0088579"), so routing found only ¶77 and ¶74. Dense retrieval still brought ¶47 into the top 5, and the answer came from it.
+- **Plausible traps:** 1 of 2 genuine ones leaked in some runs (Misra → CCRC ¶178, 2 of 3), the same pattern as on the Ismay dev set (Castleton → ¶65).
+
+### OCR damage
+- **Verification:** no quote failed it on these statements, including Roper's, which was mostly OCR.
+- **OCR errors reach the spoken answer anyway,** because quotes are verbatim from the text layer: "Linkedln" (for LinkedIn, u3-para), "UKGl" (UKGI, u3-answer run 3), "POQL00091384" (POL00091384, u2-trap-on), and the "POLO" ID above. My OCR-junk check on quotes flagged none of these, because they look like ordinary words or IDs. So "0 quotes with OCR marks" in the summary understates it. "Lid" and "to►d" didn't come up in these answers.
+
+### The dense gate (`DENSE_MIN_SCORE=0.56`, tuned on Ismay only)
+- **Answerable questions:** it refused none. Their top dense scores were 0.629–0.857.
+- **Off-topic traps:** it refused all three, at 0.499, 0.521 and 0.555. The last is 0.005 below the threshold.
+- **Margin:** the lowest answerable score (0.629) and the highest off-topic score (0.555) are 0.07 apart. That's a thin margin on 9 questions. A threshold tuned on one witness may not carry over, and this check is too small to retune it.
+
 ## Held-out results (counsel questions)
 
 `eval/ismay_heldout.jsonl`: 20 of counsel's questions from Mr Ismay's oral evidence on 11 May 2023 (transcript INQ00001063), labelled against the first written statement. Not yet run.
