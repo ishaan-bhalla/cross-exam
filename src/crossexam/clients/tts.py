@@ -291,17 +291,20 @@ class Session:
         yield {"type": "done", "duration_ms": sum(flush_done.values()),
                "time_to_first_audio_ms": time_to_first_audio_ms, "missing_words": missing}
 
-    async def close(self):
+    async def close(self) -> dict | None:
+        """Terminate the session. Returns the server's Termination message (session totals:
+        total_input_char_length, audio_duration_seconds, session_duration_seconds), or None."""
         if self.ws is None:
-            return
+            return None
         ws, self.ws = self.ws, None
         try:
             await ws.send(json.dumps({"type": "Terminate"}))
             timeout = get_settings().tts_timeout_seconds
-            while (await _recv(ws, timeout)).get("type") != "Termination":
+            while (msg := await _recv(ws, timeout)).get("type") != "Termination":
                 pass
+            return msg
         except Exception:
-            pass  # the session is being abandoned either way
+            return None  # the session is being abandoned either way
         finally:
             await ws.close()
 
@@ -366,16 +369,18 @@ class PersistentSession:
             except Exception:
                 await self._drop()  # reopened on the next answer
 
-    async def _drop(self):
+    async def _drop(self) -> dict | None:
         if self.session is not None:
             session, self.session = self.session, None
-            await session.close()
+            return await session.close()
+        return None
 
-    async def close(self):
+    async def close(self) -> dict | None:
+        """Close the session; returns its Termination totals (see Session.close), or None."""
         if self._keepalive_task:
             self._keepalive_task.cancel()
             self._keepalive_task = None
-        await self._drop()
+        return await self._drop()
 
 
 async def stream(parts: str | list[str], voice: str | None = None) -> AsyncIterator[dict]:

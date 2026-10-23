@@ -19,7 +19,7 @@ def app_module(monkeypatch):
 
     spoken = []
 
-    async def fake_speak(ws, witness, result, tts_conn, received, answer_latency_ms):
+    async def fake_speak(ws, witness, result, tts_conn, received, answer_latency_ms, *usage):
         spoken.append((witness["id"], result["quote"]))
         done = {"type": "done", "answer_latency_ms": round(answer_latency_ms), "duration_ms": 1200}
         await ws.send_json(done)
@@ -70,6 +70,7 @@ def _ask(c, witness, questions, spoken=False):
                           "voice_timing": {"end_of_speech_to_submit_ms": 640} if spoken else None})
             types = []
             while (m := ws.receive_json())["type"] != "turn":
+                assert m["type"] != "error", m
                 types.append(m["type"])
             assert types[-2:] == ["answer", "done"] or types[-1] == "done"
             ids.append(m["turn"])

@@ -1,0 +1,6609 @@
+{
+ "name": "upload_dev",
+ "date": "2026-10-24T01:01:31",
+ "source": "outputs/eval/upload_spotcheck/20261024-010131",
+ "layout": "spotcheck",
+ "git": {
+  "commit": "70b862de135ef8865204512c0c9e2775ed23f809",
+  "dirty": true
+ },
+ "model": "qwen3.5-4b-32k-fast",
+ "temperature": 0.0,
+ "settings": {
+  "llm_gateway_url": "https://llm-gateway.assemblyai.com/v1/chat/completions",
+  "llm_model": "qwen3.5-4b-32k-fast",
+  "llm_max_tokens": "300",
+  "llm_temperature": "0.0",
+  "llm_timeout_seconds": "30.0",
+  "llm_max_retries": "4",
+  "llm_retry_backoff_seconds": "2.0",
+  "stt_ws_url": "wss://streaming.assemblyai.com/v3/ws",
+  "stt_token_url": "https://streaming.assemblyai.com/v3/token",
+  "stt_speech_model": "universal-3-6-pro",
+  "stt_sample_rate": "16000",
+  "stt_chunk_ms": "100",
+  "stt_token_expires_seconds": "60",
+  "stt_token_refresh_margin_seconds": "10",
+  "stt_max_session_seconds": "600",
+  "stt_submit_grace_ms": "1200",
+  "stt_min_turn_silence_ms": "",
+  "stt_max_turn_silence_ms": "",
+  "stt_end_of_turn_confidence": "",
+  "doc_id_snap_max_distance": "1",
+  "tts_ws_url": "wss://streaming-tts.assemblyai.com/v1/ws",
+  "tts_default_voice": "charles",
+  "tts_voices": "charles:British,anna:British,paul:British,vera:British,george:American,jane:American,michael:American,mary:American,alba:American,eve:American,jean:American",
+  "tts_timeout_seconds": "10.0",
+  "tts_sample_rate": "24000",
+  "tts_session_retries": "3",
+  "tts_session_retry_backoff_seconds": "1.0",
+  "tts_silence_threshold": "500",
+  "tts_trim_preroll_ms": "40",
+  "tts_trim_tail_ms": "100",
+  "tts_chunk_max_words": "12",
+  "tts_chunk_gap_ms": "400",
+  "tts_lead_in_gap_ms": "250",
+  "tts_keepalive_seconds": "10.0",
+  "tts_words_wait_seconds": "2.0",
+  "quote_timings_max_wait_ms": "1000",
+  "phrase_cache_dir": "data/tts_cache",
+  "quote_max_words": "60",
+  "retrieval_top_k": "5",
+  "reranker_enabled": "False",
+  "reranker_model": "BAAI/bge-reranker-base",
+  "rerank_candidates": "20",
+  "retrieval_min_score": "2.0",
+  "retriever": "dense",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_query_prefix": "Represent this sentence for searching relevant passages: ",
+  "embedding_cache_dir": "data/models",
+  "rrf_k": "60",
+  "dense_weight": "0.5",
+  "dense_min_score": "0.56",
+  "hyde_enabled": "False",
+  "relevance_check_enabled": "False",
+  "doc_id_pattern": "\\b[A-Z]{3,4}\\d{8}\\b",
+  "data_dir": "data",
+  "prompts_dir": "prompts",
+  "witness_answer_prompt": "witness_answer.txt",
+  "lead_ins_file": "lead_ins.json",
+  "hyde_prompt": "hyde.txt",
+  "relevance_check_prompt": "relevance_check.txt",
+  "quote_select_prompt": "quote_select.txt",
+  "ocr_verify_enabled": "True",
+  "ocr_verify_max_edit_ratio": "0.25",
+  "ocr_verify_max_edits": "2",
+  "ocr_verify_max_merge": "3",
+  "ocr_verify_min_exact_fraction": "0.7",
+  "ocr_verify_confusable": "il1,o0",
+  "outputs_dir": "outputs",
+  "processed_dir": "data/processed",
+  "statements_dir": "data/raw/statements",
+  "ocr_enabled": "True",
+  "tesseract_cmd": "tesseract",
+  "ocr_dpi": "300",
+  "ocr_min_chars": "200",
+  "ocr_max_junk_ratio": "0.04",
+  "parser_running_line_min_fraction": "0.3",
+  "parser_edge_lines": "6",
+  "parser_max_para_gap": "3",
+  "parser_jump_lookahead_lines": "80",
+  "parser_gap_ocr_max_pages": "12",
+  "parser_heading_max_words": "12",
+  "eval_dir": "eval",
+  "upload_max_mb": "50",
+  "upload_workers": "2",
+  "persist_uploads": "False",
+  "uploads_dir": "data/uploads",
+  "uploads_per_client": "3",
+  "upload_ttl_minutes": "60",
+  "conversation_max_turns": "100",
+  "profile_prompt": "profile.txt",
+  "profile_opening_units": "12",
+  "profile_max_roles": "4",
+  "profile_max_tokens": "800",
+  "subunit_context_enabled": "True",
+  "subunit_context_max_words": "30",
+  "witnesses_file": "witnesses/witnesses.json",
+  "web_dir": "src/crossexam/web",
+  "api_host": "127.0.0.1",
+  "api_port": "8000",
+  "ui_audio_buffer_ms": "200",
+  "cost_llm_input_per_million_tokens": "",
+  "cost_llm_output_per_million_tokens": "",
+  "cost_tts_per_million_chars": "",
+  "cost_stt_per_hour": ""
+ },
+ "environment": {
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "cpu": "Apple M3 Pro",
+  "memory_gb": 36,
+  "python": "3.11.17"
+ },
+ "notes": null,
+ "llm": true,
+ "repeats": 3,
+ "runs": [
+  {
+   "overall": {
+    "n": 20,
+    "hit_at_1": 0.42857142857142855,
+    "hit_at_k": 0.7142857142857143,
+    "refused": 4,
+    "routed": 3,
+    "doc_id_unknown": 0,
+    "refusal_precision": 1.0,
+    "refusal_recall": 0.6666666666666666,
+    "mean_top_dense_answerable": 0.7353752851486206,
+    "mean_top_dense_trap": 0.6118003775676092,
+    "latency_mean_ms": 1015.415,
+    "latency_p50_ms": 1035.5,
+    "latency_p95_ms": 1979.3,
+    "rate_limit_wait_ms": 33000.0,
+    "para_accuracy": 0.7142857142857143,
+    "grounding_rate": 1.0,
+    "referrals": 0,
+    "referral_rate": 0.0,
+    "ocr_corrected": 2,
+    "ocr_corrected_rate": 0.125,
+    "para_corrected": 1,
+    "skipped_llm": 3,
+    "relevance_rejected": 0,
+    "relevance_rejected_answerable": 0,
+    "counts": {
+     "questions": 20,
+     "answerable": 14,
+     "traps": 6,
+     "hit_at_1": 6,
+     "hit_at_k": 10,
+     "unit_correct": 10,
+     "answered": 16,
+     "grounded": 16,
+     "verified": 14,
+     "ocr_corrected": 2,
+     "referrals": 0,
+     "refused": 4,
+     "refused_traps": 4,
+     "traps_refused": 4
+    },
+    "usage": {
+     "answers": 20,
+     "totals": {
+      "llm_calls": 18,
+      "llm_input_tokens": 15636,
+      "llm_output_tokens": 1000,
+      "tts_chars": 2564
+     },
+     "mean_per_answer": {
+      "llm_calls": 0.9,
+      "llm_input_tokens": 781.8,
+      "llm_output_tokens": 50.0,
+      "tts_chars": 128.2
+     },
+     "cost_usd_total": null,
+     "cost_usd_mean_per_answer": null,
+     "rates": {
+      "llm_input": null,
+      "llm_output": null,
+      "tts": null,
+      "stt": null
+     }
+    },
+    "mean_input_tokens": 781.8,
+    "mean_output_tokens": 50.0,
+    "mean_tts_chars": 128.2
+   },
+   "by_statement": {
+    "witn09180100.pdf": {
+     "n": 8,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.8333333333333334,
+     "refused": 2,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 1.0,
+     "mean_top_dense_answerable": 0.7104345162709554,
+     "mean_top_dense_trap": 0.5811148285865784,
+     "latency_mean_ms": 903.4875,
+     "latency_p50_ms": 1002.3,
+     "latency_p95_ms": 1160.1,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.8333333333333334,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.3333333333333333,
+     "para_corrected": 1,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 8,
+      "answerable": 6,
+      "traps": 2,
+      "hit_at_1": 3,
+      "hit_at_k": 5,
+      "unit_correct": 5,
+      "answered": 6,
+      "grounded": 6,
+      "verified": 4,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 2,
+      "refused_traps": 2,
+      "traps_refused": 2
+     },
+     "usage": {
+      "answers": 8,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5715,
+       "llm_output_tokens": 346,
+       "tts_chars": 916
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.875,
+       "llm_input_tokens": 714.375,
+       "llm_output_tokens": 43.25,
+       "tts_chars": 114.5
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 714.375,
+     "mean_output_tokens": 43.25,
+     "mean_tts_chars": 114.5
+    },
+    "witn06700100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.25,
+     "hit_at_k": 0.5,
+     "refused": 1,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.5,
+     "mean_top_dense_answerable": 0.7880273312330246,
+     "mean_top_dense_trap": 0.7033615410327911,
+     "latency_mean_ms": 1099.2333333333333,
+     "latency_p50_ms": 1048.9,
+     "latency_p95_ms": 1979.3,
+     "rate_limit_wait_ms": 33000.0,
+     "para_accuracy": 0.5,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 1,
+      "hit_at_k": 2,
+      "unit_correct": 2,
+      "answered": 5,
+      "grounded": 5,
+      "verified": 5,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 1,
+      "refused_traps": 1,
+      "traps_refused": 1
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 5,
+       "llm_input_tokens": 4573,
+       "llm_output_tokens": 320,
+       "tts_chars": 914
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.8333333333333334,
+       "llm_input_tokens": 762.1666666666666,
+       "llm_output_tokens": 53.333333333333336,
+       "tts_chars": 152.33333333333334
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 762.1666666666666,
+     "mean_output_tokens": 53.333333333333336,
+     "mean_tts_chars": 152.33333333333334
+    },
+    "witn09830100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.75,
+     "refused": 1,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.5,
+     "mean_top_dense_answerable": 0.7201343923807144,
+     "mean_top_dense_trap": 0.550924763083458,
+     "latency_mean_ms": 1080.8333333333333,
+     "latency_p50_ms": 1035.5,
+     "latency_p95_ms": 2264.5,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.75,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 2,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 5,
+      "grounded": 5,
+      "verified": 5,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 1,
+      "refused_traps": 1,
+      "traps_refused": 1
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 6,
+       "llm_input_tokens": 5348,
+       "llm_output_tokens": 334,
+       "tts_chars": 734
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 891.3333333333334,
+       "llm_output_tokens": 55.666666666666664,
+       "tts_chars": 122.33333333333333
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 891.3333333333334,
+     "mean_output_tokens": 55.666666666666664,
+     "mean_tts_chars": 122.33333333333333
+    }
+   },
+   "by_category": {
+    "direct": {
+     "n": 7,
+     "hit_at_1": 0.42857142857142855,
+     "hit_at_k": 0.8571428571428571,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7643481833594186,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1024.9285714285713,
+     "latency_p50_ms": 1002.3,
+     "latency_p95_ms": 1139.5,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.8571428571428571,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.2857142857142857,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 7,
+      "answerable": 7,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 6,
+      "unit_correct": 6,
+      "answered": 7,
+      "grounded": 7,
+      "verified": 5,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 7,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5216,
+       "llm_output_tokens": 346,
+       "tts_chars": 897
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 745.1428571428571,
+       "llm_output_tokens": 49.42857142857143,
+       "tts_chars": 128.14285714285714
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 745.1428571428571,
+     "mean_output_tokens": 49.42857142857143,
+     "mean_tts_chars": 128.14285714285714
+    },
+    "paraphrased": {
+     "n": 3,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.3333333333333333,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.6421718796094259,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1584.6666666666667,
+     "latency_p50_ms": 1329.4,
+     "latency_p95_ms": 2264.5,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.3333333333333333,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 1,
+      "unit_correct": 1,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 4,
+       "llm_input_tokens": 3470,
+       "llm_output_tokens": 259,
+       "tts_chars": 672
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.3333333333333333,
+       "llm_input_tokens": 1156.6666666666667,
+       "llm_output_tokens": 86.33333333333333,
+       "tts_chars": 224.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1156.6666666666667,
+     "mean_output_tokens": 86.33333333333333,
+     "mean_tts_chars": 224.0
+    },
+    "docref": {
+     "n": 3,
+     "hit_at_1": 1.0,
+     "hit_at_k": 1.0,
+     "refused": 0,
+     "routed": 3,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7404188911120096,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1335.0,
+     "latency_p50_ms": 1035.5,
+     "latency_p95_ms": 1979.3,
+     "rate_limit_wait_ms": 33000.0,
+     "para_accuracy": 1.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 1,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 3372,
+       "llm_output_tokens": 154,
+       "tts_chars": 379
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 1124.0,
+       "llm_output_tokens": 51.333333333333336,
+       "tts_chars": 126.33333333333333
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1124.0,
+     "mean_output_tokens": 51.333333333333336,
+     "mean_tts_chars": 126.33333333333333
+    },
+    "trap": {
+     "n": 6,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "refused": 4,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.6666666666666666,
+     "mean_top_dense_answerable": null,
+     "mean_top_dense_trap": 0.6118003775676092,
+     "latency_mean_ms": 554.3166666666667,
+     "latency_p50_ms": 19.5,
+     "latency_p95_ms": 1250.0,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": null,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 3,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 0,
+      "traps": 6,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 2,
+      "grounded": 2,
+      "verified": 2,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 4,
+      "refused_traps": 4,
+      "traps_refused": 4
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 2705,
+       "llm_output_tokens": 175,
+       "tts_chars": 434
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.5,
+       "llm_input_tokens": 450.8333333333333,
+       "llm_output_tokens": 29.166666666666668,
+       "tts_chars": 72.33333333333333
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 450.8333333333333,
+     "mean_output_tokens": 29.166666666666668,
+     "mean_tts_chars": 72.33333333333333
+    },
+    "sub-unit": {
+     "n": 1,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.0,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7970443964004517,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1048.9,
+     "latency_p50_ms": 1048.9,
+     "latency_p95_ms": 1048.9,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 1,
+      "answerable": 1,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 1,
+      "grounded": 1,
+      "verified": 1,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 1,
+      "totals": {
+       "llm_calls": 1,
+       "llm_input_tokens": 873,
+       "llm_output_tokens": 66,
+       "tts_chars": 182
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 873.0,
+       "llm_output_tokens": 66.0,
+       "tts_chars": 182.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 873.0,
+     "mean_output_tokens": 66.0,
+     "mean_tts_chars": 182.0
+    }
+   }
+  },
+  {
+   "overall": {
+    "n": 20,
+    "hit_at_1": 0.42857142857142855,
+    "hit_at_k": 0.7142857142857143,
+    "refused": 5,
+    "routed": 3,
+    "doc_id_unknown": 0,
+    "refusal_precision": 1.0,
+    "refusal_recall": 0.8333333333333334,
+    "mean_top_dense_answerable": 0.7353752851486206,
+    "mean_top_dense_trap": 0.6118003775676092,
+    "latency_mean_ms": 1078.615,
+    "latency_p50_ms": 1059.4,
+    "latency_p95_ms": 2079.1,
+    "rate_limit_wait_ms": 91000.0,
+    "para_accuracy": 0.7142857142857143,
+    "grounding_rate": 1.0,
+    "referrals": 0,
+    "referral_rate": 0.0,
+    "ocr_corrected": 2,
+    "ocr_corrected_rate": 0.13333333333333333,
+    "para_corrected": 1,
+    "skipped_llm": 3,
+    "relevance_rejected": 0,
+    "relevance_rejected_answerable": 0,
+    "counts": {
+     "questions": 20,
+     "answerable": 14,
+     "traps": 6,
+     "hit_at_1": 6,
+     "hit_at_k": 10,
+     "unit_correct": 10,
+     "answered": 15,
+     "grounded": 15,
+     "verified": 13,
+     "ocr_corrected": 2,
+     "referrals": 0,
+     "refused": 5,
+     "refused_traps": 5,
+     "traps_refused": 5
+    },
+    "usage": {
+     "answers": 20,
+     "totals": {
+      "llm_calls": 18,
+      "llm_input_tokens": 15636,
+      "llm_output_tokens": 917,
+      "tts_chars": 2227
+     },
+     "mean_per_answer": {
+      "llm_calls": 0.9,
+      "llm_input_tokens": 781.8,
+      "llm_output_tokens": 45.85,
+      "tts_chars": 111.35
+     },
+     "cost_usd_total": null,
+     "cost_usd_mean_per_answer": null,
+     "rates": {
+      "llm_input": null,
+      "llm_output": null,
+      "tts": null,
+      "stt": null
+     }
+    },
+    "mean_input_tokens": 781.8,
+    "mean_output_tokens": 45.85,
+    "mean_tts_chars": 111.35
+   },
+   "by_statement": {
+    "witn09180100.pdf": {
+     "n": 8,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.8333333333333334,
+     "refused": 2,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 1.0,
+     "mean_top_dense_answerable": 0.7104345162709554,
+     "mean_top_dense_trap": 0.5811148285865784,
+     "latency_mean_ms": 1039.1375,
+     "latency_p50_ms": 1116.9,
+     "latency_p95_ms": 1897.8,
+     "rate_limit_wait_ms": 45000.0,
+     "para_accuracy": 0.8333333333333334,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.3333333333333333,
+     "para_corrected": 1,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 8,
+      "answerable": 6,
+      "traps": 2,
+      "hit_at_1": 3,
+      "hit_at_k": 5,
+      "unit_correct": 5,
+      "answered": 6,
+      "grounded": 6,
+      "verified": 4,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 2,
+      "refused_traps": 2,
+      "traps_refused": 2
+     },
+     "usage": {
+      "answers": 8,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5715,
+       "llm_output_tokens": 328,
+       "tts_chars": 835
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.875,
+       "llm_input_tokens": 714.375,
+       "llm_output_tokens": 41.0,
+       "tts_chars": 104.375
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 714.375,
+     "mean_output_tokens": 41.0,
+     "mean_tts_chars": 104.375
+    },
+    "witn06700100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.25,
+     "hit_at_k": 0.5,
+     "refused": 1,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.5,
+     "mean_top_dense_answerable": 0.7880273312330246,
+     "mean_top_dense_trap": 0.7033615410327911,
+     "latency_mean_ms": 986.0666666666667,
+     "latency_p50_ms": 1014.6,
+     "latency_p95_ms": 1506.2,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.5,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 1,
+      "hit_at_k": 2,
+      "unit_correct": 2,
+      "answered": 5,
+      "grounded": 5,
+      "verified": 5,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 1,
+      "refused_traps": 1,
+      "traps_refused": 1
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 5,
+       "llm_input_tokens": 4573,
+       "llm_output_tokens": 298,
+       "tts_chars": 830
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.8333333333333334,
+       "llm_input_tokens": 762.1666666666666,
+       "llm_output_tokens": 49.666666666666664,
+       "tts_chars": 138.33333333333334
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 762.1666666666666,
+     "mean_output_tokens": 49.666666666666664,
+     "mean_tts_chars": 138.33333333333334
+    },
+    "witn09830100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.75,
+     "refused": 2,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 1.0,
+     "mean_top_dense_answerable": 0.7201343923807144,
+     "mean_top_dense_trap": 0.550924763083458,
+     "latency_mean_ms": 1223.8,
+     "latency_p50_ms": 1049.6,
+     "latency_p95_ms": 2108.0,
+     "rate_limit_wait_ms": 46000.0,
+     "para_accuracy": 0.75,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 2,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 4,
+      "grounded": 4,
+      "verified": 4,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 2,
+      "refused_traps": 2,
+      "traps_refused": 2
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 6,
+       "llm_input_tokens": 5348,
+       "llm_output_tokens": 291,
+       "tts_chars": 562
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 891.3333333333334,
+       "llm_output_tokens": 48.5,
+       "tts_chars": 93.66666666666667
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 891.3333333333334,
+     "mean_output_tokens": 48.5,
+     "mean_tts_chars": 93.66666666666667
+    }
+   },
+   "by_category": {
+    "direct": {
+     "n": 7,
+     "hit_at_1": 0.42857142857142855,
+     "hit_at_k": 0.8571428571428571,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7643481833594186,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1044.4714285714285,
+     "latency_p50_ms": 1049.6,
+     "latency_p95_ms": 1119.8,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.8571428571428571,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.2857142857142857,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 7,
+      "answerable": 7,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 6,
+      "unit_correct": 6,
+      "answered": 7,
+      "grounded": 7,
+      "verified": 5,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 7,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5216,
+       "llm_output_tokens": 326,
+       "tts_chars": 795
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 745.1428571428571,
+       "llm_output_tokens": 46.57142857142857,
+       "tts_chars": 113.57142857142857
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 745.1428571428571,
+     "mean_output_tokens": 46.57142857142857,
+     "mean_tts_chars": 113.57142857142857
+    },
+    "paraphrased": {
+     "n": 3,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.3333333333333333,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.6421718796094259,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1413.1666666666667,
+     "latency_p50_ms": 1116.9,
+     "latency_p95_ms": 2108.0,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.3333333333333333,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 1,
+      "unit_correct": 1,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 4,
+       "llm_input_tokens": 3470,
+       "llm_output_tokens": 259,
+       "tts_chars": 672
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.3333333333333333,
+       "llm_input_tokens": 1156.6666666666667,
+       "llm_output_tokens": 86.33333333333333,
+       "tts_chars": 224.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1156.6666666666667,
+     "mean_output_tokens": 86.33333333333333,
+     "mean_tts_chars": 224.0
+    },
+    "docref": {
+     "n": 3,
+     "hit_at_1": 1.0,
+     "hit_at_k": 1.0,
+     "refused": 0,
+     "routed": 3,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7404188911120096,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1548.2333333333333,
+     "latency_p50_ms": 1506.2,
+     "latency_p95_ms": 2079.1,
+     "rate_limit_wait_ms": 46000.0,
+     "para_accuracy": 1.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 1,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 3372,
+       "llm_output_tokens": 154,
+       "tts_chars": 379
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 1124.0,
+       "llm_output_tokens": 51.333333333333336,
+       "tts_chars": 126.33333333333333
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1124.0,
+     "mean_output_tokens": 51.333333333333336,
+     "mean_tts_chars": 126.33333333333333
+    },
+    "trap": {
+     "n": 6,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "refused": 5,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.8333333333333334,
+     "mean_top_dense_answerable": null,
+     "mean_top_dense_trap": 0.6118003775676092,
+     "latency_mean_ms": 712.85,
+     "latency_p50_ms": 16.4,
+     "latency_p95_ms": 1897.8,
+     "rate_limit_wait_ms": 45000.0,
+     "para_accuracy": null,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 3,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 0,
+      "traps": 6,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 1,
+      "grounded": 1,
+      "verified": 1,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 5,
+      "refused_traps": 5,
+      "traps_refused": 5
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 2705,
+       "llm_output_tokens": 134,
+       "tts_chars": 283
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.5,
+       "llm_input_tokens": 450.8333333333333,
+       "llm_output_tokens": 22.333333333333332,
+       "tts_chars": 47.166666666666664
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 450.8333333333333,
+     "mean_output_tokens": 22.333333333333332,
+     "mean_tts_chars": 47.166666666666664
+    },
+    "sub-unit": {
+     "n": 1,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.0,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7970443964004517,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1099.7,
+     "latency_p50_ms": 1099.7,
+     "latency_p95_ms": 1099.7,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 1,
+      "answerable": 1,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 1,
+      "grounded": 1,
+      "verified": 1,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 1,
+      "totals": {
+       "llm_calls": 1,
+       "llm_input_tokens": 873,
+       "llm_output_tokens": 44,
+       "tts_chars": 98
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 873.0,
+       "llm_output_tokens": 44.0,
+       "tts_chars": 98.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 873.0,
+     "mean_output_tokens": 44.0,
+     "mean_tts_chars": 98.0
+    }
+   }
+  },
+  {
+   "overall": {
+    "n": 20,
+    "hit_at_1": 0.42857142857142855,
+    "hit_at_k": 0.7142857142857143,
+    "refused": 5,
+    "routed": 3,
+    "doc_id_unknown": 0,
+    "refusal_precision": 1.0,
+    "refusal_recall": 0.8333333333333334,
+    "mean_top_dense_answerable": 0.7353752851486206,
+    "mean_top_dense_trap": 0.6118003775676092,
+    "latency_mean_ms": 1029.435,
+    "latency_p50_ms": 1053.4,
+    "latency_p95_ms": 2225.3,
+    "rate_limit_wait_ms": 47000.0,
+    "para_accuracy": 0.7142857142857143,
+    "grounding_rate": 1.0,
+    "referrals": 0,
+    "referral_rate": 0.0,
+    "ocr_corrected": 2,
+    "ocr_corrected_rate": 0.13333333333333333,
+    "para_corrected": 1,
+    "skipped_llm": 3,
+    "relevance_rejected": 0,
+    "relevance_rejected_answerable": 0,
+    "counts": {
+     "questions": 20,
+     "answerable": 14,
+     "traps": 6,
+     "hit_at_1": 6,
+     "hit_at_k": 10,
+     "unit_correct": 10,
+     "answered": 15,
+     "grounded": 15,
+     "verified": 13,
+     "ocr_corrected": 2,
+     "referrals": 0,
+     "refused": 5,
+     "refused_traps": 5,
+     "traps_refused": 5
+    },
+    "usage": {
+     "answers": 20,
+     "totals": {
+      "llm_calls": 18,
+      "llm_input_tokens": 15636,
+      "llm_output_tokens": 941,
+      "tts_chars": 2332
+     },
+     "mean_per_answer": {
+      "llm_calls": 0.9,
+      "llm_input_tokens": 781.8,
+      "llm_output_tokens": 47.05,
+      "tts_chars": 116.6
+     },
+     "cost_usd_total": null,
+     "cost_usd_mean_per_answer": null,
+     "rates": {
+      "llm_input": null,
+      "llm_output": null,
+      "tts": null,
+      "stt": null
+     }
+    },
+    "mean_input_tokens": 781.8,
+    "mean_output_tokens": 47.05,
+    "mean_tts_chars": 116.6
+   },
+   "by_statement": {
+    "witn09180100.pdf": {
+     "n": 8,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.8333333333333334,
+     "refused": 2,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 1.0,
+     "mean_top_dense_answerable": 0.7104345162709554,
+     "mean_top_dense_trap": 0.5811148285865784,
+     "latency_mean_ms": 917.5625,
+     "latency_p50_ms": 1032.4,
+     "latency_p95_ms": 1111.4,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.8333333333333334,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.3333333333333333,
+     "para_corrected": 1,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 8,
+      "answerable": 6,
+      "traps": 2,
+      "hit_at_1": 3,
+      "hit_at_k": 5,
+      "unit_correct": 5,
+      "answered": 6,
+      "grounded": 6,
+      "verified": 4,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 2,
+      "refused_traps": 2,
+      "traps_refused": 2
+     },
+     "usage": {
+      "answers": 8,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5715,
+       "llm_output_tokens": 328,
+       "tts_chars": 835
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.875,
+       "llm_input_tokens": 714.375,
+       "llm_output_tokens": 41.0,
+       "tts_chars": 104.375
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 714.375,
+     "mean_output_tokens": 41.0,
+     "mean_tts_chars": 104.375
+    },
+    "witn06700100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.25,
+     "hit_at_k": 0.5,
+     "refused": 1,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.5,
+     "mean_top_dense_answerable": 0.7880273312330246,
+     "mean_top_dense_trap": 0.7033615410327911,
+     "latency_mean_ms": 1121.8833333333334,
+     "latency_p50_ms": 1067.8,
+     "latency_p95_ms": 2405.4,
+     "rate_limit_wait_ms": 47000.0,
+     "para_accuracy": 0.5,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 1,
+      "hit_at_k": 2,
+      "unit_correct": 2,
+      "answered": 5,
+      "grounded": 5,
+      "verified": 5,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 1,
+      "refused_traps": 1,
+      "traps_refused": 1
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 5,
+       "llm_input_tokens": 4573,
+       "llm_output_tokens": 320,
+       "tts_chars": 914
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.8333333333333334,
+       "llm_input_tokens": 762.1666666666666,
+       "llm_output_tokens": 53.333333333333336,
+       "tts_chars": 152.33333333333334
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 762.1666666666666,
+     "mean_output_tokens": 53.333333333333336,
+     "mean_tts_chars": 152.33333333333334
+    },
+    "witn09830100.pdf": {
+     "n": 6,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.75,
+     "refused": 2,
+     "routed": 1,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 1.0,
+     "mean_top_dense_answerable": 0.7201343923807144,
+     "mean_top_dense_trap": 0.550924763083458,
+     "latency_mean_ms": 1086.15,
+     "latency_p50_ms": 1053.4,
+     "latency_p95_ms": 2225.3,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.75,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 1,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 4,
+      "traps": 2,
+      "hit_at_1": 2,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 4,
+      "grounded": 4,
+      "verified": 4,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 2,
+      "refused_traps": 2,
+      "traps_refused": 2
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 6,
+       "llm_input_tokens": 5348,
+       "llm_output_tokens": 293,
+       "tts_chars": 583
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 891.3333333333334,
+       "llm_output_tokens": 48.833333333333336,
+       "tts_chars": 97.16666666666667
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 891.3333333333334,
+     "mean_output_tokens": 48.833333333333336,
+     "mean_tts_chars": 97.16666666666667
+    }
+   },
+   "by_category": {
+    "direct": {
+     "n": 7,
+     "hit_at_1": 0.42857142857142855,
+     "hit_at_k": 0.8571428571428571,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7643481833594186,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1044.3285714285714,
+     "latency_p50_ms": 1021.1,
+     "latency_p95_ms": 1147.7,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.8571428571428571,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 2,
+     "ocr_corrected_rate": 0.2857142857142857,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 7,
+      "answerable": 7,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 6,
+      "unit_correct": 6,
+      "answered": 7,
+      "grounded": 7,
+      "verified": 5,
+      "ocr_corrected": 2,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 7,
+      "totals": {
+       "llm_calls": 7,
+       "llm_input_tokens": 5216,
+       "llm_output_tokens": 328,
+       "tts_chars": 816
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 745.1428571428571,
+       "llm_output_tokens": 46.857142857142854,
+       "tts_chars": 116.57142857142857
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 745.1428571428571,
+     "mean_output_tokens": 46.857142857142854,
+     "mean_tts_chars": 116.57142857142857
+    },
+    "paraphrased": {
+     "n": 3,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.3333333333333333,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.6421718796094259,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1468.1666666666667,
+     "latency_p50_ms": 1111.4,
+     "latency_p95_ms": 2225.3,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.3333333333333333,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 1,
+      "unit_correct": 1,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 4,
+       "llm_input_tokens": 3470,
+       "llm_output_tokens": 259,
+       "tts_chars": 672
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.3333333333333333,
+       "llm_input_tokens": 1156.6666666666667,
+       "llm_output_tokens": 86.33333333333333,
+       "tts_chars": 224.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1156.6666666666667,
+     "mean_output_tokens": 86.33333333333333,
+     "mean_tts_chars": 224.0
+    },
+    "docref": {
+     "n": 3,
+     "hit_at_1": 1.0,
+     "hit_at_k": 1.0,
+     "refused": 0,
+     "routed": 3,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7404188911120096,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1492.9,
+     "latency_p50_ms": 1086.0,
+     "latency_p95_ms": 2405.4,
+     "rate_limit_wait_ms": 47000.0,
+     "para_accuracy": 1.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 1,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 3,
+      "answerable": 3,
+      "traps": 0,
+      "hit_at_1": 3,
+      "hit_at_k": 3,
+      "unit_correct": 3,
+      "answered": 3,
+      "grounded": 3,
+      "verified": 3,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 3,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 3372,
+       "llm_output_tokens": 154,
+       "tts_chars": 379
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 1124.0,
+       "llm_output_tokens": 51.333333333333336,
+       "tts_chars": 126.33333333333333
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 1124.0,
+     "mean_output_tokens": 51.333333333333336,
+     "mean_tts_chars": 126.33333333333333
+    },
+    "trap": {
+     "n": 6,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "refused": 5,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.8333333333333334,
+     "mean_top_dense_answerable": null,
+     "mean_top_dense_trap": 0.6118003775676092,
+     "latency_mean_ms": 541.8000000000001,
+     "latency_p50_ms": 15.9,
+     "latency_p95_ms": 1126.8,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": null,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 3,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 6,
+      "answerable": 0,
+      "traps": 6,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 1,
+      "grounded": 1,
+      "verified": 1,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 5,
+      "refused_traps": 5,
+      "traps_refused": 5
+     },
+     "usage": {
+      "answers": 6,
+      "totals": {
+       "llm_calls": 3,
+       "llm_input_tokens": 2705,
+       "llm_output_tokens": 134,
+       "tts_chars": 283
+      },
+      "mean_per_answer": {
+       "llm_calls": 0.5,
+       "llm_input_tokens": 450.8333333333333,
+       "llm_output_tokens": 22.333333333333332,
+       "tts_chars": 47.166666666666664
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 450.8333333333333,
+     "mean_output_tokens": 22.333333333333332,
+     "mean_tts_chars": 47.166666666666664
+    },
+    "sub-unit": {
+     "n": 1,
+     "hit_at_1": 0.0,
+     "hit_at_k": 0.0,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7970443964004517,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 1144.4,
+     "latency_p50_ms": 1144.4,
+     "latency_p95_ms": 1144.4,
+     "rate_limit_wait_ms": 0.0,
+     "para_accuracy": 0.0,
+     "grounding_rate": 1.0,
+     "referrals": 0,
+     "referral_rate": 0.0,
+     "ocr_corrected": 0,
+     "ocr_corrected_rate": 0.0,
+     "para_corrected": 0,
+     "skipped_llm": 0,
+     "relevance_rejected": 0,
+     "relevance_rejected_answerable": 0,
+     "counts": {
+      "questions": 1,
+      "answerable": 1,
+      "traps": 0,
+      "hit_at_1": 0,
+      "hit_at_k": 0,
+      "unit_correct": 0,
+      "answered": 1,
+      "grounded": 1,
+      "verified": 1,
+      "ocr_corrected": 0,
+      "referrals": 0,
+      "refused": 0,
+      "refused_traps": 0,
+      "traps_refused": 0
+     },
+     "usage": {
+      "answers": 1,
+      "totals": {
+       "llm_calls": 1,
+       "llm_input_tokens": 873,
+       "llm_output_tokens": 66,
+       "tts_chars": 182
+      },
+      "mean_per_answer": {
+       "llm_calls": 1.0,
+       "llm_input_tokens": 873.0,
+       "llm_output_tokens": 66.0,
+       "tts_chars": 182.0
+      },
+      "cost_usd_total": null,
+      "cost_usd_mean_per_answer": null,
+      "rates": {
+       "llm_input": null,
+       "llm_output": null,
+       "tts": null,
+       "stt": null
+      }
+     },
+     "mean_input_tokens": 873.0,
+     "mean_output_tokens": 66.0,
+     "mean_tts_chars": 182.0
+    }
+   }
+  }
+ ],
+ "aggregate": {
+  "overall": {
+   "n": {
+    "mean": 20,
+    "min": 20,
+    "max": 20,
+    "values": [
+     20,
+     20,
+     20
+    ]
+   },
+   "hit_at_1": {
+    "mean": 0.42857142857142855,
+    "min": 0.42857142857142855,
+    "max": 0.42857142857142855,
+    "values": [
+     0.42857142857142855,
+     0.42857142857142855,
+     0.42857142857142855
+    ]
+   },
+   "hit_at_k": {
+    "mean": 0.7142857142857143,
+    "min": 0.7142857142857143,
+    "max": 0.7142857142857143,
+    "values": [
+     0.7142857142857143,
+     0.7142857142857143,
+     0.7142857142857143
+    ]
+   },
+   "refused": {
+    "mean": 4.666666666666667,
+    "min": 4,
+    "max": 5,
+    "values": [
+     4,
+     5,
+     5
+    ]
+   },
+   "routed": {
+    "mean": 3,
+    "min": 3,
+    "max": 3,
+    "values": [
+     3,
+     3,
+     3
+    ]
+   },
+   "doc_id_unknown": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0,
+     0,
+     0
+    ]
+   },
+   "refusal_precision": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "values": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "refusal_recall": {
+    "mean": 0.7777777777777778,
+    "min": 0.6666666666666666,
+    "max": 0.8333333333333334,
+    "values": [
+     0.6666666666666666,
+     0.8333333333333334,
+     0.8333333333333334
+    ]
+   },
+   "mean_top_dense_answerable": {
+    "mean": 0.7353752851486206,
+    "min": 0.7353752851486206,
+    "max": 0.7353752851486206,
+    "values": [
+     0.7353752851486206,
+     0.7353752851486206,
+     0.7353752851486206
+    ]
+   },
+   "mean_top_dense_trap": {
+    "mean": 0.6118003775676092,
+    "min": 0.6118003775676092,
+    "max": 0.6118003775676092,
+    "values": [
+     0.6118003775676092,
+     0.6118003775676092,
+     0.6118003775676092
+    ]
+   },
+   "latency_mean_ms": {
+    "mean": 1041.155,
+    "min": 1015.415,
+    "max": 1078.615,
+    "values": [
+     1015.415,
+     1078.615,
+     1029.435
+    ]
+   },
+   "latency_p50_ms": {
+    "mean": 1049.4333333333334,
+    "min": 1035.5,
+    "max": 1059.4,
+    "values": [
+     1035.5,
+     1059.4,
+     1053.4
+    ]
+   },
+   "latency_p95_ms": {
+    "mean": 2094.5666666666666,
+    "min": 1979.3,
+    "max": 2225.3,
+    "values": [
+     1979.3,
+     2079.1,
+     2225.3
+    ]
+   },
+   "rate_limit_wait_ms": {
+    "mean": 57000.0,
+    "min": 33000.0,
+    "max": 91000.0,
+    "values": [
+     33000.0,
+     91000.0,
+     47000.0
+    ]
+   },
+   "para_accuracy": {
+    "mean": 0.7142857142857143,
+    "min": 0.7142857142857143,
+    "max": 0.7142857142857143,
+    "values": [
+     0.7142857142857143,
+     0.7142857142857143,
+     0.7142857142857143
+    ]
+   },
+   "grounding_rate": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "values": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "referrals": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0,
+     0,
+     0
+    ]
+   },
+   "referral_rate": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "values": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "ocr_corrected": {
+    "mean": 2,
+    "min": 2,
+    "max": 2,
+    "values": [
+     2,
+     2,
+     2
+    ]
+   },
+   "ocr_corrected_rate": {
+    "mean": 0.13055555555555556,
+    "min": 0.125,
+    "max": 0.13333333333333333,
+    "values": [
+     0.125,
+     0.13333333333333333,
+     0.13333333333333333
+    ]
+   },
+   "para_corrected": {
+    "mean": 1,
+    "min": 1,
+    "max": 1,
+    "values": [
+     1,
+     1,
+     1
+    ]
+   },
+   "skipped_llm": {
+    "mean": 3,
+    "min": 3,
+    "max": 3,
+    "values": [
+     3,
+     3,
+     3
+    ]
+   },
+   "relevance_rejected": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0,
+     0,
+     0
+    ]
+   },
+   "relevance_rejected_answerable": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0,
+     0,
+     0
+    ]
+   },
+   "mean_input_tokens": {
+    "mean": 781.8,
+    "min": 781.8,
+    "max": 781.8,
+    "values": [
+     781.8,
+     781.8,
+     781.8
+    ]
+   },
+   "mean_output_tokens": {
+    "mean": 47.63333333333333,
+    "min": 45.85,
+    "max": 50.0,
+    "values": [
+     50.0,
+     45.85,
+     47.05
+    ]
+   },
+   "mean_tts_chars": {
+    "mean": 118.71666666666665,
+    "min": 111.35,
+    "max": 128.2,
+    "values": [
+     128.2,
+     111.35,
+     116.6
+    ]
+   },
+   "counts": {
+    "questions": {
+     "mean": 20,
+     "min": 20,
+     "max": 20,
+     "values": [
+      20,
+      20,
+      20
+     ]
+    },
+    "answerable": {
+     "mean": 14,
+     "min": 14,
+     "max": 14,
+     "values": [
+      14,
+      14,
+      14
+     ]
+    },
+    "traps": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6,
+      6,
+      6
+     ]
+    },
+    "hit_at_1": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6,
+      6,
+      6
+     ]
+    },
+    "hit_at_k": {
+     "mean": 10,
+     "min": 10,
+     "max": 10,
+     "values": [
+      10,
+      10,
+      10
+     ]
+    },
+    "unit_correct": {
+     "mean": 10,
+     "min": 10,
+     "max": 10,
+     "values": [
+      10,
+      10,
+      10
+     ]
+    },
+    "answered": {
+     "mean": 15.333333333333334,
+     "min": 15,
+     "max": 16,
+     "values": [
+      16,
+      15,
+      15
+     ]
+    },
+    "grounded": {
+     "mean": 15.333333333333334,
+     "min": 15,
+     "max": 16,
+     "values": [
+      16,
+      15,
+      15
+     ]
+    },
+    "verified": {
+     "mean": 13.333333333333334,
+     "min": 13,
+     "max": 14,
+     "values": [
+      14,
+      13,
+      13
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 2,
+     "min": 2,
+     "max": 2,
+     "values": [
+      2,
+      2,
+      2
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "refused": {
+     "mean": 4.666666666666667,
+     "min": 4,
+     "max": 5,
+     "values": [
+      4,
+      5,
+      5
+     ]
+    },
+    "refused_traps": {
+     "mean": 4.666666666666667,
+     "min": 4,
+     "max": 5,
+     "values": [
+      4,
+      5,
+      5
+     ]
+    },
+    "traps_refused": {
+     "mean": 4.666666666666667,
+     "min": 4,
+     "max": 5,
+     "values": [
+      4,
+      5,
+      5
+     ]
+    }
+   }
+  },
+  "by_statement": {
+   "witn09180100.pdf": {
+    "n": {
+     "mean": 8,
+     "min": 8,
+     "max": 8,
+     "values": [
+      8,
+      8,
+      8
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.8333333333333334,
+     "min": 0.8333333333333334,
+     "max": 0.8333333333333334,
+     "values": [
+      0.8333333333333334,
+      0.8333333333333334,
+      0.8333333333333334
+     ]
+    },
+    "refused": {
+     "mean": 2,
+     "min": 2,
+     "max": 2,
+     "values": [
+      2,
+      2,
+      2
+     ]
+    },
+    "routed": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7104345162709554,
+     "min": 0.7104345162709554,
+     "max": 0.7104345162709554,
+     "values": [
+      0.7104345162709554,
+      0.7104345162709554,
+      0.7104345162709554
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.5811148285865784,
+     "min": 0.5811148285865784,
+     "max": 0.5811148285865784,
+     "values": [
+      0.5811148285865784,
+      0.5811148285865784,
+      0.5811148285865784
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 953.3958333333334,
+     "min": 903.4875,
+     "max": 1039.1375,
+     "values": [
+      903.4875,
+      1039.1375,
+      917.5625
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1050.5333333333333,
+     "min": 1002.3,
+     "max": 1116.9,
+     "values": [
+      1002.3,
+      1116.9,
+      1032.4
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1389.7666666666667,
+     "min": 1111.4,
+     "max": 1897.8,
+     "values": [
+      1160.1,
+      1897.8,
+      1111.4
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 15000.0,
+     "min": 0.0,
+     "max": 45000.0,
+     "values": [
+      0.0,
+      45000.0,
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.8333333333333334,
+     "min": 0.8333333333333334,
+     "max": 0.8333333333333334,
+     "values": [
+      0.8333333333333334,
+      0.8333333333333334,
+      0.8333333333333334
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 2,
+     "min": 2,
+     "max": 2,
+     "values": [
+      2,
+      2,
+      2
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.3333333333333333,
+     "min": 0.3333333333333333,
+     "max": 0.3333333333333333,
+     "values": [
+      0.3333333333333333,
+      0.3333333333333333,
+      0.3333333333333333
+     ]
+    },
+    "para_corrected": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "skipped_llm": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 714.375,
+     "min": 714.375,
+     "max": 714.375,
+     "values": [
+      714.375,
+      714.375,
+      714.375
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 41.75,
+     "min": 41.0,
+     "max": 43.25,
+     "values": [
+      43.25,
+      41.0,
+      41.0
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 107.75,
+     "min": 104.375,
+     "max": 114.5,
+     "values": [
+      114.5,
+      104.375,
+      104.375
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 8,
+      "min": 8,
+      "max": 8,
+      "values": [
+       8,
+       8,
+       8
+      ]
+     },
+     "answerable": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "traps": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "hit_at_1": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "hit_at_k": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "unit_correct": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "answered": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "grounded": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "verified": {
+      "mean": 4,
+      "min": 4,
+      "max": 4,
+      "values": [
+       4,
+       4,
+       4
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "refused_traps": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "traps_refused": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     }
+    }
+   },
+   "witn06700100.pdf": {
+    "n": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6,
+      6,
+      6
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.25,
+     "min": 0.25,
+     "max": 0.25,
+     "values": [
+      0.25,
+      0.25,
+      0.25
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    "refused": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "routed": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7880273312330246,
+     "min": 0.7880273312330246,
+     "max": 0.7880273312330246,
+     "values": [
+      0.7880273312330246,
+      0.7880273312330246,
+      0.7880273312330246
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.7033615410327911,
+     "min": 0.7033615410327911,
+     "max": 0.7033615410327911,
+     "values": [
+      0.7033615410327911,
+      0.7033615410327911,
+      0.7033615410327911
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1069.0611111111111,
+     "min": 986.0666666666667,
+     "max": 1121.8833333333334,
+     "values": [
+      1099.2333333333333,
+      986.0666666666667,
+      1121.8833333333334
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1043.7666666666667,
+     "min": 1014.6,
+     "max": 1067.8,
+     "values": [
+      1048.9,
+      1014.6,
+      1067.8
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1963.6333333333334,
+     "min": 1506.2,
+     "max": 2405.4,
+     "values": [
+      1979.3,
+      1506.2,
+      2405.4
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 26666.666666666668,
+     "min": 0.0,
+     "max": 47000.0,
+     "values": [
+      33000.0,
+      0.0,
+      47000.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 762.1666666666666,
+     "min": 762.1666666666666,
+     "max": 762.1666666666666,
+     "values": [
+      762.1666666666666,
+      762.1666666666666,
+      762.1666666666666
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 52.111111111111114,
+     "min": 49.666666666666664,
+     "max": 53.333333333333336,
+     "values": [
+      53.333333333333336,
+      49.666666666666664,
+      53.333333333333336
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 147.66666666666669,
+     "min": 138.33333333333334,
+     "max": 152.33333333333334,
+     "values": [
+      152.33333333333334,
+      138.33333333333334,
+      152.33333333333334
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "answerable": {
+      "mean": 4,
+      "min": 4,
+      "max": 4,
+      "values": [
+       4,
+       4,
+       4
+      ]
+     },
+     "traps": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "hit_at_1": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "hit_at_k": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "unit_correct": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "answered": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "grounded": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "verified": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "refused_traps": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "traps_refused": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     }
+    }
+   },
+   "witn09830100.pdf": {
+    "n": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6,
+      6,
+      6
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.75,
+     "min": 0.75,
+     "max": 0.75,
+     "values": [
+      0.75,
+      0.75,
+      0.75
+     ]
+    },
+    "refused": {
+     "mean": 1.6666666666666667,
+     "min": 1,
+     "max": 2,
+     "values": [
+      1,
+      2,
+      2
+     ]
+    },
+    "routed": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.8333333333333334,
+     "min": 0.5,
+     "max": 1.0,
+     "values": [
+      0.5,
+      1.0,
+      1.0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7201343923807144,
+     "min": 0.7201343923807144,
+     "max": 0.7201343923807144,
+     "values": [
+      0.7201343923807144,
+      0.7201343923807144,
+      0.7201343923807144
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.550924763083458,
+     "min": 0.550924763083458,
+     "max": 0.550924763083458,
+     "values": [
+      0.550924763083458,
+      0.550924763083458,
+      0.550924763083458
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1130.2611111111112,
+     "min": 1080.8333333333333,
+     "max": 1223.8,
+     "values": [
+      1080.8333333333333,
+      1223.8,
+      1086.15
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1046.1666666666667,
+     "min": 1035.5,
+     "max": 1053.4,
+     "values": [
+      1035.5,
+      1049.6,
+      1053.4
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 2199.266666666667,
+     "min": 2108.0,
+     "max": 2264.5,
+     "values": [
+      2264.5,
+      2108.0,
+      2225.3
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 15333.333333333334,
+     "min": 0.0,
+     "max": 46000.0,
+     "values": [
+      0.0,
+      46000.0,
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.75,
+     "min": 0.75,
+     "max": 0.75,
+     "values": [
+      0.75,
+      0.75,
+      0.75
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 891.3333333333334,
+     "min": 891.3333333333334,
+     "max": 891.3333333333334,
+     "values": [
+      891.3333333333334,
+      891.3333333333334,
+      891.3333333333334
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 51.0,
+     "min": 48.5,
+     "max": 55.666666666666664,
+     "values": [
+      55.666666666666664,
+      48.5,
+      48.833333333333336
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 104.38888888888889,
+     "min": 93.66666666666667,
+     "max": 122.33333333333333,
+     "values": [
+      122.33333333333333,
+      93.66666666666667,
+      97.16666666666667
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "answerable": {
+      "mean": 4,
+      "min": 4,
+      "max": 4,
+      "values": [
+       4,
+       4,
+       4
+      ]
+     },
+     "traps": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "hit_at_1": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "hit_at_k": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "unit_correct": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "answered": {
+      "mean": 4.333333333333333,
+      "min": 4,
+      "max": 5,
+      "values": [
+       5,
+       4,
+       4
+      ]
+     },
+     "grounded": {
+      "mean": 4.333333333333333,
+      "min": 4,
+      "max": 5,
+      "values": [
+       5,
+       4,
+       4
+      ]
+     },
+     "verified": {
+      "mean": 4.333333333333333,
+      "min": 4,
+      "max": 5,
+      "values": [
+       5,
+       4,
+       4
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 1.6666666666666667,
+      "min": 1,
+      "max": 2,
+      "values": [
+       1,
+       2,
+       2
+      ]
+     },
+     "refused_traps": {
+      "mean": 1.6666666666666667,
+      "min": 1,
+      "max": 2,
+      "values": [
+       1,
+       2,
+       2
+      ]
+     },
+     "traps_refused": {
+      "mean": 1.6666666666666667,
+      "min": 1,
+      "max": 2,
+      "values": [
+       1,
+       2,
+       2
+      ]
+     }
+    }
+   }
+  },
+  "by_category": {
+   "direct": {
+    "n": {
+     "mean": 7,
+     "min": 7,
+     "max": 7,
+     "values": [
+      7,
+      7,
+      7
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.42857142857142855,
+     "min": 0.42857142857142855,
+     "max": 0.42857142857142855,
+     "values": [
+      0.42857142857142855,
+      0.42857142857142855,
+      0.42857142857142855
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.8571428571428571,
+     "min": 0.8571428571428571,
+     "max": 0.8571428571428571,
+     "values": [
+      0.8571428571428571,
+      0.8571428571428571,
+      0.8571428571428571
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7643481833594186,
+     "min": 0.7643481833594186,
+     "max": 0.7643481833594186,
+     "values": [
+      0.7643481833594186,
+      0.7643481833594186,
+      0.7643481833594186
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1037.9095238095238,
+     "min": 1024.9285714285713,
+     "max": 1044.4714285714285,
+     "values": [
+      1024.9285714285713,
+      1044.4714285714285,
+      1044.3285714285714
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1024.3333333333333,
+     "min": 1002.3,
+     "max": 1049.6,
+     "values": [
+      1002.3,
+      1049.6,
+      1021.1
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1135.6666666666667,
+     "min": 1119.8,
+     "max": 1147.7,
+     "values": [
+      1139.5,
+      1119.8,
+      1147.7
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.8571428571428571,
+     "min": 0.8571428571428571,
+     "max": 0.8571428571428571,
+     "values": [
+      0.8571428571428571,
+      0.8571428571428571,
+      0.8571428571428571
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 2,
+     "min": 2,
+     "max": 2,
+     "values": [
+      2,
+      2,
+      2
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.2857142857142857,
+     "min": 0.2857142857142857,
+     "max": 0.2857142857142857,
+     "values": [
+      0.2857142857142857,
+      0.2857142857142857,
+      0.2857142857142857
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 745.1428571428571,
+     "min": 745.1428571428571,
+     "max": 745.1428571428571,
+     "values": [
+      745.1428571428571,
+      745.1428571428571,
+      745.1428571428571
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 47.61904761904762,
+     "min": 46.57142857142857,
+     "max": 49.42857142857143,
+     "values": [
+      49.42857142857143,
+      46.57142857142857,
+      46.857142857142854
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 119.42857142857143,
+     "min": 113.57142857142857,
+     "max": 128.14285714285714,
+     "values": [
+      128.14285714285714,
+      113.57142857142857,
+      116.57142857142857
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 7,
+      "min": 7,
+      "max": 7,
+      "values": [
+       7,
+       7,
+       7
+      ]
+     },
+     "answerable": {
+      "mean": 7,
+      "min": 7,
+      "max": 7,
+      "values": [
+       7,
+       7,
+       7
+      ]
+     },
+     "traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_1": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "hit_at_k": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "unit_correct": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "answered": {
+      "mean": 7,
+      "min": 7,
+      "max": 7,
+      "values": [
+       7,
+       7,
+       7
+      ]
+     },
+     "grounded": {
+      "mean": 7,
+      "min": 7,
+      "max": 7,
+      "values": [
+       7,
+       7,
+       7
+      ]
+     },
+     "verified": {
+      "mean": 5,
+      "min": 5,
+      "max": 5,
+      "values": [
+       5,
+       5,
+       5
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 2,
+      "min": 2,
+      "max": 2,
+      "values": [
+       2,
+       2,
+       2
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused_traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "traps_refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   },
+   "paraphrased": {
+    "n": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3,
+      3,
+      3
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.3333333333333333,
+     "min": 0.3333333333333333,
+     "max": 0.3333333333333333,
+     "values": [
+      0.3333333333333333,
+      0.3333333333333333,
+      0.3333333333333333
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.6421718796094259,
+     "min": 0.6421718796094259,
+     "max": 0.6421718796094259,
+     "values": [
+      0.6421718796094259,
+      0.6421718796094259,
+      0.6421718796094259
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1488.6666666666667,
+     "min": 1413.1666666666667,
+     "max": 1584.6666666666667,
+     "values": [
+      1584.6666666666667,
+      1413.1666666666667,
+      1468.1666666666667
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1185.9,
+     "min": 1111.4,
+     "max": 1329.4,
+     "values": [
+      1329.4,
+      1116.9,
+      1111.4
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 2199.266666666667,
+     "min": 2108.0,
+     "max": 2264.5,
+     "values": [
+      2264.5,
+      2108.0,
+      2225.3
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.3333333333333333,
+     "min": 0.3333333333333333,
+     "max": 0.3333333333333333,
+     "values": [
+      0.3333333333333333,
+      0.3333333333333333,
+      0.3333333333333333
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 1156.6666666666667,
+     "min": 1156.6666666666667,
+     "max": 1156.6666666666667,
+     "values": [
+      1156.6666666666667,
+      1156.6666666666667,
+      1156.6666666666667
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 86.33333333333333,
+     "min": 86.33333333333333,
+     "max": 86.33333333333333,
+     "values": [
+      86.33333333333333,
+      86.33333333333333,
+      86.33333333333333
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 224.0,
+     "min": 224.0,
+     "max": 224.0,
+     "values": [
+      224.0,
+      224.0,
+      224.0
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "answerable": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_1": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_k": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "unit_correct": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "answered": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "grounded": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "verified": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused_traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "traps_refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   },
+   "docref": {
+    "n": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3,
+      3,
+      3
+     ]
+    },
+    "hit_at_1": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "hit_at_k": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "routed": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3,
+      3,
+      3
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7404188911120096,
+     "min": 0.7404188911120096,
+     "max": 0.7404188911120096,
+     "values": [
+      0.7404188911120096,
+      0.7404188911120096,
+      0.7404188911120096
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1458.7111111111112,
+     "min": 1335.0,
+     "max": 1548.2333333333333,
+     "values": [
+      1335.0,
+      1548.2333333333333,
+      1492.9
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1209.2333333333333,
+     "min": 1035.5,
+     "max": 1506.2,
+     "values": [
+      1035.5,
+      1506.2,
+      1086.0
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 2154.6,
+     "min": 1979.3,
+     "max": 2405.4,
+     "values": [
+      1979.3,
+      2079.1,
+      2405.4
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 42000.0,
+     "min": 33000.0,
+     "max": 47000.0,
+     "values": [
+      33000.0,
+      46000.0,
+      47000.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "skipped_llm": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 1124.0,
+     "min": 1124.0,
+     "max": 1124.0,
+     "values": [
+      1124.0,
+      1124.0,
+      1124.0
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 51.333333333333336,
+     "min": 51.333333333333336,
+     "max": 51.333333333333336,
+     "values": [
+      51.333333333333336,
+      51.333333333333336,
+      51.333333333333336
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 126.33333333333333,
+     "min": 126.33333333333333,
+     "max": 126.33333333333333,
+     "values": [
+      126.33333333333333,
+      126.33333333333333,
+      126.33333333333333
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "answerable": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_1": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "hit_at_k": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "unit_correct": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "answered": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "grounded": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "verified": {
+      "mean": 3,
+      "min": 3,
+      "max": 3,
+      "values": [
+       3,
+       3,
+       3
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused_traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "traps_refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   },
+   "trap": {
+    "n": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6,
+      6,
+      6
+     ]
+    },
+    "refused": {
+     "mean": 4.666666666666667,
+     "min": 4,
+     "max": 5,
+     "values": [
+      4,
+      5,
+      5
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.7777777777777778,
+     "min": 0.6666666666666666,
+     "max": 0.8333333333333334,
+     "values": [
+      0.6666666666666666,
+      0.8333333333333334,
+      0.8333333333333334
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.6118003775676092,
+     "min": 0.6118003775676092,
+     "max": 0.6118003775676092,
+     "values": [
+      0.6118003775676092,
+      0.6118003775676092,
+      0.6118003775676092
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 602.9888888888889,
+     "min": 541.8000000000001,
+     "max": 712.85,
+     "values": [
+      554.3166666666667,
+      712.85,
+      541.8000000000001
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 17.266666666666666,
+     "min": 15.9,
+     "max": 19.5,
+     "values": [
+      19.5,
+      16.4,
+      15.9
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1424.8666666666666,
+     "min": 1126.8,
+     "max": 1897.8,
+     "values": [
+      1250.0,
+      1897.8,
+      1126.8
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 15000.0,
+     "min": 0.0,
+     "max": 45000.0,
+     "values": [
+      0.0,
+      45000.0,
+      0.0
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3,
+      3,
+      3
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 450.8333333333333,
+     "min": 450.8333333333333,
+     "max": 450.8333333333333,
+     "values": [
+      450.8333333333333,
+      450.8333333333333,
+      450.8333333333333
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 24.61111111111111,
+     "min": 22.333333333333332,
+     "max": 29.166666666666668,
+     "values": [
+      29.166666666666668,
+      22.333333333333332,
+      22.333333333333332
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 55.55555555555555,
+     "min": 47.166666666666664,
+     "max": 72.33333333333333,
+     "values": [
+      72.33333333333333,
+      47.166666666666664,
+      47.166666666666664
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "answerable": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "traps": {
+      "mean": 6,
+      "min": 6,
+      "max": 6,
+      "values": [
+       6,
+       6,
+       6
+      ]
+     },
+     "hit_at_1": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_k": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "unit_correct": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "answered": {
+      "mean": 1.3333333333333333,
+      "min": 1,
+      "max": 2,
+      "values": [
+       2,
+       1,
+       1
+      ]
+     },
+     "grounded": {
+      "mean": 1.3333333333333333,
+      "min": 1,
+      "max": 2,
+      "values": [
+       2,
+       1,
+       1
+      ]
+     },
+     "verified": {
+      "mean": 1.3333333333333333,
+      "min": 1,
+      "max": 2,
+      "values": [
+       2,
+       1,
+       1
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 4.666666666666667,
+      "min": 4,
+      "max": 5,
+      "values": [
+       4,
+       5,
+       5
+      ]
+     },
+     "refused_traps": {
+      "mean": 4.666666666666667,
+      "min": 4,
+      "max": 5,
+      "values": [
+       4,
+       5,
+       5
+      ]
+     },
+     "traps_refused": {
+      "mean": 4.666666666666667,
+      "min": 4,
+      "max": 5,
+      "values": [
+       4,
+       5,
+       5
+      ]
+     }
+    }
+   },
+   "sub-unit": {
+    "n": {
+     "mean": 1,
+     "min": 1,
+     "max": 1,
+     "values": [
+      1,
+      1,
+      1
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7970443964004517,
+     "min": 0.7970443964004517,
+     "max": 0.7970443964004517,
+     "values": [
+      0.7970443964004517,
+      0.7970443964004517,
+      0.7970443964004517
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 1097.6666666666667,
+     "min": 1048.9,
+     "max": 1144.4,
+     "values": [
+      1048.9,
+      1099.7,
+      1144.4
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 1097.6666666666667,
+     "min": 1048.9,
+     "max": 1144.4,
+     "values": [
+      1048.9,
+      1099.7,
+      1144.4
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 1097.6666666666667,
+     "min": 1048.9,
+     "max": 1144.4,
+     "values": [
+      1048.9,
+      1099.7,
+      1144.4
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_accuracy": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "grounding_rate": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "referrals": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "referral_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "ocr_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "ocr_corrected_rate": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "para_corrected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "skipped_llm": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "relevance_rejected_answerable": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0,
+      0,
+      0
+     ]
+    },
+    "mean_input_tokens": {
+     "mean": 873.0,
+     "min": 873.0,
+     "max": 873.0,
+     "values": [
+      873.0,
+      873.0,
+      873.0
+     ]
+    },
+    "mean_output_tokens": {
+     "mean": 58.666666666666664,
+     "min": 44.0,
+     "max": 66.0,
+     "values": [
+      66.0,
+      44.0,
+      66.0
+     ]
+    },
+    "mean_tts_chars": {
+     "mean": 154.0,
+     "min": 98.0,
+     "max": 182.0,
+     "values": [
+      182.0,
+      98.0,
+      182.0
+     ]
+    },
+    "counts": {
+     "questions": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "answerable": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_1": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "hit_at_k": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "unit_correct": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "answered": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "grounded": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "verified": {
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "values": [
+       1,
+       1,
+       1
+      ]
+     },
+     "ocr_corrected": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "referrals": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "refused_traps": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     },
+     "traps_refused": {
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "values": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   }
+  }
+ },
+ "per_question": [
+  {
+   "id": "u1-direct",
+   "category": "direct",
+   "question": "During any audit you conducted, were errors ever attributed to the Horizon IT system?",
+   "expected_paras": [
+    56,
+    68
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 56,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1007.1
+    },
+    {
+     "run": 2,
+     "para_no": 56,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1119.8
+    },
+    {
+     "run": 3,
+     "para_no": 56,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1018.3
+    }
+   ]
+  },
+  {
+   "id": "u1-para",
+   "category": "paraphrased",
+   "question": "How did the business decide which branches you would visit, and how often a given branch could expect to see you?",
+   "expected_paras": [
+    23,
+    27
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 28,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 8,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1160.1
+    },
+    {
+     "run": 2,
+     "para_no": 28,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 8,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1116.9
+    },
+    {
+     "run": 3,
+     "para_no": 28,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 8,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1111.4
+    }
+   ]
+  },
+  {
+   "id": "u1-answer",
+   "category": "direct",
+   "question": "When did you first learn that Ms Hall had been prosecuted?",
+   "expected_paras": [
+    66
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 66,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1001.1
+    },
+    {
+     "run": 2,
+     "para_no": 66,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 975.0
+    },
+    {
+     "run": 3,
+     "para_no": 66,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1043.4
+    }
+   ]
+  },
+  {
+   "id": "u1-docref",
+   "category": "docref",
+   "question": "Turning to POL00091046, can you tell us what that document is?",
+   "expected_paras": [
+    "44(i)",
+    58
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": "44(i)",
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 990.2
+    },
+    {
+     "run": 2,
+     "para_no": "44(i)",
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1059.4
+    },
+    {
+     "run": 3,
+     "para_no": "44(i)",
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 987.3
+    }
+   ]
+  },
+  {
+   "id": "u1-trap-off",
+   "category": "trap",
+   "question": "Which football team do you support?",
+   "expected_paras": [],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 6.9
+    },
+    {
+     "run": 2,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 13.9
+    },
+    {
+     "run": 3,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 15.9
+    }
+   ]
+  },
+  {
+   "id": "u1-trap-on",
+   "category": "trap",
+   "question": "What was your involvement in the Initial Complaint Review and Mediation Scheme?",
+   "expected_paras": [],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 920.7
+    },
+    {
+     "run": 2,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1897.8
+    },
+    {
+     "run": 3,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1032.4
+    }
+   ]
+  },
+  {
+   "id": "u1-ocr-role",
+   "category": "direct",
+   "question": "What was your role at the Post Office, and when did you start?",
+   "expected_paras": [
+    3
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 3,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1139.5
+    },
+    {
+     "run": 2,
+     "para_no": 3,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1117.5
+    },
+    {
+     "run": 3,
+     "para_no": 3,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1110.7
+    }
+   ]
+  },
+  {
+   "id": "u1-ocr-fsa",
+   "category": "direct",
+   "question": "Do you work as a field support advisor?",
+   "expected_paras": [
+    1
+   ],
+   "statement": "witn09180100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 1,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 5,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1002.3
+    },
+    {
+     "run": 2,
+     "para_no": 1,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 5,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1012.8
+    },
+    {
+     "run": 3,
+     "para_no": 1,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 5,
+     "refused": false,
+     "grounded": true,
+     "verified": false,
+     "ocr_corrected": true,
+     "referral": false,
+     "latency_ms": 1021.1
+    }
+   ]
+  },
+  {
+   "id": "u2-direct",
+   "category": "direct",
+   "question": "Was there any right of appeal against a decision to suspend a subpostmaster?",
+   "expected_paras": [
+    127
+   ],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 127,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 968.3
+    },
+    {
+     "run": 2,
+     "para_no": 127,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 983.0
+    },
+    {
+     "run": 3,
+     "para_no": 127,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 976.5
+    }
+   ]
+  },
+  {
+   "id": "u2-para",
+   "category": "paraphrased",
+   "question": "Before 2014, who had the final say on stopping a postmaster from running their branch while a shortfall was looked into?",
+   "expected_paras": [
+    99
+   ],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 106,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 119,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1329.4
+    },
+    {
+     "run": 2,
+     "para_no": 106,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 119,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1014.6
+    },
+    {
+     "run": 3,
+     "para_no": 106,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 119,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1067.8
+    }
+   ]
+  },
+  {
+   "id": "u2-sub",
+   "category": "sub-unit",
+   "question": "Did the auditor's own view of what they had found play any part in whether a subpostmaster was suspended?",
+   "expected_paras": [
+    "103.9"
+   ],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": "152.2",
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 67,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1048.9
+    },
+    {
+     "run": 2,
+     "para_no": "152.2",
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 67,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1099.7
+    },
+    {
+     "run": 3,
+     "para_no": "152.2",
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 67,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1144.4
+    }
+   ]
+  },
+  {
+   "id": "u2-docref",
+   "category": "docref",
+   "question": "You refer to POL00088579, the Operators In Service Debt policy. Why did you come to write it?",
+   "expected_paras": [
+    47,
+    77
+   ],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 47,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1979.3
+    },
+    {
+     "run": 2,
+     "para_no": 47,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1506.2
+    },
+    {
+     "run": 3,
+     "para_no": 47,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2405.4
+    }
+   ]
+  },
+  {
+   "id": "u2-trap-off",
+   "category": "trap",
+   "question": "What do you do with your spare time now that you have retired?",
+   "expected_paras": [],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 19.5
+    },
+    {
+     "run": 2,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 16.4
+    },
+    {
+     "run": 3,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 10.4
+    }
+   ]
+  },
+  {
+   "id": "u2-trap-on",
+   "category": "trap",
+   "question": "What did you know about Fujitsu's ability to access branch accounts remotely?",
+   "expected_paras": [],
+   "statement": "witn06700100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 161,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1250.0
+    },
+    {
+     "run": 2,
+     "para_no": 161,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1296.5
+    },
+    {
+     "run": 3,
+     "para_no": 161,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1126.8
+    }
+   ]
+  },
+  {
+   "id": "u3-direct",
+   "category": "direct",
+   "question": "Were you given any specific training on Horizon when you joined the Post Office?",
+   "expected_paras": [
+    21
+   ],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 21,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 977.2
+    },
+    {
+     "run": 2,
+     "para_no": 21,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1053.6
+    },
+    {
+     "run": 3,
+     "para_no": 21,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 992.6
+    }
+   ]
+  },
+  {
+   "id": "u3-para",
+   "category": "paraphrased",
+   "question": "How did you come to be brought into the organisation in the first place?",
+   "expected_paras": [
+    7,
+    6
+   ],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 7,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2264.5
+    },
+    {
+     "run": 2,
+     "para_no": 7,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2108.0
+    },
+    {
+     "run": 3,
+     "para_no": 7,
+     "para_correct": true,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2225.3
+    }
+   ]
+  },
+  {
+   "id": "u3-answer",
+   "category": "direct",
+   "question": "Did you read Deloitte's Project Bramble reports when they were produced?",
+   "expected_paras": [
+    238
+   ],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 240,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 15,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1079.0
+    },
+    {
+     "run": 2,
+     "para_no": 235,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 15,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1049.6
+    },
+    {
+     "run": 3,
+     "para_no": 240,
+     "para_correct": false,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 15,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1147.7
+    }
+   ]
+  },
+  {
+   "id": "u3-docref",
+   "category": "docref",
+   "question": "Can you help us with POL00149601? What was your part in it?",
+   "expected_paras": [
+    41
+   ],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 41,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1035.5
+    },
+    {
+     "run": 2,
+     "para_no": 41,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 2079.1
+    },
+    {
+     "run": 3,
+     "para_no": 41,
+     "para_correct": true,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1086.0
+    }
+   ]
+  },
+  {
+   "id": "u3-trap-off",
+   "category": "trap",
+   "question": "Where do you like to go on holiday?",
+   "expected_paras": [],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 15.1
+    },
+    {
+     "run": 2,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 14.5
+    },
+    {
+     "run": 3,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 11.9
+    }
+   ]
+  },
+  {
+   "id": "u3-trap-on",
+   "category": "trap",
+   "question": "What was your involvement in the prosecution of Seema Misra?",
+   "expected_paras": [],
+   "statement": "witn09830100.pdf",
+   "runs": [
+    {
+     "run": 1,
+     "para_no": 178,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1113.7
+    },
+    {
+     "run": 2,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1038.0
+    },
+    {
+     "run": 3,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": true,
+     "verified": true,
+     "ocr_corrected": false,
+     "referral": false,
+     "latency_ms": 1053.4
+    }
+   ]
+  }
+ ]
+}

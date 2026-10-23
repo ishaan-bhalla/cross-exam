@@ -1,8 +1,24 @@
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 import requests
 from crossexam.config import get_settings
 
 _rate_limit_wait_seconds = 0.0
+# Token usage of each chat() call made inside track_usage(), for cost logging.
+_usage: ContextVar[list | None] = ContextVar("llm_usage", default=None)
+
+
+@contextmanager
+def track_usage():
+    """Collects {"input_tokens", "output_tokens"} for every chat() call in this context
+    (asyncio.to_thread copies the context, so calls made in a worker thread count too)."""
+    calls = []
+    token = _usage.set(calls)
+    try:
+        yield calls
+    finally:
+        _usage.reset(token)
 
 
 def rate_limit_wait_seconds() -> float:
@@ -33,4 +49,10 @@ def chat(messages: list[dict], model: str | None = None, max_tokens: int | None 
         time.sleep(wait)
         _rate_limit_wait_seconds += wait
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+    body = r.json()
+    calls = _usage.get()
+    if calls is not None:
+        u = body.get("usage") or {}
+        calls.append({"input_tokens": u.get("input_tokens", u.get("prompt_tokens")),
+                      "output_tokens": u.get("output_tokens", u.get("completion_tokens"))})
+    return body["choices"][0]["message"]["content"]

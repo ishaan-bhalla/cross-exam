@@ -14,7 +14,8 @@ import statistics
 import time
 from datetime import datetime
 from pathlib import Path
-from crossexam.clients.llm_gateway import rate_limit_wait_seconds
+from crossexam import costs
+from crossexam.clients.llm_gateway import rate_limit_wait_seconds, track_usage
 from crossexam.config import get_settings
 from crossexam.statements.parser import load_statement
 from crossexam.retrieval.retriever import Retriever
@@ -37,11 +38,15 @@ def _mean(values: list[float]) -> float | None:
     return statistics.mean(values) if values else None
 
 
-def _p95(values: list[float]) -> float | None:
+def _percentile(values: list[float], q: float) -> float | None:
     if not values:
         return None
     ordered = sorted(values)
-    return ordered[min(len(ordered) - 1, round(0.95 * (len(ordered) - 1)))]
+    return ordered[min(len(ordered) - 1, round(q * (len(ordered) - 1)))]
+
+
+def _p95(values: list[float]) -> float | None:
+    return _percentile(values, 0.95)
 
 
 def variant_name(kind: str, hyde: bool, dense_weight: float | None = None) -> str:
@@ -75,7 +80,10 @@ def run_question(q: dict, retriever: Retriever, witness: str, use_llm: bool,
          "hit_at_k": any(h["para_no"] in expected for h in hits) if answerable else None}
 
     if use_llm:
-        a = answer(q["question"], retriever, witness, retrieval=retrieval, relevance_check=relevance_check)
+        with track_usage() as llm_calls:
+            a = answer(q["question"], retriever, witness, retrieval=retrieval, relevance_check=relevance_check)
+        # The text eval synthesises nothing: TTS characters are what would be sent, audio is not measured.
+        r["usage"] = costs.usage(llm_calls, costs.live_tts_chars(a), tts_audio_seconds=None)
         rel = a["relevance"] or {}
         r.update({"para_no": a["para_no"],
                   "para_correct": (a["para_no"] in expected) if answerable else None,
@@ -120,6 +128,7 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
          "mean_top_dense_answerable": _mean(dense(answerable)),
          "mean_top_dense_trap": _mean(dense(traps)),
          "latency_mean_ms": _mean(latencies),
+         "latency_p50_ms": _percentile(latencies, 0.5),
          "latency_p95_ms": _p95(latencies),
          "rate_limit_wait_ms": sum(r["rate_limit_wait_ms"] for r in rows)}
     if use_llm:
@@ -133,7 +142,44 @@ def summarise(rows: list[dict], use_llm: bool) -> dict:
         s["skipped_llm"] = sum(r["skipped_llm"] for r in rows)
         s["relevance_rejected"] = sum(r["relevance_rejected"] for r in rows)
         s["relevance_rejected_answerable"] = sum(r["relevance_rejected"] for r in rows if r["expected_paras"])
+        s["counts"] = counts(rows)
+        s["usage"] = usage_summary(rows)
+        mean = (s["usage"] or {}).get("mean_per_answer", {})
+        s["mean_input_tokens"] = mean.get("llm_input_tokens")
+        s["mean_output_tokens"] = mean.get("llm_output_tokens")
+        s["mean_tts_chars"] = mean.get("tts_chars")
     return s
+
+
+def counts(rows: list[dict]) -> dict:
+    """The numerators and denominators behind the rates, for reporting exact counts."""
+    answerable = [r for r in rows if r["expected_paras"]]
+    traps = [r for r in rows if not r["expected_paras"]]
+    refused = [r for r in rows if r["refused"]]
+    answered = [r for r in rows if not r["refused"]]
+    return {"questions": len(rows), "answerable": len(answerable), "traps": len(traps),
+            "hit_at_1": sum(bool(r["hit_at_1"]) for r in answerable), "hit_at_k": sum(bool(r["hit_at_k"]) for r in answerable),
+            "unit_correct": sum(bool(r.get("para_correct")) for r in answerable),
+            "answered": len(answered), "grounded": sum(bool(r.get("grounded")) for r in answered),
+            "verified": sum(bool(r.get("verified")) for r in answered),
+            "ocr_corrected": sum(bool(r.get("ocr_corrected")) for r in answered),
+            "referrals": sum(bool(r.get("referral")) for r in answered),
+            "refused": len(refused), "refused_traps": sum(not r["expected_paras"] for r in refused),
+            "traps_refused": sum(bool(r["refused"]) for r in traps)}
+
+
+def usage_summary(rows: list[dict]) -> dict | None:
+    """Mean and total LLM tokens and TTS characters per answer, and the cost estimate."""
+    us = [r["usage"] for r in rows if r.get("usage")]
+    if not us:
+        return None
+    totals = {k: sum(u[k] for u in us) for k in ("llm_calls", "llm_input_tokens", "llm_output_tokens", "tts_chars")}
+    cost = [u["cost_usd"]["total"] for u in us]
+    return {"answers": len(us), "totals": totals,
+            "mean_per_answer": {k: v / len(us) for k, v in totals.items()},
+            "cost_usd_total": None if None in cost else sum(cost),
+            "cost_usd_mean_per_answer": None if None in cost else sum(cost) / len(us),
+            "rates": costs.rates()}
 
 
 def build_summary(rows: list[dict], use_llm: bool, split_confidence: bool = True, **meta) -> dict:
@@ -160,12 +206,14 @@ def table_columns(use_llm: bool) -> list[tuple[str, str, str]]:
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%")]
     if use_llm:
         cols += [("para acc", "para_accuracy", "%"), ("grounded", "grounding_rate", "%"),
+                 ("tok in", "mean_input_tokens", "f"), ("tok out", "mean_output_tokens", "f"),
+                 ("tts chars", "mean_tts_chars", "f"),
                  ("referrals", "referrals", "d"), ("referral %", "referral_rate", "%"),
                  ("ocr corr", "ocr_corrected", "d"),
                  ("corrected", "para_corrected", "d"), ("skip llm", "skipped_llm", "d"),
                  ("rel rej", "relevance_rejected", "d")]
     cols += [("routed", "routed", "d"), ("refused", "refused", "d"), ("ref prec", "refusal_precision", "%"),
-             ("ref rec", "refusal_recall", "%"), ("mean ms", "latency_mean_ms", "f"),
+             ("ref rec", "refusal_recall", "%"), ("mean ms", "latency_mean_ms", "f"), ("p50 ms", "latency_p50_ms", "f"),
              ("p95 ms", "latency_p95_ms", "f"), ("rl wait ms", "rate_limit_wait_ms", "f")]
     return cols
 
@@ -290,6 +338,7 @@ def main():
     p.add_argument("--no-llm", action="store_true", help="retrieval only, no answer generation")
     p.add_argument("--no-relevance-check", action="store_true", help="skip the LLM relevance check")
     p.add_argument("--repeats", type=int, default=1, help="run the eval N times; report mean and min-max")
+    p.add_argument("--save-as", metavar="NAME", help="also write eval/results/run_<date>_NAME.json (eval_results.py)")
     a = p.parse_args()
     if a.repeats > 1 and a.ablation:
         p.error("--repeats is not supported with --ablation")
@@ -301,6 +350,8 @@ def main():
     questions = [json.loads(line) for line in qpath.read_text().splitlines() if line.strip()]
     paragraphs = load_statement(a.pdf)
     out_dir = s.resolve(s.outputs_dir) / "eval" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    while out_dir.exists():  # two runs started in the same second
+        out_dir = out_dir.with_name(out_dir.name + "-b")
 
     if a.ablation:
         variants = [(k, h, w) for k, h, w in ABLATION if use_llm or not h]
@@ -337,7 +388,9 @@ def main():
             if agg_high:
                 print("\nHigh-confidence labels only")
                 print_repeats(agg_high, use_llm, a.repeats)
+            print_usage([sm["overall"].get("usage") for sm in summaries])
             print(f"\nwrote {out_dir}")
+            save_result(out_dir, a.save_as)
             return
         rows, summary = run_variant(questions, paragraphs, a, kind, hyde, use_llm)
         write(out_dir, rows, summary)
@@ -351,7 +404,29 @@ def main():
             print_table(summary["high_confidence"], use_llm)
         print_misses(rows)
         print_dense_scores(rows)
+        print_usage([summary["overall"].get("usage")])
     print(f"\nwrote {out_dir}")
+    save_result(out_dir, a.save_as)
+
+
+def print_usage(usages: list[dict | None]):
+    """Per-answer LLM tokens and TTS characters, and the cost estimate, over the runs."""
+    usages = [u for u in usages if u]
+    if not usages:
+        return
+    mean = lambda k: statistics.mean(u["mean_per_answer"][k] for u in usages)
+    cost = [u["cost_usd_mean_per_answer"] for u in usages]
+    answers = sum(u["answers"] for u in usages)
+    print(f"\nusage per answer (mean over {answers} answers): {mean('llm_calls'):.2f} LLM calls, "
+          f"{mean('llm_input_tokens'):.0f} input / {mean('llm_output_tokens'):.0f} output tokens, "
+          f"{mean('tts_chars'):.0f} TTS characters (audio not synthesised in this eval); cost "
+          + (f"${statistics.mean(cost):.5f}" if None not in cost else "not measured (rates not set)"))
+
+
+def save_result(out_dir: Path, name: str | None):
+    if name:
+        import eval_results
+        print(f"saved {eval_results.save(out_dir, name, fresh=True)}")
 
 
 if __name__ == "__main__":

@@ -131,7 +131,7 @@ async function restoreConversation() {
       counsel.append(el("div", "timing", `asked by voice · end of speech to submitted ${t.timing.voice.end_of_speech_to_submit_ms} ms`));
     const turn = renderWitnessTurn(t.answer, { scroll: false });
     addReplay(turn, t.id);
-    if (params.has("debug") && t.timing) turn.append(el("div", "timing", `answer ${t.timing.answer_latency_ms} ms · audio ${(t.timing.duration_ms / 1000).toFixed(1)} s`));
+    if (params.has("debug") && t.timing) turn.append(el("div", "timing", `answer ${t.timing.answer_latency_ms} ms · audio ${(t.timing.duration_ms / 1000).toFixed(1)} s · ${describeUsage(t.timing.usage)}`));
     last = t.answer;
   }
   $("clear-conversation").hidden = !turns.length;
@@ -255,7 +255,8 @@ $("ask-form").addEventListener("submit", (e) => {
   startAnswer();
   current.counselTurn = turn;
   ws.send(JSON.stringify({ type: "question", text, spoken: Boolean(voice),
-                           voice_timing: voice ? { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms } : undefined }));
+                           voice_timing: voice ? { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms,
+                                                   stt_audio_seconds: voice.stt_audio_seconds } : undefined }));
 });
 
 function addTurn(cls, who, text, { scroll = true, asked = null } = {}) {
@@ -497,6 +498,16 @@ function tick() {
   else current.rafId = requestAnimationFrame(tick);
 }
 
+// Same wording as crossexam.costs.describe.
+function describeUsage(u) {
+  if (!u) return "cost not measured";
+  const tts = `TTS ${u.tts_chars} chars` + (u.tts_audio_seconds != null ? `, ${u.tts_audio_seconds.toFixed(1)} s` : "");
+  const stt = u.stt_audio_seconds != null ? ` · STT ${u.stt_audio_seconds.toFixed(1)} s` : "";
+  const total = u.cost_usd?.total;
+  return `LLM ${u.llm_calls} call(s), ${u.llm_input_tokens} in / ${u.llm_output_tokens} out tokens · ${tts}${stt}` +
+    ` · cost ${total != null ? "$" + total.toFixed(5) : "not measured"}`;
+}
+
 function onDone(msg) {
   current.done = msg;
   if (current.startTime === null) finish(); // no audio arrived
@@ -513,7 +524,8 @@ function finish() {
     ` · audio ${(d.duration_ms / 1000).toFixed(1)} s` +
     (current.underruns ? ` · ${current.underruns} audio underrun(s)` : "") +
     (d.missing_words?.length ? ` · no word timings for ${d.missing_words.join(", ")}` : "") +
-    (current.lateWordsMs > 0 ? ` · word timings arrived up to ${Math.round(current.lateWordsMs)} ms late` : "");
+    (current.lateWordsMs > 0 ? ` · word timings arrived up to ${Math.round(current.lateWordsMs)} ms late` : "") +
+    ` · ${describeUsage(d.usage)}`;
   if (params.has("debug")) current.turn?.append(el("div", "timing", timing)); // latency, for development
   window.__lastAnswer = { ...d, underruns: current.underruns, late_words_ms: Math.round(current.lateWordsMs),
     quote_hold_ms: Math.round(current.quoteHoldMs) };

@@ -112,6 +112,10 @@ class Settings(BaseSettings):
     api_host: str
     api_port: int
     ui_audio_buffer_ms: int
+    cost_llm_input_per_million_tokens: str
+    cost_llm_output_per_million_tokens: str
+    cost_tts_per_million_chars: str
+    cost_stt_per_hour: str
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p

@@ -52,6 +52,8 @@ from crossexam.api import conversations, phrases, uploads, witnesses
 from crossexam.statements.parser import ocr_available
 from crossexam.clients import tts
 from crossexam.config import get_settings
+from crossexam.clients.llm_gateway import track_usage
+from crossexam import costs
 from crossexam.witness.align import align_words, key_count
 from crossexam.witness.chunking import chunk_quote
 from crossexam.witness.docids import normalise_ids
@@ -318,19 +320,28 @@ def answer_message(result: dict) -> dict:
     return {**{k: result[k] for k in ANSWER_FIELDS}, "refused": result["para_no"] is None}
 
 
-async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.PersistentSession) -> tuple[dict, dict]:
+async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.PersistentSession,
+                   stt_audio_seconds: float | None = None) -> tuple[dict, dict]:
     """Answer a question and speak it. Returns (answer result, done message)."""
     received = time.perf_counter()
-    result = await asyncio.to_thread(answer, question, witnesses.retriever(witness["id"]), witness["name"])
+
+    def run():
+        with track_usage() as calls:
+            return answer(question, witnesses.retriever(witness["id"]), witness["name"]), calls
+    result, llm_calls = await asyncio.to_thread(run)
     answer_latency_ms = (time.perf_counter() - received) * 1000
     await ws.send_json({"type": "answer", **answer_message(result)})
-    return result, await _speak(ws, witness, result, tts_conn, received, answer_latency_ms)
+    return result, await _speak(ws, witness, result, tts_conn, received, answer_latency_ms, llm_calls, stt_audio_seconds)
 
 
 async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.PersistentSession,
-                 received: float, answer_latency_ms: float) -> dict:
+                 received: float, answer_latency_ms: float, llm_calls: list[dict] | None = None,
+                 stt_audio_seconds: float | None = None) -> dict:
     """Send the answer's audio and word timings (cached phrases, then the live quote), then
-    the done message, which is returned."""
+    the done message, which is returned. Its "usage" (crossexam.costs) counts the LLM calls
+    passed in and what was synthesised live: characters sent and the audio seconds the TTS
+    server reported per flush (FlushDone audio_duration_ms, the per-flush form of
+    Termination's audio_duration_seconds)."""
     s = get_settings()
     voice = witness["voice"]
     refused = result["para_no"] is None
@@ -366,6 +377,7 @@ async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.Persi
         part.setdefault("label", part["kind"])
 
     tts_wait_ms = time_to_first_audio_ms = quote_audio_ms = None
+    tts_live_ms = None
     missing_words = []
     if live:
         wait_started = time.perf_counter()
@@ -397,6 +409,7 @@ async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.Persi
             elif event["type"] == "done":
                 await out.send(limiter.finish(), session.sample_rate, live[-1]["kind"])
                 time_to_first_audio_ms = round(event["time_to_first_audio_ms"])
+                tts_live_ms = event["duration_ms"]
                 missing_words = [live[i]["label"] for i in event["missing_words"]]
     if quote_audio_ms is None and not refused and not referral:
         quote_audio_ms = out.first_audio_ms
@@ -408,7 +421,9 @@ async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.Persi
                         "tts_session_opens": tts_conn.opens,
                         "time_to_first_audio_ms": time_to_first_audio_ms,
                         "duration_ms": round(out.position_ms), "cached": cached,
-                        "missing_words": missing_words}
+                        "missing_words": missing_words,
+                        "usage": costs.usage(llm_calls, sum(len(p["text"]) for p in live),
+                                             tts_live_ms / 1000 if tts_live_ms is not None else 0.0, stt_audio_seconds)}
     await ws.send_json(done)
     return done
 
@@ -462,7 +477,10 @@ async def examine(ws: WebSocket, witness: str):
                     question, changes = normalise_ids(question, witnesses.cited_ids(w["id"]),
                                                       get_settings().doc_id_snap_max_distance)
                     await ws.send_json({"type": "question", "text": question, "id_changes": changes})
-                result, done = await _examine(ws, w, question, tts_conn)
+                voice_timing = msg.get("voice_timing") if isinstance(msg.get("voice_timing"), dict) else {}
+                stt_seconds = voice_timing.get("stt_audio_seconds")
+                result, done = await _examine(ws, w, question, tts_conn,
+                                              stt_seconds if isinstance(stt_seconds, (int, float)) else None)
                 timing = {k: v for k, v in done.items() if k != "type"}
                 if isinstance(msg.get("voice_timing"), dict):
                     timing["voice"] = {k: v for k, v in msg["voice_timing"].items() if isinstance(v, (int, float))}
@@ -478,7 +496,17 @@ async def examine(ws: WebSocket, witness: str):
         pass
     finally:
         opening.cancel()
-        await tts_conn.close()
+        # Shielded: if this handler is cancelled as the socket closes, the TTS session is still
+        # terminated (and its totals logged) rather than left open against the session limit.
+        closing = asyncio.ensure_future(tts_conn.close())
+        closing.add_done_callback(lambda f: f.cancelled() or f.exception() or _log_termination(w["id"], f.result()))
+        await asyncio.shield(closing)
+
+
+def _log_termination(witness_id: str, termination: dict | None):
+    if termination:  # the TTS server's own totals for this examination's session
+        print(f"tts session for {witness_id}: {termination.get('total_input_char_length')} chars, "
+              f"{termination.get('audio_duration_seconds')} s audio, {termination.get('session_duration_seconds')} s open")
 
 
 app.mount("/", StaticFiles(directory=get_settings().resolve(get_settings().web_dir), html=True), name="web")

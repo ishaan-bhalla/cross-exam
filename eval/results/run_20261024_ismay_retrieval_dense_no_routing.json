@@ -1,0 +1,1664 @@
+{
+ "name": "ismay_retrieval_dense_no_routing",
+ "date": "2026-10-24T00:44:35",
+ "source": "outputs/eval/20261024-004435-no-routing",
+ "layout": "single",
+ "git": {
+  "commit": "70b862de135ef8865204512c0c9e2775ed23f809",
+  "dirty": true
+ },
+ "model": "qwen3.5-4b-32k-fast",
+ "temperature": 0.0,
+ "settings": {
+  "llm_gateway_url": "https://llm-gateway.assemblyai.com/v1/chat/completions",
+  "llm_model": "qwen3.5-4b-32k-fast",
+  "llm_max_tokens": "300",
+  "llm_temperature": "0.0",
+  "llm_timeout_seconds": "30.0",
+  "llm_max_retries": "4",
+  "llm_retry_backoff_seconds": "2.0",
+  "stt_ws_url": "wss://streaming.assemblyai.com/v3/ws",
+  "stt_token_url": "https://streaming.assemblyai.com/v3/token",
+  "stt_speech_model": "universal-3-6-pro",
+  "stt_sample_rate": "16000",
+  "stt_chunk_ms": "100",
+  "stt_token_expires_seconds": "60",
+  "stt_token_refresh_margin_seconds": "10",
+  "stt_max_session_seconds": "600",
+  "stt_submit_grace_ms": "1200",
+  "stt_min_turn_silence_ms": "",
+  "stt_max_turn_silence_ms": "",
+  "stt_end_of_turn_confidence": "",
+  "doc_id_snap_max_distance": "1",
+  "tts_ws_url": "wss://streaming-tts.assemblyai.com/v1/ws",
+  "tts_default_voice": "charles",
+  "tts_voices": "charles:British,anna:British,paul:British,vera:British,george:American,jane:American,michael:American,mary:American,alba:American,eve:American,jean:American",
+  "tts_timeout_seconds": "10.0",
+  "tts_sample_rate": "24000",
+  "tts_session_retries": "3",
+  "tts_session_retry_backoff_seconds": "1.0",
+  "tts_silence_threshold": "500",
+  "tts_trim_preroll_ms": "40",
+  "tts_trim_tail_ms": "100",
+  "tts_chunk_max_words": "12",
+  "tts_chunk_gap_ms": "400",
+  "tts_lead_in_gap_ms": "250",
+  "tts_keepalive_seconds": "10.0",
+  "tts_words_wait_seconds": "2.0",
+  "quote_timings_max_wait_ms": "1000",
+  "phrase_cache_dir": "data/tts_cache",
+  "quote_max_words": "60",
+  "retrieval_top_k": "5",
+  "reranker_enabled": "False",
+  "reranker_model": "BAAI/bge-reranker-base",
+  "rerank_candidates": "20",
+  "retrieval_min_score": "2.0",
+  "retriever": "dense",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_query_prefix": "Represent this sentence for searching relevant passages: ",
+  "embedding_cache_dir": "data/models",
+  "rrf_k": "60",
+  "dense_weight": "0.5",
+  "dense_min_score": "0.56",
+  "hyde_enabled": "False",
+  "relevance_check_enabled": "False",
+  "doc_id_pattern": "",
+  "data_dir": "data",
+  "prompts_dir": "prompts",
+  "witness_answer_prompt": "witness_answer.txt",
+  "lead_ins_file": "lead_ins.json",
+  "hyde_prompt": "hyde.txt",
+  "relevance_check_prompt": "relevance_check.txt",
+  "quote_select_prompt": "quote_select.txt",
+  "ocr_verify_enabled": "True",
+  "ocr_verify_max_edit_ratio": "0.25",
+  "ocr_verify_max_edits": "2",
+  "ocr_verify_max_merge": "3",
+  "ocr_verify_min_exact_fraction": "0.7",
+  "ocr_verify_confusable": "il1,o0",
+  "outputs_dir": "outputs",
+  "processed_dir": "data/processed",
+  "statements_dir": "data/raw/statements",
+  "ocr_enabled": "True",
+  "tesseract_cmd": "tesseract",
+  "ocr_dpi": "300",
+  "ocr_min_chars": "200",
+  "ocr_max_junk_ratio": "0.04",
+  "parser_running_line_min_fraction": "0.3",
+  "parser_edge_lines": "6",
+  "parser_max_para_gap": "3",
+  "parser_jump_lookahead_lines": "80",
+  "parser_gap_ocr_max_pages": "12",
+  "parser_heading_max_words": "12",
+  "eval_dir": "eval",
+  "upload_max_mb": "50",
+  "upload_workers": "2",
+  "persist_uploads": "False",
+  "uploads_dir": "data/uploads",
+  "uploads_per_client": "3",
+  "upload_ttl_minutes": "60",
+  "conversation_max_turns": "100",
+  "profile_prompt": "profile.txt",
+  "profile_opening_units": "12",
+  "profile_max_roles": "4",
+  "profile_max_tokens": "800",
+  "subunit_context_enabled": "True",
+  "subunit_context_max_words": "30",
+  "witnesses_file": "witnesses/witnesses.json",
+  "web_dir": "src/crossexam/web",
+  "api_host": "127.0.0.1",
+  "api_port": "8000",
+  "ui_audio_buffer_ms": "200",
+  "cost_llm_input_per_million_tokens": "",
+  "cost_llm_output_per_million_tokens": "",
+  "cost_tts_per_million_chars": "",
+  "cost_stt_per_hour": ""
+ },
+ "environment": {
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "cpu": "Apple M3 Pro",
+  "memory_gb": 36,
+  "python": "3.11.17"
+ },
+ "notes": "Retrieval only, dense, with document-ID routing off (DOC_ID_PATTERN empty).",
+ "llm": false,
+ "repeats": 1,
+ "runs": [
+  {
+   "overall": {
+    "n": 35,
+    "hit_at_1": 0.8214285714285714,
+    "hit_at_k": 0.9285714285714286,
+    "refused": 3,
+    "routed": 0,
+    "doc_id_unknown": 0,
+    "refusal_precision": 1.0,
+    "refusal_recall": 0.42857142857142855,
+    "mean_top_dense_answerable": 0.7358366953475135,
+    "mean_top_dense_trap": 0.5963309747832162,
+    "latency_mean_ms": 5.98,
+    "latency_p50_ms": 3.7,
+    "latency_p95_ms": 4.8,
+    "rate_limit_wait_ms": 0.0
+   },
+   "by_category": {
+    "direct": {
+     "n": 12,
+     "hit_at_1": 1.0,
+     "hit_at_k": 1.0,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7944546242554983,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 10.158333333333333,
+     "latency_p50_ms": 3.8,
+     "latency_p95_ms": 5.1,
+     "rate_limit_wait_ms": 0.0
+    },
+    "paraphrased": {
+     "n": 8,
+     "hit_at_1": 0.75,
+     "hit_at_k": 0.875,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.6489544585347176,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 4.1875,
+     "latency_p50_ms": 4.3,
+     "latency_p95_ms": 4.8,
+     "rate_limit_wait_ms": 0.0
+    },
+    "multi": {
+     "n": 4,
+     "hit_at_1": 0.75,
+     "hit_at_k": 1.0,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": null,
+     "mean_top_dense_answerable": 0.7590740025043488,
+     "mean_top_dense_trap": null,
+     "latency_mean_ms": 3.8,
+     "latency_p50_ms": 3.9,
+     "latency_p95_ms": 4.0,
+     "rate_limit_wait_ms": 0.0
+    },
+    "trap": {
+     "n": 6,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "refused": 3,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": 1.0,
+     "refusal_recall": 0.5,
+     "mean_top_dense_answerable": null,
+     "mean_top_dense_trap": 0.5748461286226908,
+     "latency_mean_ms": 3.2333333333333334,
+     "latency_p50_ms": 3.2,
+     "latency_p95_ms": 3.7,
+     "rate_limit_wait_ms": 0.0
+    },
+    "docref": {
+     "n": 5,
+     "hit_at_1": 0.5,
+     "hit_at_k": 0.75,
+     "refused": 0,
+     "routed": 0,
+     "doc_id_unknown": 0,
+     "refusal_precision": null,
+     "refusal_recall": 0.0,
+     "mean_top_dense_answerable": 0.7105100750923157,
+     "mean_top_dense_trap": 0.7252400517463684,
+     "latency_mean_ms": 3.86,
+     "latency_p50_ms": 3.7,
+     "latency_p95_ms": 4.6,
+     "rate_limit_wait_ms": 0.0
+    }
+   }
+  }
+ ],
+ "aggregate": {
+  "overall": {
+   "n": {
+    "mean": 35,
+    "min": 35,
+    "max": 35,
+    "values": [
+     35
+    ]
+   },
+   "hit_at_1": {
+    "mean": 0.8214285714285714,
+    "min": 0.8214285714285714,
+    "max": 0.8214285714285714,
+    "values": [
+     0.8214285714285714
+    ]
+   },
+   "hit_at_k": {
+    "mean": 0.9285714285714286,
+    "min": 0.9285714285714286,
+    "max": 0.9285714285714286,
+    "values": [
+     0.9285714285714286
+    ]
+   },
+   "refused": {
+    "mean": 3,
+    "min": 3,
+    "max": 3,
+    "values": [
+     3
+    ]
+   },
+   "routed": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "doc_id_unknown": {
+    "mean": 0,
+    "min": 0,
+    "max": 0,
+    "values": [
+     0
+    ]
+   },
+   "refusal_precision": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "values": [
+     1.0
+    ]
+   },
+   "refusal_recall": {
+    "mean": 0.42857142857142855,
+    "min": 0.42857142857142855,
+    "max": 0.42857142857142855,
+    "values": [
+     0.42857142857142855
+    ]
+   },
+   "mean_top_dense_answerable": {
+    "mean": 0.7358366953475135,
+    "min": 0.7358366953475135,
+    "max": 0.7358366953475135,
+    "values": [
+     0.7358366953475135
+    ]
+   },
+   "mean_top_dense_trap": {
+    "mean": 0.5963309747832162,
+    "min": 0.5963309747832162,
+    "max": 0.5963309747832162,
+    "values": [
+     0.5963309747832162
+    ]
+   },
+   "latency_mean_ms": {
+    "mean": 5.98,
+    "min": 5.98,
+    "max": 5.98,
+    "values": [
+     5.98
+    ]
+   },
+   "latency_p50_ms": {
+    "mean": 3.7,
+    "min": 3.7,
+    "max": 3.7,
+    "values": [
+     3.7
+    ]
+   },
+   "latency_p95_ms": {
+    "mean": 4.8,
+    "min": 4.8,
+    "max": 4.8,
+    "values": [
+     4.8
+    ]
+   },
+   "rate_limit_wait_ms": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "values": [
+     0.0
+    ]
+   },
+   "counts": {}
+  },
+  "by_category": {
+   "direct": {
+    "n": {
+     "mean": 12,
+     "min": 12,
+     "max": 12,
+     "values": [
+      12
+     ]
+    },
+    "hit_at_1": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "hit_at_k": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7944546242554983,
+     "min": 0.7944546242554983,
+     "max": 0.7944546242554983,
+     "values": [
+      0.7944546242554983
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 10.158333333333333,
+     "min": 10.158333333333333,
+     "max": 10.158333333333333,
+     "values": [
+      10.158333333333333
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 3.8,
+     "min": 3.8,
+     "max": 3.8,
+     "values": [
+      3.8
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 5.1,
+     "min": 5.1,
+     "max": 5.1,
+     "values": [
+      5.1
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "counts": {}
+   },
+   "paraphrased": {
+    "n": {
+     "mean": 8,
+     "min": 8,
+     "max": 8,
+     "values": [
+      8
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.75,
+     "min": 0.75,
+     "max": 0.75,
+     "values": [
+      0.75
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.875,
+     "min": 0.875,
+     "max": 0.875,
+     "values": [
+      0.875
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.6489544585347176,
+     "min": 0.6489544585347176,
+     "max": 0.6489544585347176,
+     "values": [
+      0.6489544585347176
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 4.1875,
+     "min": 4.1875,
+     "max": 4.1875,
+     "values": [
+      4.1875
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 4.3,
+     "min": 4.3,
+     "max": 4.3,
+     "values": [
+      4.3
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 4.8,
+     "min": 4.8,
+     "max": 4.8,
+     "values": [
+      4.8
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "counts": {}
+   },
+   "multi": {
+    "n": {
+     "mean": 4,
+     "min": 4,
+     "max": 4,
+     "values": [
+      4
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.75,
+     "min": 0.75,
+     "max": 0.75,
+     "values": [
+      0.75
+     ]
+    },
+    "hit_at_k": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7590740025043488,
+     "min": 0.7590740025043488,
+     "max": 0.7590740025043488,
+     "values": [
+      0.7590740025043488
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 3.8,
+     "min": 3.8,
+     "max": 3.8,
+     "values": [
+      3.8
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 3.9,
+     "min": 3.9,
+     "max": 3.9,
+     "values": [
+      3.9
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 4.0,
+     "min": 4.0,
+     "max": 4.0,
+     "values": [
+      4.0
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "counts": {}
+   },
+   "trap": {
+    "n": {
+     "mean": 6,
+     "min": 6,
+     "max": 6,
+     "values": [
+      6
+     ]
+    },
+    "refused": {
+     "mean": 3,
+     "min": 3,
+     "max": 3,
+     "values": [
+      3
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "refusal_precision": {
+     "mean": 1.0,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.5748461286226908,
+     "min": 0.5748461286226908,
+     "max": 0.5748461286226908,
+     "values": [
+      0.5748461286226908
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 3.2333333333333334,
+     "min": 3.2333333333333334,
+     "max": 3.2333333333333334,
+     "values": [
+      3.2333333333333334
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 3.2,
+     "min": 3.2,
+     "max": 3.2,
+     "values": [
+      3.2
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 3.7,
+     "min": 3.7,
+     "max": 3.7,
+     "values": [
+      3.7
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "counts": {}
+   },
+   "docref": {
+    "n": {
+     "mean": 5,
+     "min": 5,
+     "max": 5,
+     "values": [
+      5
+     ]
+    },
+    "hit_at_1": {
+     "mean": 0.5,
+     "min": 0.5,
+     "max": 0.5,
+     "values": [
+      0.5
+     ]
+    },
+    "hit_at_k": {
+     "mean": 0.75,
+     "min": 0.75,
+     "max": 0.75,
+     "values": [
+      0.75
+     ]
+    },
+    "refused": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "routed": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "doc_id_unknown": {
+     "mean": 0,
+     "min": 0,
+     "max": 0,
+     "values": [
+      0
+     ]
+    },
+    "refusal_recall": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "mean_top_dense_answerable": {
+     "mean": 0.7105100750923157,
+     "min": 0.7105100750923157,
+     "max": 0.7105100750923157,
+     "values": [
+      0.7105100750923157
+     ]
+    },
+    "mean_top_dense_trap": {
+     "mean": 0.7252400517463684,
+     "min": 0.7252400517463684,
+     "max": 0.7252400517463684,
+     "values": [
+      0.7252400517463684
+     ]
+    },
+    "latency_mean_ms": {
+     "mean": 3.86,
+     "min": 3.86,
+     "max": 3.86,
+     "values": [
+      3.86
+     ]
+    },
+    "latency_p50_ms": {
+     "mean": 3.7,
+     "min": 3.7,
+     "max": 3.7,
+     "values": [
+      3.7
+     ]
+    },
+    "latency_p95_ms": {
+     "mean": 4.6,
+     "min": 4.6,
+     "max": 4.6,
+     "values": [
+      4.6
+     ]
+    },
+    "rate_limit_wait_ms": {
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "counts": {}
+   }
+  }
+ },
+ "per_question": [
+  {
+   "id": "d01",
+   "category": "direct",
+   "question": "Did you design the training delivered to subpostmasters?",
+   "expected_paras": [
+    19
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 81.2
+    }
+   ]
+  },
+  {
+   "id": "d02",
+   "category": "direct",
+   "question": "When did you leave Post Office Ltd?",
+   "expected_paras": [
+    17
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.1
+    }
+   ]
+  },
+  {
+   "id": "d03",
+   "category": "direct",
+   "question": "Did you personally carry out audits?",
+   "expected_paras": [
+    56
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.0
+    }
+   ]
+  },
+  {
+   "id": "d04",
+   "category": "direct",
+   "question": "Who asked you to conduct the review that became report POL00026572?",
+   "expected_paras": [
+    39
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.3
+    }
+   ]
+  },
+  {
+   "id": "d05",
+   "category": "direct",
+   "question": "Did you oversee the Anti-Money Laundering Team?",
+   "expected_paras": [
+    8
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.2
+    }
+   ]
+  },
+  {
+   "id": "d06",
+   "category": "direct",
+   "question": "Why was the Ping Project established?",
+   "expected_paras": [
+    24
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.0
+    }
+   ]
+  },
+  {
+   "id": "d07",
+   "category": "direct",
+   "question": "When did you take over the role of Head of Product and Branch Accounting?",
+   "expected_paras": [
+    12
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.8
+    }
+   ]
+  },
+  {
+   "id": "d08",
+   "category": "direct",
+   "question": "Do you recall the crib sheet for disputing Transaction Corrections referred to in NFSP00000521?",
+   "expected_paras": [
+    20
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 5.1
+    }
+   ]
+  },
+  {
+   "id": "d09",
+   "category": "direct",
+   "question": "Did you have any input into prosecution cases?",
+   "expected_paras": [
+    65
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.2
+    }
+   ]
+  },
+  {
+   "id": "d10",
+   "category": "direct",
+   "question": "Why did your report say Post Office was justified in assuming that losses identified at audit were due to theft?",
+   "expected_paras": [
+    40
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.7
+    }
+   ]
+  },
+  {
+   "id": "d11",
+   "category": "direct",
+   "question": "How were Transaction Corrections identified at the time?",
+   "expected_paras": [
+    30
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.3
+    }
+   ]
+  },
+  {
+   "id": "d12",
+   "category": "direct",
+   "question": "What did the joint panel with the NFSP decide about counterfeit benefit cheques?",
+   "expected_paras": [
+    59
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.0
+    }
+   ]
+  },
+  {
+   "id": "p01",
+   "category": "paraphrased",
+   "question": "At what point did your employment with the organisation come to an end?",
+   "expected_paras": [
+    17
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.5
+    }
+   ]
+  },
+  {
+   "id": "p02",
+   "category": "paraphrased",
+   "question": "Where were you employed immediately before you came to the company, and what position did you first hold?",
+   "expected_paras": [
+    5
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.4
+    }
+   ]
+  },
+  {
+   "id": "p03",
+   "category": "paraphrased",
+   "question": "Were you the person who put together the courses given to people running local outlets?",
+   "expected_paras": [
+    19
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.9
+    }
+   ]
+  },
+  {
+   "id": "p04",
+   "category": "paraphrased",
+   "question": "Did you yourself go and examine the money and goods held at individual outlets?",
+   "expected_paras": [
+    56
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.7
+    }
+   ]
+  },
+  {
+   "id": "p05",
+   "category": "paraphrased",
+   "question": "Was the 2010 paper you produced a new inquiry into the allegations, or something else?",
+   "expected_paras": [
+    39,
+    76
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.2
+    }
+   ]
+  },
+  {
+   "id": "p06",
+   "category": "paraphrased",
+   "question": "Did your own department rely on the same IT as sub-postmasters in its day-to-day operations?",
+   "expected_paras": [
+    28
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 21,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.7
+    }
+   ]
+  },
+  {
+   "id": "p07",
+   "category": "paraphrased",
+   "question": "With today's understanding, would you have flagged the computer system as a danger to a senior governance body sooner?",
+   "expected_paras": [
+    75
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.8
+    }
+   ]
+  },
+  {
+   "id": "p08",
+   "category": "paraphrased",
+   "question": "Do you stand by the language in your paper characterising the business as showing sympathy to those accused?",
+   "expected_paras": [
+    45,
+    76
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.3
+    }
+   ]
+  },
+  {
+   "id": "m01",
+   "category": "multi",
+   "question": "How did your role develop between joining in 2003 and becoming Head of Product and Branch Accounting?",
+   "expected_paras": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.9
+    }
+   ]
+  },
+  {
+   "id": "m02",
+   "category": "multi",
+   "question": "Looking back, what would you have done differently with the 2010 report?",
+   "expected_paras": [
+    42,
+    43,
+    44,
+    45,
+    76
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 2,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.5
+    }
+   ]
+  },
+  {
+   "id": "m03",
+   "category": "multi",
+   "question": "Why did branches use the other postage button, and how did the stock adjustment project respond?",
+   "expected_paras": [
+    35,
+    36,
+    37
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.0
+    }
+   ]
+  },
+  {
+   "id": "m04",
+   "category": "multi",
+   "question": "What did the Ping Project propose, and why were you in favour of it?",
+   "expected_paras": [
+    24,
+    25,
+    27
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.8
+    }
+   ]
+  },
+  {
+   "id": "t01",
+   "category": "trap",
+   "question": "What is your favourite football team?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 2.8
+    }
+   ]
+  },
+  {
+   "id": "t02",
+   "category": "trap",
+   "question": "Where did you go on holiday last summer?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.2
+    }
+   ]
+  },
+  {
+   "id": "t03",
+   "category": "trap",
+   "question": "What car do you drive?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": true,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 2.7
+    }
+   ]
+  },
+  {
+   "id": "t04",
+   "category": "trap",
+   "question": "Did you ever discuss Horizon with Paula Vennells?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.3
+    }
+   ]
+  },
+  {
+   "id": "t05",
+   "category": "trap",
+   "question": "What was your involvement in the Initial Complaint Review and Mediation Scheme?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.7
+    }
+   ]
+  },
+  {
+   "id": "t06",
+   "category": "trap",
+   "question": "Did you provide any evidence in the case against Lee Castleton?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.7
+    }
+   ]
+  },
+  {
+   "id": "r01",
+   "category": "docref",
+   "question": "What did you make of POL00055418?",
+   "expected_paras": [
+    64
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": false,
+     "hit_at_k": true,
+     "best_expected_rank": 3,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.5
+    }
+   ]
+  },
+  {
+   "id": "r02",
+   "category": "docref",
+   "question": "Turning to POL00001697, what was your understanding of what that programme was dealing with?",
+   "expected_paras": [
+    34
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": false,
+     "hit_at_k": false,
+     "best_expected_rank": 12,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.6
+    }
+   ]
+  },
+  {
+   "id": "r03",
+   "category": "docref",
+   "question": "Can you help the Inquiry with FUJ00084797?",
+   "expected_paras": [
+    49
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.7
+    }
+   ]
+  },
+  {
+   "id": "r04",
+   "category": "docref",
+   "question": "What was POL00087409 intended to deal with?",
+   "expected_paras": [
+    61,
+    59
+   ],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": true,
+     "hit_at_k": true,
+     "best_expected_rank": 1,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 3.4
+    }
+   ]
+  },
+  {
+   "id": "r05",
+   "category": "docref",
+   "question": "Please look at POL00041235. Do you recall receiving that report?",
+   "expected_paras": [],
+   "runs": [
+    {
+     "run": 1,
+     "para_no": null,
+     "para_correct": null,
+     "hit_at_1": null,
+     "hit_at_k": null,
+     "best_expected_rank": null,
+     "refused": false,
+     "grounded": null,
+     "verified": null,
+     "ocr_corrected": null,
+     "referral": null,
+     "latency_ms": 4.1
+    }
+   ]
+  }
+ ]
+}

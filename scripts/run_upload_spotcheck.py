@@ -47,6 +47,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--questions", default="upload_spotcheck.jsonl")
     p.add_argument("--repeats", type=int, default=3)
+    p.add_argument("--save-as", metavar="NAME", help="also write eval/results/run_<date>_NAME.json (eval_results.py)")
     a = p.parse_args()
     s = get_settings()
     qpath = Path(a.questions)
@@ -100,11 +101,15 @@ def main():
     cols = [("n", "n", "d"), ("hit@1", "hit_at_1", "%"), ("hit@k", "hit_at_k", "%"), ("unit acc", "para_accuracy", "%"),
             ("grounded", "grounding_rate", "%"), ("ref prec", "refusal_precision", "%"), ("ref rec", "refusal_recall", "%"),
             ("referrals", "referrals", "d"), ("ocr corr", "ocr_corrected", "d"), ("shorten", "quote_shortening_calls", "d"), ("gate ref", "gate_refused_answerable", "d"),
-            ("ocr q", "quotes_with_ocr_marks", "d"), ("mean ms", "latency_mean_ms", "f"), ("p95 ms", "latency_p95_ms", "f")]
+            ("ocr q", "quotes_with_ocr_marks", "d"), ("mean ms", "latency_mean_ms", "f"), ("p50 ms", "latency_p50_ms", "f"), ("p95 ms", "latency_p95_ms", "f")]
     print(f"\n{'':<18}" + "".join(f"{h:>10}" for h, _, _ in cols))
     for key, g in list(summary["by_statement"].items()) + [("overall", summary["overall"])]:
         print(f"{key[:18]:<18}" + "".join(f"{run_eval.fmt(g.get(k), kind):>10}" for _, k, kind in cols))
+    run_eval.print_usage([summary["overall"].get("usage")])
     print(f"\nwrote {out}")
+    if a.save_as:
+        import eval_results
+        print(f"saved {eval_results.save(out, a.save_as, fresh=True)}")
 
 
 if __name__ == "__main__":

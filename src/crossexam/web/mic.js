@@ -77,8 +77,11 @@ export async function startMic(witnessId, { onListening, onText, onSubmit, onErr
 
   const shown = () => [...finals, partial].filter(Boolean).join(" ");
 
+  let sentBytes = 0; // PCM16 streamed to STT, for usage: what Termination's audio_duration_seconds counts
+
   function sendFrame(frame) {
     ws.send(frame);
+    sentBytes += frame.byteLength;
     if (!firstSent) { firstSent = true; event("first audio frame sent"); }
   }
 
@@ -90,6 +93,7 @@ export async function startMic(witnessId, { onListening, onText, onSubmit, onErr
     stop();
     onSubmit(text, {
       end_of_speech_to_submit_ms: captured ? Math.round(performance.now() - captured[1]) : null,
+      stt_audio_seconds: Math.round(sentBytes / 2 / sampleRate * 100) / 100,
       log,
     });
   }
@@ -102,7 +106,7 @@ export async function startMic(witnessId, { onListening, onText, onSubmit, onErr
       return;
     }
     if (msg.type !== "Turn") {
-      event(`server ${msg.type}`, msg.error ?? undefined);
+      event(`server ${msg.type}`, msg.error ?? (msg.type === "Termination" ? `${msg.audio_duration_seconds} s audio` : undefined));
       return;
     }
     if (!msg.end_of_turn) {
