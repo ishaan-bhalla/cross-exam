@@ -24,7 +24,7 @@ import secrets
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from crossexam.api import phrases, witnesses
+from crossexam.api import conversations, phrases, witnesses
 from crossexam.config import get_settings
 from crossexam.retrieval.retriever import Retriever
 from crossexam.statements.keyterms import statement_keyterms
@@ -62,6 +62,7 @@ def expire_stale():
             u.update(stage="expired", message=EXPIRED_MESSAGE, profile=None, preamble=None, keyterms=[])
     for u in stale:
         witnesses.unregister(u["id"])
+        conversations.drop_witness(u["id"])
 
 
 def get(upload_id: str, visitor: str | None = None, touch: bool = True) -> dict | None:
@@ -81,6 +82,7 @@ def remove(upload_id: str):
     with _lock:
         _uploads.pop(upload_id, None)
     witnesses.unregister(upload_id)
+    conversations.drop_witness(upload_id)
 
 
 def active_count(visitor: str) -> int:

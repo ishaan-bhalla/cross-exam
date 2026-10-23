@@ -12,6 +12,7 @@ let current = null; // state of the answer being played
 let witnessId = null;
 let mic = null; // { stop } while listening
 let spoken = null; // timing for a question asked by voice, shown under it
+let witnesses = []; // this visitor's witnesses, for the switcher
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -39,6 +40,8 @@ async function init() {
   if (!witness || !res.ok) return showGone("Witness not found", "This witness is not available. Upload the statement again, or try the example witness.");
   if (witness.uploaded && !witness.profile_confirmed) location.replace(`/?upload=${encodeURIComponent(witness.id)}`);
   witnessId = witness.id;
+  witnesses = list;
+  renderSwitcher();
   prefetchSttSession(witnessId); // so the mic does not wait for a token
   // Role first, then name: the values the user confirmed for an upload.
   $("witness-role").textContent = witness.role_label;
@@ -60,8 +63,119 @@ async function init() {
     row.append(el("span", "no", p.para_no), el("span", "body", p.text));
     box.append(row);
   }
+  await restoreConversation();
   connect(witness.id);
 }
+
+// ---------------------------------------------------------------- witness switcher
+
+// A disclosure menu of links: the example witness and confirmed uploads, role then name, with
+// each one's number of questions; the current one is marked. Choosing one navigates to it.
+function renderSwitcher() {
+  const open = witnesses.filter((w) => !w.uploaded || w.profile_confirmed);
+  const current = open.find((w) => w.id === witnessId);
+  $("switch-current").textContent = current ? current.name : "Witness";
+  $("switch-menu").replaceChildren(...open.map((w) => {
+    const a = el("a", "switch-item");
+    a.href = `examine.html?witness=${encodeURIComponent(w.id)}`;
+    if (w.id === witnessId) a.setAttribute("aria-current", "page");
+    const n = w.questions;
+    a.append(el("span", "role", w.role_label), el("span", "name", w.name),
+             el("span", "count", `${n} ${n === 1 ? "question" : "questions"}${w.id === witnessId ? " · current" : ""}`));
+    const li = el("li");
+    li.append(a);
+    return li;
+  }), (() => {
+    const li = el("li", "upload-item");
+    const a = el("a", "switch-item", "Upload another statement");
+    a.href = "/#upload";
+    li.append(a);
+    return li;
+  })());
+}
+
+function setSwitcherOpen(open) {
+  $("switch-button").setAttribute("aria-expanded", String(open));
+  $("switch-menu").hidden = !open;
+  if (open) ($("switch-menu").querySelector("[aria-current]") || $("switch-menu").querySelector("a"))?.focus();
+}
+
+$("switch-button").addEventListener("click", () => setSwitcherOpen($("switch-menu").hidden));
+$("switcher").addEventListener("keydown", (e) => {
+  const links = [...$("switch-menu").querySelectorAll("a")];
+  const i = links.indexOf(document.activeElement);
+  if (e.key === "Escape" && !$("switch-menu").hidden) { setSwitcherOpen(false); $("switch-button").focus(); }
+  else if (e.key === "ArrowDown" && i > -1) { e.preventDefault(); links[(i + 1) % links.length].focus(); }
+  else if (e.key === "ArrowUp" && i > -1) { e.preventDefault(); links[(i - 1 + links.length) % links.length].focus(); }
+  else if (e.key === "ArrowDown" && document.activeElement === $("switch-button")) { e.preventDefault(); setSwitcherOpen(true); }
+});
+document.addEventListener("click", (e) => { if (!$("switcher").contains(e.target)) setSwitcherOpen(false); });
+$("switcher").addEventListener("focusout", (e) => { if (!$("switcher").contains(e.relatedTarget)) setSwitcherOpen(false); });
+
+function bumpQuestionCount(delta) {
+  const w = witnesses.find((x) => x.id === witnessId);
+  if (w) { w.questions = delta === null ? 0 : w.questions + delta; renderSwitcher(); }
+}
+
+// ---------------------------------------------------------------- conversation
+
+// The server keeps this visitor's conversation with the witness; draw it in order, scrolled to
+// the latest answer, with the last cited unit marked in the statement.
+async function restoreConversation() {
+  const res = await fetch(`/api/witnesses/${encodeURIComponent(witnessId)}/conversation`);
+  const turns = res.ok ? await res.json() : [];
+  let last = null;
+  for (const t of turns) {
+    const counsel = addTurn("counsel", "Counsel", t.question, { scroll: false, asked: t.asked });
+    if (params.has("debug") && t.timing?.voice?.end_of_speech_to_submit_ms != null)
+      counsel.append(el("div", "timing", `asked by voice · end of speech to submitted ${t.timing.voice.end_of_speech_to_submit_ms} ms`));
+    const turn = renderWitnessTurn(t.answer, { scroll: false });
+    addReplay(turn, t.id);
+    if (params.has("debug") && t.timing) turn.append(el("div", "timing", `answer ${t.timing.answer_latency_ms} ms · audio ${(t.timing.duration_ms / 1000).toFixed(1)} s`));
+    last = t.answer;
+  }
+  $("clear-conversation").hidden = !turns.length;
+  if (!turns.length) return;
+  $("transcript").lastElementChild.scrollIntoView({ block: "end" });
+  if (last && !last.refused) {
+    // A minimal current answer, so the next question clears this mark as usual.
+    startAnswer();
+    current.answer = last;
+    markUnit(last, "auto");
+  }
+}
+
+function addReplay(turn, id) {
+  turn.dataset.turn = id;
+  const replay = el("button", "replay");
+  replay.type = "button";
+  replay.innerHTML = '<svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7-4.5z" fill="currentColor"/></svg><span>Replay</span>';
+  replay.setAttribute("aria-label", "Replay this answer");
+  replay.addEventListener("click", () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN || $("ask-button").disabled) return;
+    ensureAudio();
+    if (mic) stopMic();
+    startAnswer();
+    current.replayTurn = turn;
+    setBusy(true);
+    setStatus("Replaying…");
+    ws.send(JSON.stringify({ type: "replay", turn: id }));
+  });
+  turn.querySelector(".who").append(" ", replay);
+}
+
+$("clear-conversation").addEventListener("click", async () => {
+  if (!confirm("Clear this conversation? The questions and answers with this witness will be deleted.")) return;
+  const res = await fetch(`/api/witnesses/${encodeURIComponent(witnessId)}/conversation`, { method: "DELETE" });
+  if (!res.ok) { setStatus("The conversation could not be cleared."); return; }
+  clearHighlight();
+  current = null;
+  $("transcript").replaceChildren();
+  $("clear-conversation").hidden = true;
+  bumpQuestionCount(null);
+  setStatus("Conversation cleared.");
+  $("question").focus();
+});
 
 function connect(witnessId) {
   ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/examine?witness=${encodeURIComponent(witnessId)}`);
@@ -122,9 +236,9 @@ $("ask-form").addEventListener("submit", (e) => {
   if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
   ensureAudio();
   if (mic) stopMic(); // typed while listening: the typed text wins
-  const turn = addTurn("counsel", "Counsel", text);
   const voice = spoken;
   spoken = null;
+  const turn = addTurn("counsel", "Counsel", text, { asked: voice ? "voice" : "typed" });
   if (voice) {
     if (params.has("debug")) turn.append(el("div", "timing", `asked by voice · end of speech to submitted ${voice.end_of_speech_to_submit_ms ?? "?"} ms`));
     window.__lastSpoken = { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms, log: voice.log };
@@ -140,12 +254,14 @@ $("ask-form").addEventListener("submit", (e) => {
   setStatus("Witness is considering the question…");
   startAnswer();
   current.counselTurn = turn;
-  ws.send(JSON.stringify({ type: "question", text, spoken: Boolean(voice) }));
+  ws.send(JSON.stringify({ type: "question", text, spoken: Boolean(voice),
+                           voice_timing: voice ? { end_of_speech_to_submit_ms: voice.end_of_speech_to_submit_ms } : undefined }));
 });
 
-function addTurn(cls, who, text) {
+function addTurn(cls, who, text, { scroll = true, asked = null } = {}) {
   const turn = el("div", `turn ${cls}`);
   const head = el("div", "who", who);
+  if (asked === "voice") head.append(" ", el("span", "asked", "by voice"));
   turn.append(head);
   const body = el("div", "text");
   if (text) body.textContent = text;
@@ -163,7 +279,8 @@ function addTurn(cls, who, text) {
     head.append(" ", edit);
   }
   $("transcript").append(turn);
-  turn.scrollIntoView({ block: "end" });
+  if (scroll) turn.scrollIntoView({ block: "end" });
+  $("clear-conversation").hidden = false;
   return turn;
 }
 
@@ -189,6 +306,20 @@ function handle(msg) {
   else if (msg.type === "audio") onAudio(msg);
   else if (msg.type === "words") onWords(msg);
   else if (msg.type === "done") onDone(msg);
+  else if (msg.type === "replay") onReplay(msg);
+  else if (msg.type === "turn") onTurnStored(msg);
+}
+
+// A stored answer being spoken again: it plays into its existing turn.
+function onReplay(msg) {
+  current.answer = msg;
+  current.turn = current.replayTurn;
+  markUnit(msg, "smooth");
+}
+
+function onTurnStored(msg) {
+  if (current?.turn && !current.turn.dataset.turn) addReplay(current.turn, msg.turn);
+  bumpQuestionCount(1);
 }
 
 // A spoken question as the server understood it, with document IDs rebuilt.
@@ -204,7 +335,13 @@ function onQuestionUnderstood(msg) {
 
 function onAnswer(msg) {
   current.answer = msg;
-  const turn = addTurn("witness", "Witness");
+  current.turn = renderWitnessTurn(msg);
+  setStatus("Speaking…");
+  markUnit(msg, "smooth");
+}
+
+function renderWitnessTurn(msg, options) {
+  const turn = addTurn("witness", "Witness", undefined, options);
   const body = turn.querySelector(".text");
   if (msg.lead_in) body.append(el("span", "lead-in", msg.lead_in + " "));
   body.append(el("span", msg.referral ? "quote referral" : "quote", msg.refused || msg.referral ? msg.spoken : msg.quote));
@@ -221,15 +358,16 @@ function onAnswer(msg) {
     if (msg.routed === "doc_id") badges.append(el("span", "badge", "Document reference"));
   }
   turn.append(badges);
-  current.turn = turn;
-  setStatus("Speaking…");
+  return turn;
+}
 
-  if (!msg.refused) {
-    current.row = $(`para-${msg.para_no}`);
-    // A referral quotes nothing, so the whole unit is banded instead of word by word.
-    current.row.classList.add(msg.referral ? "referred" : "cited");
-    current.row.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+function markUnit(msg, behavior) {
+  if (msg.refused) return;
+  current.row = $(`para-${msg.para_no}`);
+  if (!current.row) return;
+  // A referral quotes nothing, so the whole unit is banded instead of word by word.
+  current.row.classList.add(msg.referral ? "referred" : "cited");
+  current.row.scrollIntoView({ behavior, block: "center" });
 }
 
 function onAudio(msg) {

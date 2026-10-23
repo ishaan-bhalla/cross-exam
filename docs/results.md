@@ -148,6 +148,28 @@ Answers were identical in all 3 runs except u2-sub (different quote, same wrong 
 
 **One labelling error, mine.** u2-trap-on ("What did you know about Fujitsu's ability to access branch accounts remotely?") was meant as a trap, chosen because "remote access" does not appear in Breeden's statement. But ¶161 covers it in other words: "I was not aware that Fujitsu could put an entry into a branch account remotely via Horizon". The system answered from ¶161, correctly. Counting it as answerable with ¶161 expected, the overall figures would be: unit accuracy 69% (9 of 13 answerable), refusal recall 87% (13 of 15 trap answers), and Breeden's refusal recall 100%. The table above keeps the labels as they were written before the run.
 
+### Two OCR questions added (20 questions)
+
+Two questions on Roper's statement were added after OCR-tolerant verification was built: they are the two that had become referrals. So the set now has 20 questions, and both new ones are tagged `ocr`:
+- u1-ocr-role, "What was your role at the Post Office, and when did you start?", expecting ¶3 (`2"` for "2nd").
+- u1-ocr-fsa, "Do you work as a field support advisor?", expecting ¶1 (`lama` for "I am a").
+
+Because they were chosen after the fix, they show that the fix works on these cases, not how often it helps on statements it hasn't seen.
+
+**Rerun** (3 repeats, `outputs/eval/upload_spotcheck/20261024-001236`):
+
+| | n | hit@1 | hit@k | unit accuracy | grounded | refusal precision | refusal recall | referrals | OCR-corrected | mean / p95 latency |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Roper (OCR) | 24 | 50% | 83% | 83% | 100% | 100% | 100% | 0 | 6 | 1078 / 2375 ms |
+| Breeden | 18 | 25% | 50% | 50% | 100% | 100% | 50% | 0 | 0 | 1036 / 1589 ms |
+| Bourke | 18 | 50% | 75% | 75% | 100% | 100% | 83% | 0 | 0 | 1219 / 2103 ms |
+| **Overall** | 60 | 43% | 71% | 71% | 100% | 100% | 78% | 0 | 6 | 1108 / 2103 ms |
+
+**What it shows:**
+- **The two new questions:** both were answered with OCR-corrected quotes in all 3 runs (6 of 6), from the expected units, with 0 referrals. Both expected units ranked 2nd (¶3) and 5th (¶1) in retrieval, never 1st, which is why Roper's hit@1 drops from 75% to 50% while its unit accuracy rises from 75% to 83%.
+- **The original 18 questions:** hit@1 50% and unit accuracy 67%, unchanged, with no referrals and no OCR-corrected answers.
+- **Overall:** 6 OCR-corrected answers and 0 referrals in 60.
+
 ### Each question
 
 | | Question | Expected | Answered from (3 runs) | Quote (shortened here) | Right? |

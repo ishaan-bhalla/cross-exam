@@ -4,7 +4,12 @@ Uploaded witnesses belong to the visitor who uploaded them (cookie VISITOR_COOKI
 visitor gets 404, an expired upload 410, and the examination refuses an upload whose profile
 has not been confirmed (POST /api/witnesses/{id}/confirm).
 
-WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?}. For a spoken
+Each visitor's conversation with each witness is kept (api.conversations): GET
+/api/witnesses/{id}/conversation lists its turns, DELETE clears it, and over the WebSocket
+{"type": "replay", "turn": id} re-synthesises a stored answer (no LLM call): the server
+replies {"type": "replay", "turn", <answer fields>} and then audio, words and done as for a question.
+
+WebSocket /ws/examine?witness={id}. Client sends {"type": "question", "text", "spoken"?, "voice_timing"?}. For a spoken
 question the server first replies {"type": "question", "text", "id_changes"} with document IDs
 normalised (witness.docids); then, for every question,
   {"type": "answer", para_no, quote, lead_in, spoken, verified, refused, referral, ocr_corrected, routed}
@@ -14,6 +19,7 @@ normalised (witness.docids); then, for every question,
   {"type": "done", answer_latency_ms, question_to_first_audio_ms, question_to_quote_audio_ms,
    tts_wait_ms, tts_session_opens, time_to_first_audio_ms, duration_ms, cached: [parts from cache],
    missing_words: [parts whose word timings never arrived]}
+then {"type": "turn", "turn": id} once the turn is stored (not after a replay),
 or {"type": "error", "message"}. Word start/end are ms from the start of this answer's audio
 (before any hold the browser adds); span is [start, end] character offsets into paragraph
 para_no's text, or None (not highlighted). A referral (the quote failed verification) has
@@ -42,7 +48,7 @@ import logging
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
-from crossexam.api import phrases, uploads, witnesses
+from crossexam.api import conversations, phrases, uploads, witnesses
 from crossexam.statements.parser import ocr_available
 from crossexam.clients import tts
 from crossexam.config import get_settings
@@ -115,10 +121,36 @@ def check_access(witness_id: str, visitor: str | None) -> dict:
     return w
 
 
+@app.middleware("http")
+async def visitor_cookie(request: Request, call_next):
+    """Give every visitor a cookie on their first request, so the example witness's
+    conversation (and later uploads) can be kept for them."""
+    response = await call_next(request)
+    if VISITOR_COOKIE not in request.cookies and VISITOR_COOKIE not in response.headers.get("set-cookie", ""):
+        response.set_cookie(VISITOR_COOKIE, secrets.token_urlsafe(16), httponly=True, samesite="lax", max_age=30 * 24 * 3600)
+    return response
+
+
 @app.get("/api/witnesses")
 def list_witnesses(request: Request):
+    """Witnesses this visitor can see, each with "questions": the turns in their conversation."""
     uploads.expire_stale()
-    return witnesses.list_witnesses(request.cookies.get(VISITOR_COOKIE))
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    return [{**w, "questions": conversations.count(visitor, w["id"])} for w in witnesses.list_witnesses(visitor)]
+
+
+@app.get("/api/witnesses/{witness_id}/conversation")
+def get_conversation(witness_id: str, request: Request):
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    check_access(witness_id, visitor)
+    return [{k: v for k, v in t.items() if k != "ocr_spans"} for t in conversations.turns(visitor, witness_id)]
+
+
+@app.delete("/api/witnesses/{witness_id}/conversation", status_code=204)
+def clear_conversation(witness_id: str, request: Request):
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    check_access(witness_id, visitor)
+    conversations.clear(visitor, witness_id)
 
 
 @app.get("/api/voices")
@@ -278,19 +310,31 @@ class AudioOut:
         await self.ws.send_json({"type": "words", "part": part, "words": shifted})
 
 
-async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.PersistentSession):
-    s = get_settings()
+ANSWER_FIELDS = ("para_no", "quote", "lead_in", "spoken", "verified", "referral", "ocr_corrected", "routed")
+
+
+def answer_message(result: dict) -> dict:
+    """The answer as sent to the browser (and stored in the conversation)."""
+    return {**{k: result[k] for k in ANSWER_FIELDS}, "refused": result["para_no"] is None}
+
+
+async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.PersistentSession) -> tuple[dict, dict]:
+    """Answer a question and speak it. Returns (answer result, done message)."""
     received = time.perf_counter()
-    voice = witness["voice"]
     result = await asyncio.to_thread(answer, question, witnesses.retriever(witness["id"]), witness["name"])
     answer_latency_ms = (time.perf_counter() - received) * 1000
+    await ws.send_json({"type": "answer", **answer_message(result)})
+    return result, await _speak(ws, witness, result, tts_conn, received, answer_latency_ms)
+
+
+async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.PersistentSession,
+                 received: float, answer_latency_ms: float) -> dict:
+    """Send the answer's audio and word timings (cached phrases, then the live quote), then
+    the done message, which is returned."""
+    s = get_settings()
+    voice = witness["voice"]
     refused = result["para_no"] is None
     referral = result["referral"]
-    await ws.send_json({"type": "answer", "para_no": result["para_no"], "quote": result["quote"],
-                        "lead_in": result["lead_in"], "spoken": result["spoken"],
-                        "verified": result["verified"], "refused": refused, "referral": referral,
-                        "ocr_corrected": result["ocr_corrected"],
-                        "routed": result["routed"]})
     out = AudioOut(ws, received)
     cached, live = [], []  # live: [{"kind", "text", "label", "start"}], one per flush
 
@@ -357,14 +401,16 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
     if quote_audio_ms is None and not refused and not referral:
         quote_audio_ms = out.first_audio_ms
 
-    await ws.send_json({"type": "done", "answer_latency_ms": round(answer_latency_ms),
+    done = {"type": "done", "answer_latency_ms": round(answer_latency_ms),
                         "question_to_first_audio_ms": round(out.first_audio_ms or 0),
                         "question_to_quote_audio_ms": round(quote_audio_ms) if quote_audio_ms else None,
                         "tts_wait_ms": round(tts_wait_ms) if tts_wait_ms is not None else None,
                         "tts_session_opens": tts_conn.opens,
                         "time_to_first_audio_ms": time_to_first_audio_ms,
                         "duration_ms": round(out.position_ms), "cached": cached,
-                        "missing_words": missing_words})
+                        "missing_words": missing_words}
+    await ws.send_json(done)
+    return done
 
 
 @app.websocket("/ws/examine")
@@ -385,13 +431,28 @@ async def examine(ws: WebSocket, witness: str):
     try:
         while True:
             msg = await ws.receive_json()
-            if msg.get("type") != "question" or not str(msg.get("text", "")).strip():
+            replay = msg.get("type") == "replay"
+            if not replay and (msg.get("type") != "question" or not str(msg.get("text", "")).strip()):
                 await ws.send_json({"type": "error", "message": "expected {\"type\": \"question\", \"text\": ...}"})
                 continue
             try:
                 check_access(w["id"], visitor)  # counts as activity, and stops if it expired
             except HTTPException as e:
                 await ws.send_json({"type": "error", "message": e.detail, "status": e.status_code})
+                continue
+            if replay:
+                stored = conversations.turn(visitor, w["id"], msg.get("turn"))
+                if not stored:
+                    await ws.send_json({"type": "error", "message": "that answer is no longer in the conversation"})
+                    continue
+                try:
+                    await ws.send_json({"type": "replay", "turn": stored["id"], **stored["answer"]})
+                    await _speak(ws, w, {**stored["answer"], "ocr_spans": stored["ocr_spans"]}, tts_conn,
+                                 time.perf_counter(), 0)
+                except WebSocketDisconnect:
+                    raise
+                except Exception as e:
+                    await ws.send_json({"type": "error", "message": f"{type(e).__name__}: {e}"})
                 continue
             try:
                 question = msg["text"].strip()
@@ -401,7 +462,14 @@ async def examine(ws: WebSocket, witness: str):
                     question, changes = normalise_ids(question, witnesses.cited_ids(w["id"]),
                                                       get_settings().doc_id_snap_max_distance)
                     await ws.send_json({"type": "question", "text": question, "id_changes": changes})
-                await _examine(ws, w, question, tts_conn)
+                result, done = await _examine(ws, w, question, tts_conn)
+                timing = {k: v for k, v in done.items() if k != "type"}
+                if isinstance(msg.get("voice_timing"), dict):
+                    timing["voice"] = {k: v for k, v in msg["voice_timing"].items() if isinstance(v, (int, float))}
+                stored = conversations.add(visitor, w["id"], {
+                    "question": question, "asked": "voice" if msg.get("spoken") else "typed",
+                    "answer": answer_message(result), "ocr_spans": result["ocr_spans"], "timing": timing})
+                await ws.send_json({"type": "turn", "turn": stored["id"]})
             except WebSocketDisconnect:
                 raise
             except Exception as e:

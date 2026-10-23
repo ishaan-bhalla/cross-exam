@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     uploads_dir: Path
     uploads_per_client: int
     upload_ttl_minutes: int
+    conversation_max_turns: int
     profile_prompt: str
     profile_opening_units: int
     profile_max_roles: int

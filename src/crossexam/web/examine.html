@@ -19,7 +19,13 @@
   <a class="skip" href="#question">Skip to the question box</a>
   <header class="topbar">
     <a class="wordmark" href="/"><span class="mark" aria-hidden="true"></span>Cross-examine</a>
-    <nav aria-label="Main"><a href="/">Choose another witness</a></nav>
+    <nav aria-label="Witnesses" class="switcher" id="switcher">
+      <button type="button" class="btn small" id="switch-button" aria-expanded="false" aria-controls="switch-menu">
+        <span class="visually-hidden">Switch witness, current: </span><span id="switch-current">Witness</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <ul id="switch-menu" class="switch-menu" hidden></ul>
+    </nav>
   </header>
   <main class="layout" id="exam">
     <section class="left" aria-labelledby="witness-role">
@@ -30,6 +36,7 @@
       <div class="statement statement-text" id="statement" role="region" aria-label="Witness statement" tabindex="0"></div>
     </section>
     <section class="right" aria-label="Examination">
+      <div class="transcript-bar"><button type="button" class="linkish" id="clear-conversation" hidden>Clear conversation</button></div>
       <div class="transcript" id="transcript" aria-live="polite"></div>
       <form class="ask" id="ask-form">
         <label class="visually-hidden" for="question">Question for the witness</label>
