@@ -139,7 +139,8 @@ class Settings(BaseSettings):
     limit_uploads_per_day: int
     limit_ip_factor: int
     client_ip_header: str
-    client_ip_position: str
+    trusted_proxy_hops: int
+    debug_client_ip: bool
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p

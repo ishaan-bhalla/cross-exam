@@ -154,3 +154,73 @@ def test_rate_limited_gateway_waits_then_gives_up(monkeypatch):
     with llm_gateway.on_rate_limit(told.append), pytest.raises(llm_gateway.LLMBusy, match="busy after 10 seconds"):
         llm_gateway.chat([])
     assert slept == [2, 4, 4] and told == slept               # backoff, capped by LLM_MAX_WAIT_SECONDS
+
+
+# ------------------------------------------------------------------ client IP behind a proxy
+
+@pytest.fixture
+def ip_settings(monkeypatch):
+    from crossexam.api import app as appmod
+    s = SimpleNamespace(client_ip_header="", trusted_proxy_hops=1)
+    monkeypatch.setattr(appmod, "get_settings", lambda: s)
+    return appmod, s
+
+
+PEER = SimpleNamespace(host="10.200.0.7")  # the proxy's own connection to the app
+
+
+def test_spoofed_leftmost_entry_is_ignored(ip_settings):
+    appmod, s = ip_settings
+    # The client sent "X-Forwarded-For: 1.2.3.4"; the platform's proxy appended the real address.
+    assert appmod.client_ip({"x-forwarded-for": "1.2.3.4, 203.0.113.9"}, PEER) == "203.0.113.9"
+    assert appmod.client_ip({"x-forwarded-for": "1.2.3.4, 5.6.7.8, 203.0.113.9"}, PEER) == "203.0.113.9"
+
+
+def test_multi_hop_chain_takes_the_entry_trusted_hops_from_the_right(ip_settings):
+    appmod, s = ip_settings
+    s.trusted_proxy_hops = 2  # e.g. a CDN edge appends the client, then the platform's proxy appends the edge
+    chain = {"x-forwarded-for": "1.2.3.4, 203.0.113.9, 198.51.100.20"}
+    assert appmod.client_ip(chain, PEER) == "203.0.113.9"
+    assert appmod.client_ip({"x-forwarded-for": "198.51.100.20"}, PEER) == "10.200.0.7"  # too few entries: peer
+
+
+def test_missing_header_falls_back_to_the_peer(ip_settings):
+    appmod, s = ip_settings
+    assert appmod.client_ip({}, PEER) == "10.200.0.7"
+    assert appmod.client_ip({"x-forwarded-for": " , "}, PEER) == "10.200.0.7"
+    assert appmod.client_ip({}, None) is None
+    s.trusted_proxy_hops = 0                              # X-Forwarded-For not trusted at all
+    assert appmod.client_ip({"x-forwarded-for": "203.0.113.9"}, PEER) == "10.200.0.7"
+
+
+def test_platform_header_wins_and_a_list_in_it_is_not_trusted(ip_settings):
+    appmod, s = ip_settings
+    s.client_ip_header = "true-client-ip"
+    headers = {"true-client-ip": "203.0.113.9", "x-forwarded-for": "1.2.3.4, 198.51.100.20"}
+    assert appmod.client_ip(headers, PEER) == "203.0.113.9"
+    # A comma-separated value isn't one the platform set: fall through to the trusted XFF entry.
+    assert appmod.client_ip({**headers, "true-client-ip": "1.2.3.4, 203.0.113.9"}, PEER) == "198.51.100.20"
+    assert appmod.client_ip({"x-forwarded-for": "1.2.3.4, 198.51.100.20"}, PEER) == "198.51.100.20"  # header absent
+
+
+def test_debug_client_ip_shows_raw_headers_only_when_on():
+    from crossexam.config import load_settings
+    try:
+        load_settings()
+    except SystemExit as e:
+        pytest.skip(f"settings not configured: {e}")
+    from fastapi.testclient import TestClient
+    from crossexam.api.app import app
+    from crossexam.config import get_settings
+    c = TestClient(app)
+    fake = {"X-Forwarded-For": "1.2.3.4", "True-Client-IP": "9.9.9.9"}
+    assert "debug_client_ip" not in c.get("/api/limits", headers=fake).json()
+    s = get_settings()
+    old = s.debug_client_ip
+    try:
+        s.debug_client_ip = True
+        d = c.get("/api/limits", headers=fake).json()["debug_client_ip"]
+        assert d["headers"]["x-forwarded-for"] == "1.2.3.4" and d["headers"]["true-client-ip"] == "9.9.9.9"
+        assert d["headers"]["cf-connecting-ip"] is None and d["peer"] == "testclient"
+    finally:
+        s.debug_client_ip = old

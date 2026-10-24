@@ -64,15 +64,28 @@ VISITOR_COOKIE = "cx_visitor"
 BUSY_MESSAGE = "The witness is gathering their thoughts: the service is busy."
 
 
+DIAGNOSTIC_IP_HEADERS = ("x-forwarded-for", "x-real-ip", "true-client-ip", "cf-connecting-ip")
+
+
 def client_ip(headers, peer) -> str | None:
-    """The visitor's IP: from client_ip_header behind a proxy (first or last entry, per
-    client_ip_position), else the connecting address."""
+    """The visitor's IP, which per-IP limits key on, so it must be one the client can't choose:
+    1. client_ip_header, a header the platform sets and the client can't override, if it holds
+       one address;
+    2. else the X-Forwarded-For entry trusted_proxy_hops from the right (1 = the rightmost, added
+       by the proxy nearest the app). Each proxy appends the address it received the request
+       from, so entries to the left of the trusted ones may be whatever the client sent; the
+       leftmost is never used.
+    3. else (no such header or not enough entries) the socket peer address."""
     s = get_settings()
-    if s.client_ip_header.strip():
-        value = headers.get(s.client_ip_header.strip(), "")
-        parts = [p.strip() for p in value.split(",") if p.strip()]
-        if parts:
-            return parts[-1] if s.client_ip_position == "last" else parts[0]
+    name = s.client_ip_header.strip()
+    if name:
+        value = headers.get(name, "").strip()
+        if value and "," not in value:
+            return value
+    if s.trusted_proxy_hops > 0:
+        parts = [p.strip() for p in headers.get("x-forwarded-for", "").split(",") if p.strip()]
+        if len(parts) >= s.trusted_proxy_hops:
+            return parts[-s.trusted_proxy_hops]
     return peer.host if peer else None
 
 
@@ -146,7 +159,12 @@ def healthz():
 def limits(request: Request):
     """This visitor's usage against the demo's quotas (cookie and IP), and the global budget."""
     keys = limit_keys(request)
-    return {"ip": client_ip(request.headers, request.client), **budget.client_status(keys), "global": budget.status()}
+    out = {"ip": client_ip(request.headers, request.client), **budget.client_status(keys), "global": budget.status()}
+    if get_settings().debug_client_ip:
+        # Temporary, to see what the platform's proxies send (DEBUG_CLIENT_IP; off by default).
+        out["debug_client_ip"] = {"headers": {h: request.headers.get(h) for h in DIAGNOSTIC_IP_HEADERS},
+                                  "peer": request.client.host if request.client else None}
+    return out
 
 
 def voices() -> list[dict]:

@@ -46,7 +46,7 @@ What it took to fit:
 5. When the service shows **Live**, open its URL (`https://cross-examine-….onrender.com`). Check:
    - `/healthz` answers `{"status": "ok"}`;
    - the front page loads, and the example witness answers a typed question;
-   - `/api/limits` shows your own IP under `"ip"`. Then confirm the IP can't be spoofed: run `curl -s -H "X-Forwarded-For: 1.2.3.4" https://<your-url>/api/limits` and check `"ip"` is your real address, not 1.2.3.4. If it shows 1.2.3.4, set `CLIENT_IP_POSITION=last` (step 7) and check again.
+   - the per-IP limits can't be dodged by sending a fake IP (next section).
 6. **Keep it awake** (next section).
 7. To change a setting, open the service's **Environment** tab and add it as an environment variable (for example `LIMIT_QUESTIONS_PER_DAY=50`). Environment variables override `deploy/render.env`. Saving restarts the service.
 
@@ -111,7 +111,33 @@ In practice an answer uses about 1 LLM call and 129 TTS characters ([measured](.
 | `UPLOADS_PER_CLIENT` | 2 | Open at once per visitor |
 | `MAX_OPEN_UPLOADS` | 2 | Open at once across everyone: "The demo is busy, please try again in a few minutes." |
 
-The client IP comes from `CLIENT_IP_HEADER=x-forwarded-for`, first entry (`CLIENT_IP_POSITION`); check it can't be spoofed after deploying (dashboard step 5).
+The client IP comes from a header the platform sets (`CLIENT_IP_HEADER`), or the X-Forwarded-For entry `TRUSTED_PROXY_HOPS` from the right, or the connecting address; never the leftmost X-Forwarded-For entry, which the client can write. See the next section.
+
+## Checking the client IP can't be spoofed
+
+Per-IP limits only work if a visitor can't choose the IP the app sees. Run both of these from your own machine:
+
+```bash
+curl -s https://<your-url>/api/limits | python3 -c "import json,sys; print(json.load(sys.stdin)['ip'])"
+curl -s -H "X-Forwarded-For: 1.2.3.4" https://<your-url>/api/limits | python3 -c "import json,sys; print(json.load(sys.stdin)['ip'])"
+```
+
+**A pass:**
+- both commands print the **same** address;
+- that address is **your public IP** (compare with `curl -s https://api.ipify.org`);
+- **neither** prints `1.2.3.4`.
+
+| What you see | Meaning | What to do |
+|---|---|---|
+| The second prints `1.2.3.4` | Fails: the client chooses its IP | Not possible with the shipped settings (the leftmost entry is never used); if it happens, run the diagnostic below |
+| Both print the same address, but it isn't your public IP (for example `10.x.x.x` or a Render address) | Fails the other way: every visitor would share one IP's limits | Run the diagnostic and set `TRUSTED_PROXY_HOPS` or `CLIENT_IP_HEADER` from it |
+| Both print your public IP | Pass | Nothing |
+
+**Diagnostic.** Set `DEBUG_CLIENT_IP=true` in the service's Environment tab (it restarts), run the two commands again without the `python3` part, and look at `debug_client_ip`. It lists the raw `x-forwarded-for`, `x-real-ip`, `true-client-ip` and `cf-connecting-ip` headers and the socket peer address. From those:
+- A single-address header that shows your public IP in both runs (unchanged by the fake one) can be used directly: `CLIENT_IP_HEADER=<that header>`.
+- Otherwise, in the X-Forwarded-For of the run with the fake IP, count from the right to your public IP: that position is `TRUSTED_PROXY_HOPS` (1 if it is the last entry).
+
+Then set `DEBUG_CLIENT_IP=false` again and repeat the pass check.
 
 A visitor can go over their spoken quota by at most one session (60 s): the page keeps one microphone token ready so the mic starts at once, and a token issued before the quota ran out can't be revoked. The next token is refused, and the global session budget counts every token issued.
 
