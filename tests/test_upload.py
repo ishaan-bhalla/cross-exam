@@ -246,3 +246,23 @@ def test_healthz_sets_no_cookie_and_counts_towards_nothing(settings):
         r = c.get("/healthz")
         assert r.status_code == 200 and "set-cookie" not in r.headers
     assert budget.status()["used"] == before
+
+
+@pytest.mark.parametrize("path", ["/healthz", "/", "/examine.html", "/style.css", "/api/config"])
+def test_head_answers_like_get(settings, path):
+    """Uptime monitors check with HEAD: every page and GET route that exists answers 200, with no body."""
+    c = _new_client()
+    head = c.head(path)
+    assert head.status_code == 200 == c.get(path).status_code
+    assert head.content == b""
+    assert c.head("/no-such-page").status_code == 404
+
+
+def test_head_healthz_sets_no_cookie_and_counts_towards_nothing(settings):
+    from crossexam import budget
+    c = _new_client()
+    before = budget.status()["used"]
+    for _ in range(20):
+        r = c.head("/healthz")
+        assert r.status_code == 200 and "set-cookie" not in r.headers
+    assert budget.status()["used"] == before

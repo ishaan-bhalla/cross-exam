@@ -58,7 +58,7 @@ On the free plan, the service sleeps after 15 minutes without traffic, and wakin
 
 So ping `/healthz` every 10 minutes with an uptime monitor (for example UptimeRobot or cron-job.org, both free): an HTTP(S) monitor on `https://<your-url>/healthz` at a 10-minute interval. Then the container only restarts when you redeploy, the counters survive the day, and visitors don't hit cold starts.
 
-`/healthz` requests set no cookie and count towards no limit and no budget. They do expire idle uploads, so memory is freed even when nobody else is visiting.
+`/healthz` answers GET and HEAD (UptimeRobot's free plan checks with HEAD) with 200. Its requests set no cookie and count towards no limit and no budget. They do expire idle uploads, so memory is freed even when nobody else is visiting.
 
 **Rule: after every redeploy, check [AssemblyAI's usage dashboard](https://www.assemblyai.com/dashboard) that day.** A redeploy starts a new container, so that day's counters start again from zero.
 

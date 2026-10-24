@@ -47,6 +47,7 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
+from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from crossexam.api import conversations, phrases, uploads, witnesses
 from crossexam.statements.parser import ocr_available
@@ -591,5 +592,13 @@ def _log_termination(witness_id: str, termination: dict | None):
         print(f"tts session for {witness_id}: {termination.get('total_input_char_length')} chars, "
               f"{termination.get('audio_duration_seconds')} s audio, {termination.get('session_duration_seconds')} s open")
 
+
+# Every GET route also answers HEAD (uptime monitors such as UptimeRobot's free plan check with
+# HEAD). Without this a HEAD request matches no route and falls through to the static files
+# mounted at "/", which answer 404 for /healthz and the API. Starlette serves HEAD with GET's
+# status and headers and no body; static files already handle HEAD themselves.
+for route in app.routes:
+    if isinstance(route, APIRoute) and "GET" in route.methods:
+        route.methods.add("HEAD")
 
 app.mount("/", StaticFiles(directory=get_settings().resolve(get_settings().web_dir), html=True), name="web")
