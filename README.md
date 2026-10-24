@@ -19,7 +19,7 @@
 
 ## Key results
 
-- **Counsel's real questions, never used in development: 11 of 15 answered from the right paragraph,** 3 of 5 trap questions refused, and all 15 answers verified quotes.
+- **Counsel's real questions, never used in development: 11 of 15 answered from the right paragraph** in each of 3 runs, 4–5 of 5 trap questions refused, and every answer given a verified quote (40 of 40).
 - **Uploaded statements never used in development: 7 of 8 answered from the right paragraph,** 4 of 4 traps refused.
 - **Nothing unverified is spoken.** On the example witness, 83 of 83 answers over 3 runs were verified quotes, and 27 of 28 answerable questions were answered from the right paragraph in every run.
 - **About a second to the witness's voice:** question to first audio p50 1.06 s, p95 2.25 s over 35 spoken questions.
@@ -94,12 +94,12 @@ A trap is a question the statement doesn't answer, such as an Inquiry topic the 
 
 | Set | Runs | Right paragraph | Verified quotes | Traps refused | Source |
 |---|---|---|---|---|---|
-| Ismay held-out (counsel) | 1 | **11 of 15** | 15 of 15 | 3 of 5 | [ismay_heldout](eval/results/run_20261024_ismay_heldout.json) |
+| Ismay held-out (counsel) | 3 | **11 of 15** | 40 of 40 (13–14 per run) | 4–5 of 5 | [ismay_heldout](eval/results/run_20261024_ismay_heldout.json) |
 | Upload held-out | 1 | **7 of 8** | 7 of 8 | 4 of 4 | [upload_heldout](eval/results/run_20261023_upload_heldout.json) |
 | Ismay dev | 3 | 27 of 28 | 100% | 6–7 of 7 | [ismay_dev](eval/results/run_20261024_ismay_dev.json) |
 | Upload dev | 3 | 10 of 14 | 13–14, plus 2 OCR-corrected | 4–5 of 6 | [upload_dev](eval/results/run_20261024_upload_dev.json) |
 
-Counsel's questions are harder than the dev set: the right paragraph is ranked first for 8 of 15 (25 of 28 on dev) and in the top 5 for 14 of 15. Of the 4 misses, 2 were refused and 2 quoted a real but wrong paragraph. On the 8 questions whose labels are marked high-confidence, the right paragraph was cited for 7. The upload held-out run was made before referrals existed; its one unverified answer would now be a referral to the right paragraph.
+Counsel's questions are harder than the dev set: the right paragraph is ranked first for 8 of 15 (25 of 28 on dev) and in the top 5 for 14 of 15. Of the 4 misses, 2 were refused and 2 quoted a real but wrong paragraph; 3 of the 4 had the right paragraph retrieved. On the 12 questions whose labels are marked high-confidence, the right paragraph was cited for 7 of 8 answerable, and 3–4 of 4 traps were refused. An earlier single run of the same set ([first run](eval/results/run_20261024_ismay_heldout_first_run.json)) gave the same 11 of 15, with 3 of 5 traps refused; the traps differ from run to run. Every wrong answer is listed in [`docs/results.md`](docs/results.md#held-out-counsel-questions). The upload held-out run was made before referrals existed; its one unverified answer would now be a referral to the right paragraph.
 
 **What was tried, and kept or left off** (Ismay dev, 28 answerable questions)
 
@@ -117,7 +117,7 @@ Counsel's questions are harder than the dev set: the right paragraph is ranked f
 
 | | Result |
 |---|---|
-| Answer decided, p50 / p95 | 1,104 / 2,505 ms (dev), 1,087 / 1,782 ms (counsel) |
+| Answer decided, p50 / p95 | 1,104 / 2,505 ms (dev), 1,076 / 2,198 ms (counsel) |
 | Question to first audio, p50 / p95 | 1,063 / 2,250 ms (35 spoken questions) |
 | Question to the quote's first audio, p50 / p95 | 1,428 / 3,092 ms |
 | Refusal audio starting, when decided before the LLM | 5–13 ms |

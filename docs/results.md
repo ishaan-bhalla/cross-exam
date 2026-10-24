@@ -313,8 +313,41 @@ With 8 answerable questions and 4 traps, one question moves the overall figures 
 - **Grounding:** the new failure is a fallback, the first on uploads. The quote shown is still verbatim, but it is not the answer.
 - **Traps:** none leaked. Both on-topic traps passed the dense gate (0.621, 0.702), so they were refused by the answer step, not the gate.
 
-## Held-out results (counsel questions)
+## Held-out (counsel questions)
 
-`eval/ismay_heldout.jsonl`: 20 of counsel's questions from Mr Ismay's oral evidence on 11 May 2023 (transcript INQ00001063), labelled against the first written statement. Not yet run.
+`eval/ismay_heldout.jsonl`: 20 of counsel's questions from Mr Ismay's oral evidence on 11 May 2023 (transcript INQ00001063), labelled against the first written statement: 15 answerable and 5 the statement doesn't cover (h01, h04, h10, h12, h16). 12 have labels marked high-confidence (8 answerable, 4 not covered). The set was not used to choose any setting.
 
-_To be filled in._
+**Two runs, no changes in between.** It was first run once on 24 October at 01:52 ([run_20261024_ismay_heldout_first_run](../eval/results/run_20261024_ismay_heldout_first_run.json), commit 156c127). It was run again at 18:54 with 3 repeats, for stability ([run_20261024_ismay_heldout](../eval/results/run_20261024_ismay_heldout.json), commit 4444517, clean tree). Between the two, the only setting changes were deploy settings (all off locally) and `EMBEDDING_BATCH_SIZE=1`, which doesn't change this eval: a question is embedded on its own anyway, and the statement's index was the same cached one. Nothing was tuned on either run. The figures below are from the 3-repeat run. Where runs differ, the range is shown.
+
+h09 and h19 have labels marked partial (the expected paragraphs only partly answer counsel's question). They count as right if the answer cites any expected paragraph: h19 did in every run, h09 was refused in every run.
+
+| | All 20 | High-confidence 12 |
+|---|---|---|
+| Right paragraph (answerable) | **11 of 15** in each run | **7 of 8** in each run |
+| Expected paragraph ranked first / in the top 5 | 8 / 14 of 15 | 6 / 8 of 8 |
+| Answers given | 13, 13, 14 | 8, 8, 9 |
+| Verified quotes (exact) | 13, 13, 14: every answer given | 8, 8, 9: every answer given |
+| OCR-corrected | 0 | 0 |
+| Referrals | 0 | 0 |
+| Answerable questions refused | 2 (h09, h11) | 0 |
+| Refusal precision (refusals that were right to refuse) | 5 of 7, 5 of 7, 4 of 6 | 4 of 4, 4 of 4, 3 of 3 |
+| Refusal recall (uncovered questions refused) | 5 of 5, 5 of 5, 4 of 5 | 4 of 4, 4 of 4, 3 of 4 |
+| Latency p50 / p95 (mean of runs; range) | 1,076 (1,045–1,114) / 2,198 (2,128–2,235) ms | 1,079 / 1,953 ms |
+
+Latency excludes 90 s of rate-limit waiting in one run. Usage per answer: 1.10 LLM calls, 932 input and 52 output tokens, 131 TTS characters.
+
+**Compared with the dev set,** counsel's questions are harder: the right paragraph for 11 of 15 (73%) against 27 of 28 (96%) on dev, and ranked first for 8 of 15 against 25 of 28. Grounding held: every answer given was a verified quote, as on dev.
+
+**Stability.** The 15 answerable questions got the same paragraph or refusal in all 3 runs and in the first run. Only two uncovered questions varied: h16 was refused in 2 of 3 runs here and answered in the first run; h04 was refused in all 3 here and answered (from ¶5) in the first run. So the first run's single figure for these, 3 of 5 refused, and this run's 4–5 of 5 are both within the model's run-to-run variation at temperature 0.
+
+### Every wrong answer
+
+| | Question | What the witness said | Expected | Rank of expected in retrieval |
+|---|---|---|---|---|
+| h09 (low, partial) | "Was there any, in your three years in this post, discussion about Fujitsu employees having unrestricted and unauditable access to the Post Office Horizon System?" | Refused ("That is not something I addressed in my witness statement."), all 3 runs | ¶54 ("I had understood that Fujitsu could not 'correct' or 'inject' transactions whereas FUJ00087118 … indicates that some form of entry was possible.") | 7th: outside the top 5, so the model never saw it |
+| h11 (low) | "Can you recall a phrase in this period, namely 'ARQ data'?" | Refused, all 3 runs | ¶71 (about the 42 days and what data would have been available) | 1st: retrieved, but the model judged it doesn't answer; ¶71 never uses the phrase "ARQ data" |
+| h14 (low) | "Would you agree that internal auditors would be a vital source of assurance within the corporation?" | "I was, however, responsible early in my time at Post Office Ltd for the Branch Audit Team whose members carried out audits at branches." (¶56), all 3 runs | ¶64 ("because of reassurance from audit risk modelling, feedback from audit…") | 4th: retrieved, but the model quoted ¶56, which mentions audits but not assurance |
+| h20 (high) | "What were the 'compassionate factors' that were borne in mind?" | "In hindsight, my own perception and wider management perception of the likely validity of allegations about Horizon may have been influenced by such things as understandings of feedback at audit and by a belief in the controls and mitigations which went on to be summarized in this 2010 paper." (¶43), all 3 runs | ¶45 ("The report should have explained more about the phrase 'compassionate', in order to justify its use.") | 1st: retrieved first, but the model quoted ¶43 |
+| h16 (high, not covered) | "You were aware by this time about the Callendar Square bug, weren't you?" | Run 3 only: "My teams primarily worked using a central SAP finance system, not Horizon, and so we would not have had direct user experience to inform views on Horizon…" (¶28). Refused in runs 1 and 2 | None: the statement never mentions Callendar Square | Not applicable |
+
+Three of the four wrong answers to answerable questions (h11, h14, h20) had the right paragraph retrieved, two of them ranked first, so they are answer-step errors, not retrieval misses. h09 is a retrieval miss (7th). Every quote was real and verified; h14 and h20 quote the wrong paragraph. All are reported as they are; nothing was changed in response.
