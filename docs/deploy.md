@@ -139,6 +139,26 @@ curl -s -H "X-Forwarded-For: 1.2.3.4" https://<your-url>/api/limits | python3 -c
 
 Then set `DEBUG_CLIENT_IP=false` again and repeat the pass check.
 
+### What Render sends (checked 24 October 2026)
+
+Render's free web services sit behind Cloudflare. The diagnostic showed:
+
+| Header | Value | Trustworthy? |
+|---|---|---|
+| `X-Forwarded-For` | `[whatever the client sent], client, Cloudflare, Render's internal 10.x proxy` | Only counted from the right |
+| `CF-Connecting-IP` | the real client IP | Yes: Cloudflare sets it, and rejects a request that sends it itself (error 1000) |
+| `True-Client-IP` | the real client IP | Also set by the proxy, but not used |
+| Socket peer | Render's internal proxy | No: the same for every visitor |
+
+So the leftmost entry was the client's own input (the original spoofing bug), and the rightmost (`TRUSTED_PROXY_HOPS=1`) is Render's internal proxy, which would put every visitor under one IP's limits. `deploy/render.env` therefore sets:
+- `CLIENT_IP_HEADER=cf-connecting-ip`, the address used;
+- `TRUSTED_PROXY_HOPS=3`, the fallback if that header is ever missing (the client is third from the right);
+- `DEBUG_CLIENT_IP=false`.
+
+With `CLIENT_IP_HEADER=cf-connecting-ip` set, the spoof check passes: both curls show the real client IP.
+
+If Render's proxy chain changes (for example a different CDN), the fallback count changes with it, so rerun the check after any Render-side change.
+
 A visitor can go over their spoken quota by at most one session (60 s): the page keeps one microphone token ready so the mic starts at once, and a token issued before the quota ran out can't be revoked. The next token is refused, and the global session budget counts every token issued.
 
 A microphone token is fetched when the examination page opens and replaced every 9.5 minutes while the tab is visible (tokens last `STT_TOKEN_EXPIRES_SECONDS=600`), so each open page uses a few of the 20 daily sessions. A token's session can run at most 60 s.

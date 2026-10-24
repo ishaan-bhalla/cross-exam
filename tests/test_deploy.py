@@ -21,6 +21,25 @@ def test_render_env_plus_the_key_satisfies_settings(clean_env, monkeypatch):
     assert s.assemblyai_api_key == "test-key"
     assert (s.persist_uploads, s.api_host, s.embedding_batch_size) == (False, "0.0.0.0", 1)
     assert s.budget_llm_calls_per_day > 0 and s.limit_questions_per_day > 0
+    # The client IP behind Render's Cloudflare proxy (docs/deploy.md), and no diagnostic output.
+    assert (s.client_ip_header, s.trusted_proxy_hops, s.debug_client_ip) == ("cf-connecting-ip", 3, False)
+
+
+def test_debug_client_ip_is_off_by_default():
+    for f in (PROJECT_ROOT / ".env.example", RENDER_ENV):
+        assert dotenv_values(f)["DEBUG_CLIENT_IP"] == "false"
+
+
+def test_render_chain_resolves_to_the_client(monkeypatch):
+    """Render's real headers: CF-Connecting-IP, and X-Forwarded-For with a spoofed entry first."""
+    from crossexam.api import app as appmod
+    s = SimpleNamespace(client_ip_header="cf-connecting-ip", trusted_proxy_hops=3)
+    monkeypatch.setattr(appmod, "get_settings", lambda: s)
+    xff = "1.2.3.4, 203.0.113.9, 172.70.1.2, 10.204.3.4"  # fake, client, Cloudflare, Render internal
+    peer = SimpleNamespace(host="10.204.3.4")
+    assert appmod.client_ip({"cf-connecting-ip": "203.0.113.9", "x-forwarded-for": xff}, peer) == "203.0.113.9"
+    assert appmod.client_ip({"x-forwarded-for": xff}, peer) == "203.0.113.9"           # header missing: 3 hops
+    assert appmod.client_ip({"x-forwarded-for": xff.split(", ", 1)[1]}, peer) == "203.0.113.9"  # no fake entry
 
 
 def test_render_env_without_the_key_is_incomplete(clean_env):
