@@ -52,14 +52,40 @@ from crossexam.api import conversations, phrases, uploads, witnesses
 from crossexam.statements.parser import ocr_available
 from crossexam.clients import tts
 from crossexam.config import get_settings
-from crossexam.clients.llm_gateway import track_usage
-from crossexam import costs
+from crossexam.clients.llm_gateway import LLMBusy, on_rate_limit, track_usage
+from crossexam import budget, costs
 from crossexam.witness.align import align_words, key_count
 from crossexam.witness.chunking import chunk_quote
 from crossexam.witness.docids import normalise_ids
 from crossexam.witness.answer import answer, fixed_phrase, fixed_phrases, spoken_quote
 
 VISITOR_COOKIE = "cx_visitor"
+BUSY_MESSAGE = "The witness is gathering their thoughts: the service is busy."
+
+
+def client_ip(headers, peer) -> str | None:
+    """The visitor's IP: from client_ip_header behind a proxy (first or last entry, per
+    client_ip_position), else the connecting address."""
+    s = get_settings()
+    if s.client_ip_header.strip():
+        value = headers.get(s.client_ip_header.strip(), "")
+        parts = [p.strip() for p in value.split(",") if p.strip()]
+        if parts:
+            return parts[-1] if s.client_ip_position == "last" else parts[0]
+    return peer.host if peer else None
+
+
+def limit_keys(conn) -> list[tuple[str, int]]:
+    """Quota keys for a request or WebSocket: its visitor cookie and its IP."""
+    return budget.client_keys(conn.cookies.get(VISITOR_COOKIE), client_ip(conn.headers, conn.client))
+
+
+def guard(check, *args):
+    """Run a budget check, turning LimitReached into HTTP 429 with the visitor-facing message."""
+    try:
+        check(*args)
+    except budget.LimitReached as e:
+        raise HTTPException(429, str(e)) from None
 
 
 log = logging.getLogger("crossexam")
@@ -82,7 +108,14 @@ async def lifespan(app: FastAPI):
     texts = fixed_phrases()
     for voice in sorted({w["voice"] for w in witnesses.list_witnesses()}):
         started = time.perf_counter()
-        counts = await phrases.warm(voice, texts)
+        try:
+            counts = await phrases.warm(voice, texts)
+        except Exception as e:
+            # Not fatal: an uncached phrase is synthesised live when needed. (Seen when the account
+            # was at its TTS session limit, error 3009, as containers restarted.)
+            log.warning("phrases for voice %r not pre-synthesised (%s: %s); they will be synthesised live",
+                        voice, type(e).__name__, e)
+            continue
         print(f"phrases for voice {voice!r}: {counts} in {time.perf_counter() - started:.1f}s")
     yield
 
@@ -96,7 +129,23 @@ def config():
     return {"audio_buffer_ms": s.ui_audio_buffer_ms, "quote_timings_max_wait_ms": s.quote_timings_max_wait_ms,
             "stt_sample_rate": s.stt_sample_rate, "stt_chunk_ms": s.stt_chunk_ms,
             "upload_max_mb": s.upload_max_mb, "ocr_available": s.ocr_enabled and ocr_available(),
-            "uploads_per_client": s.uploads_per_client, "upload_ttl_minutes": s.upload_ttl_minutes}
+            "uploads_per_client": s.uploads_per_client, "upload_ttl_minutes": s.upload_ttl_minutes,
+            "demo_limit": budget.demo_limited(), "demo_video_url": s.demo_video_url or None}
+
+
+@app.get("/healthz")
+def healthz():
+    """For Render's health check and an uptime pinger: the app is up. Counts towards no limit or
+    budget; it does expire idle uploads, so their memory is freed even when nobody else visits."""
+    uploads.expire_stale()
+    return {"status": "ok"}
+
+
+@app.get("/api/limits")
+def limits(request: Request):
+    """This visitor's usage against the demo's quotas (cookie and IP), and the global budget."""
+    keys = limit_keys(request)
+    return {"ip": client_ip(request.headers, request.client), **budget.client_status(keys), "global": budget.status()}
 
 
 def voices() -> list[dict]:
@@ -128,6 +177,8 @@ async def visitor_cookie(request: Request, call_next):
     """Give every visitor a cookie on their first request, so the example witness's
     conversation (and later uploads) can be kept for them."""
     response = await call_next(request)
+    if request.url.path == "/healthz":  # uptime pingers are not visitors
+        return response
     if VISITOR_COOKIE not in request.cookies and VISITOR_COOKIE not in response.headers.get("set-cookie", ""):
         response.set_cookie(VISITOR_COOKIE, secrets.token_urlsafe(16), httponly=True, samesite="lax", max_age=30 * 24 * 3600)
     return response
@@ -167,6 +218,7 @@ async def voice_sample(voice: str):
         raise HTTPException(404, "unknown voice")
     text = fixed_phrase("SAMPLE")
     if not phrases.get(voice, text):
+        guard(budget.check_demo)
         await phrases.warm(voice, [text])
     phrase = phrases.get(voice, text)
     header = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 36 + len(phrase.pcm), b"WAVE", b"fmt ", 16, 1, 1,
@@ -181,6 +233,12 @@ async def upload_statement(request: Request, response: Response, file: UploadFil
     s = get_settings()
     visitor = request.cookies.get(VISITOR_COOKIE) or secrets.token_urlsafe(16)
     response.set_cookie(VISITOR_COOKIE, visitor, httponly=True, samesite="lax", max_age=30 * 24 * 3600)
+    keys = budget.client_keys(visitor, client_ip(request.headers, request.client))
+    guard(budget.check_demo)
+    guard(budget.check_upload, keys)
+    if s.max_open_uploads and uploads.active_count() >= s.max_open_uploads:
+        # Every open upload holds a parsed statement and its index in memory (512 MB on Render).
+        raise HTTPException(503, "The demo is busy, please try again in a few minutes.")
     open_now = uploads.active_count(visitor)
     if open_now >= s.uploads_per_client:
         raise HTTPException(429, f"You already have {open_now} statements open, the most allowed at once. "
@@ -192,6 +250,7 @@ async def upload_statement(request: Request, response: Response, file: UploadFil
         raise HTTPException(413, f"file is larger than the {s.upload_max_mb} MB limit")
     if not data.startswith(b"%PDF-"):
         raise HTTPException(415, "only PDF files can be uploaded")
+    budget.charge_upload(keys)
     record = uploads.start(file.filename or "statement.pdf", data, visitor)
     return {**_public_record(record), "status_url": f"/api/uploads/{record['id']}"}
 
@@ -249,6 +308,7 @@ def confirm_witness(witness_id: str, body: Confirmation, request: Request):
         raise HTTPException(422, "unknown voice")
     if uploads.get(witness_id, visitor)["stage"] not in ("ready", "confirmed", "error"):
         raise HTTPException(409, "this statement is not ready to confirm")
+    guard(budget.check_demo)  # preparing the voice synthesises its phrases
     roles = [{"title": r.title.strip(), "organisation": r.organisation, "from": r.from_, "to": r.to} for r in body.roles]
     uploads.confirm(witness_id, body.name.strip(), body.role_label.strip(), roles, body.voice)
     return _public_record(uploads.get(witness_id, visitor))
@@ -259,6 +319,9 @@ def stt_session(witness_id: str, request: Request):
     """A temporary speech-to-text token, as a ready-to-use WebSocket URL. The API key stays
     on the server; the token is single-use and expires after stt_token_expires_seconds."""
     check_access(witness_id, request.cookies.get(VISITOR_COOKIE))
+    keys = limit_keys(request)
+    guard(budget.check_demo)
+    guard(budget.check_spoken, keys)
     s = get_settings()
     r = requests.get(s.stt_token_url, headers={"Authorization": s.assemblyai_api_key},
                      params={"expires_in_seconds": s.stt_token_expires_seconds,
@@ -266,6 +329,8 @@ def stt_session(witness_id: str, request: Request):
                      timeout=s.llm_timeout_seconds)
     if r.status_code != 200:
         raise HTTPException(502, f"speech-to-text token request failed ({r.status_code})")
+    # Each token allows one session of up to stt_max_session_seconds: counted when issued.
+    budget.charge_stt_session(keys)
     terms = witnesses.keyterms(witness_id)
     params = {"token": r.json()["token"], "speech_model": s.stt_speech_model, "encoding": "pcm_s16le",
               "sample_rate": s.stt_sample_rate, "keyterms_prompt": json.dumps(terms)}
@@ -324,9 +389,14 @@ async def _examine(ws: WebSocket, witness: dict, question: str, tts_conn: tts.Pe
                    stt_audio_seconds: float | None = None) -> tuple[dict, dict]:
     """Answer a question and speak it. Returns (answer result, done message)."""
     received = time.perf_counter()
+    loop = asyncio.get_running_loop()
+
+    def busy(wait_seconds: float):
+        msg = {"type": "busy", "message": BUSY_MESSAGE, "wait_seconds": round(wait_seconds, 1)}
+        loop.call_soon_threadsafe(lambda: asyncio.ensure_future(ws.send_json(msg)))
 
     def run():
-        with track_usage() as calls:
+        with track_usage() as calls, on_rate_limit(busy):
             return answer(question, witnesses.retriever(witness["id"]), witness["name"]), calls
     result, llm_calls = await asyncio.to_thread(run)
     answer_latency_ms = (time.perf_counter() - received) * 1000
@@ -431,6 +501,7 @@ async def _speak(ws: WebSocket, witness: dict, result: dict, tts_conn: tts.Persi
 @app.websocket("/ws/examine")
 async def examine(ws: WebSocket, witness: str):
     visitor = ws.cookies.get(VISITOR_COOKIE)
+    keys = limit_keys(ws)
     await ws.accept()
     try:
         w = check_access(witness, visitor)
@@ -455,6 +526,14 @@ async def examine(ws: WebSocket, witness: str):
             except HTTPException as e:
                 await ws.send_json({"type": "error", "message": e.detail, "status": e.status_code})
                 continue
+            try:
+                budget.check_demo()
+                budget.check_question(keys)
+            except budget.LimitReached as e:
+                await ws.send_json({"type": "error", "message": str(e), "status": 429,
+                                    "code": "demo_limit" if e.demo else "limit"})
+                continue
+            budget.charge_question(keys)
             if replay:
                 stored = conversations.turn(visitor, w["id"], msg.get("turn"))
                 if not stored:
@@ -479,6 +558,8 @@ async def examine(ws: WebSocket, witness: str):
                     await ws.send_json({"type": "question", "text": question, "id_changes": changes})
                 voice_timing = msg.get("voice_timing") if isinstance(msg.get("voice_timing"), dict) else {}
                 stt_seconds = voice_timing.get("stt_audio_seconds")
+                if msg.get("spoken") and isinstance(stt_seconds, (int, float)):
+                    budget.charge_spoken(keys, min(float(stt_seconds), get_settings().stt_max_session_seconds))
                 result, done = await _examine(ws, w, question, tts_conn,
                                               stt_seconds if isinstance(stt_seconds, (int, float)) else None)
                 timing = {k: v for k, v in done.items() if k != "type"}
@@ -490,6 +571,8 @@ async def examine(ws: WebSocket, witness: str):
                 await ws.send_json({"type": "turn", "turn": stored["id"]})
             except WebSocketDisconnect:
                 raise
+            except LLMBusy as e:
+                await ws.send_json({"type": "error", "message": str(e), "code": "busy"})
             except Exception as e:
                 await ws.send_json({"type": "error", "message": f"{type(e).__name__}: {e}"})
     except WebSocketDisconnect:

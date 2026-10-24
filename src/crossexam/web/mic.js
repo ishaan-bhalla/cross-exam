@@ -16,7 +16,8 @@
 // Token pre-fetch. Each token starts one session and must be used within
 // expires_in_seconds, so one is fetched when the page loads, replaced refresh_margin_seconds
 // before it expires, and replaced again as soon as it is used. A click takes the cached token
-// if it is still fresh, and otherwise fetches one itself.
+// if it is still fresh, and otherwise fetches one itself. Each token counts against the demo's
+// daily microphone quota, so while the tab is hidden no new token is fetched until it is shown.
 const tokenCache = { witnessId: null, session: null, fetchedAt: 0, timer: null };
 
 async function fetchSession(witnessId) {
@@ -27,6 +28,10 @@ async function fetchSession(witnessId) {
 
 export async function prefetchSttSession(witnessId) {
   clearTimeout(tokenCache.timer);
+  if (document.hidden) {
+    document.addEventListener("visibilitychange", () => prefetchSttSession(witnessId), { once: true });
+    return;
+  }
   tokenCache.witnessId = witnessId;
   tokenCache.session = null;
   try {
@@ -40,12 +45,20 @@ export async function prefetchSttSession(witnessId) {
   }
 }
 
+// Fetch a token if none is cached (after a spoken question has been answered, or a mic attempt
+// that sent nothing).
+export function ensureSttSession(witnessId) {
+  if (!tokenCache.session || tokenCache.witnessId !== witnessId) prefetchSttSession(witnessId);
+}
+
 function takeCachedSession(witnessId) {
   const s = tokenCache.session;
   if (!s || tokenCache.witnessId !== witnessId) return null;
   const ageMs = performance.now() - tokenCache.fetchedAt;
+  // Tokens are single-use. The next one is fetched by ensureSttSession once the server has
+  // counted this question's audio, so the daily spoken quota is checked against it.
+  clearTimeout(tokenCache.timer);
   tokenCache.session = null;
-  prefetchSttSession(witnessId); // tokens are single-use: get the next one now
   return ageMs < (s.expires_in_seconds - s.refresh_margin_seconds) * 1000 ? { s, ageMs } : null;
 }
 

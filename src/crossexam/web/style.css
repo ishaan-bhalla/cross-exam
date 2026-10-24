@@ -281,6 +281,16 @@ fieldset legend { padding: 0 6px; font: 500 14px/1 var(--sans); }
 .ask .btn { min-height: auto; }
 .ask #mic-button[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
 .ask #mic-button .rec { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+/* Banner under the header: demo limits and cold starts. */
+.notice { margin: 0; padding: 10px clamp(16px, 4vw, 40px); font-size: 15px; border-bottom: 1px solid var(--line);
+          background: var(--band-soft); color: var(--ink); }
+.notice.limit { background: var(--warn-soft); }
+.notice a { color: var(--accent); }
+.dropzone.disabled { opacity: .55; }
+.dropzone.disabled label.btn { pointer-events: none; }
+.spinner { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; border-radius: 50%;
+           border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .status { font-size: 13px; color: var(--muted); min-height: 1.6em; margin-top: 6px; }
 .gone { margin: 48px auto; max-width: 560px; padding: 0 16px; }
 .gone h1, .gone .title { font-size: 32px; margin-bottom: 10px; }

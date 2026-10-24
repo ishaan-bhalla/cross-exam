@@ -1,0 +1,14 @@
+# Render blueprint: one free web service built from the Dockerfile. Settings come from
+# deploy/render.env inside the image; ASSEMBLYAI_API_KEY is the only value to fill in.
+services:
+  - type: web
+    name: cross-examine
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: ASSEMBLYAI_API_KEY
+        sync: false

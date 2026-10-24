@@ -3,6 +3,10 @@ venv/
 __pycache__/
 *.pyc
 *.egg-info/
-data/
+# data/ is local only, except the example witness's statement (a public Inquiry document)
+data/*
+!data/raw/
+data/raw/*
+!data/raw/WITN04630100 - Rod Ismay - First Witness Statement.pdf
 outputs/
 .DS_Store

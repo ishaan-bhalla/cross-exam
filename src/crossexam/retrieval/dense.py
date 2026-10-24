@@ -22,12 +22,15 @@ def _model() -> TextEmbedding:
     s = get_settings()
     if s.embedding_model not in _models:
         _models[s.embedding_model] = TextEmbedding(model_name=s.embedding_model,
-                                                   cache_dir=str(s.resolve(s.embedding_cache_dir)))
+                                                   cache_dir=str(s.resolve(s.embedding_cache_dir)),
+                                                   threads=int(s.embedding_threads) if s.embedding_threads.strip() else None)
     return _models[s.embedding_model]
 
 
 def _embed(texts: list[str]) -> np.ndarray:
-    v = np.array(list(_model().embed(texts)), dtype=np.float32)
+    # Small batches: each batch is padded to its longest text (up to 512 tokens), and ONNX keeps
+    # the peak allocation, so a large batch of long statement units costs gigabytes.
+    v = np.array(list(_model().embed(texts, batch_size=get_settings().embedding_batch_size)), dtype=np.float32)
     return v / np.linalg.norm(v, axis=1, keepdims=True)
 
 

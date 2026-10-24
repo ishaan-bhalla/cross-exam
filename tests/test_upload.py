@@ -167,6 +167,7 @@ def fake_processing(monkeypatch, settings):
 
     async def warm(voice, texts):
         return {}
+    monkeypatch.setattr(uploads, "_uploads", {})  # no uploads left open by earlier tests
     monkeypatch.setattr(uploads, "_process", process)
     monkeypatch.setattr(phrases, "warm", warm)
     monkeypatch.setattr(uploads, "_executor", lambda: SimpleNamespace(submit=lambda fn, *a: fn(*a)))
@@ -223,3 +224,25 @@ def test_examination_waits_for_confirmation(fake_processing, settings):
     assert c.get(f"/api/uploads/{upload_id}").json()["stage"] == "confirmed"
     w = next(w for w in c.get("/api/witnesses").json() if w["id"] == upload_id)
     assert (w["name"], w["role_label"], w["voice"], w["profile_confirmed"]) == ("Jane Doe", body["role_label"], "anna", True)
+
+
+def test_global_cap_on_open_uploads_across_visitors(fake_processing, settings, monkeypatch):
+    from crossexam.config import get_settings
+    monkeypatch.setattr(get_settings(), "max_open_uploads", 2)
+    a, b = _new_client(), _new_client()
+    assert _pdf_upload(a).status_code == 202
+    assert _pdf_upload(b).status_code == 202
+    r = _pdf_upload(b)                                   # a third, from either visitor
+    assert r.status_code == 503 and r.json()["detail"] == "The demo is busy, please try again in a few minutes."
+    a.delete(f"/api/uploads/{a.get('/api/uploads').json()[0]['id']}")
+    assert _pdf_upload(b).status_code == 202             # a place freed up
+
+
+def test_healthz_sets_no_cookie_and_counts_towards_nothing(settings):
+    from crossexam import budget
+    c = _new_client()
+    before = budget.status()["used"]
+    for _ in range(20):
+        r = c.get("/healthz")
+        assert r.status_code == 200 and "set-cookie" not in r.headers
+    assert budget.status()["used"] == before

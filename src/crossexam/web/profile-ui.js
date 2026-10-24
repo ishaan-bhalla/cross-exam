@@ -59,6 +59,7 @@ export function uploadError(status, detail, maxMb) {
   if (status === 413) return `That file is larger than the ${maxMb} MB limit. Try a smaller PDF, for example the statement without its exhibits.`;
   if (status === 415) return "That file is not a PDF. Upload the witness statement as a PDF file.";
   if (status === 429) return detail || "You have too many statements open. Remove one from the list below, then try again.";
+  if (status === 503) return detail || "The demo is busy, please try again in a few minutes.";
   if (status === 0) return "The upload did not reach the server. Check your connection and try again.";
   return detail ? `The statement could not be uploaded: ${detail}` : "The statement could not be uploaded. Please try again.";
 }

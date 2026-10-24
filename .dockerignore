@@ -1,0 +1,19 @@
+# Only what the image needs: code, prompts, the witness file, the web front end and the
+# example witness's statement.
+.git
+.gitignore
+venv/
+outputs/
+.env
+.env.*
+**/__pycache__/
+*.pyc
+.jury/
+.pytest_cache/
+node_modules/
+docs/
+eval/
+tests/
+# data/ is built in the image (models, processed index, phrase cache) or held in memory (uploads)
+data/
+!data/raw/WITN04630100 - Rod Ismay - First Witness Statement.pdf

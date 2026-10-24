@@ -1,10 +1,14 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-ENV_FILE = PROJECT_ROOT / ".env"
+# Settings come from this file, and real environment variables override it. Locally it is .env;
+# the Docker image sets CROSSEXAM_ENV_FILE=deploy/render.env (committed, no secrets), so on Render
+# only ASSEMBLYAI_API_KEY needs to be set in the environment.
+ENV_FILE = PROJECT_ROOT / os.environ.get("CROSSEXAM_ENV_FILE", ".env")
 
 
 class Settings(BaseSettings):
@@ -18,6 +22,7 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float
     llm_max_retries: int
     llm_retry_backoff_seconds: float
+    llm_max_wait_seconds: float
     stt_ws_url: str
     stt_token_url: str
     stt_speech_model: str
@@ -57,6 +62,8 @@ class Settings(BaseSettings):
     retrieval_min_score: float
     retriever: str
     embedding_model: str
+    embedding_batch_size: int
+    embedding_threads: str
     embedding_query_prefix: str
     embedding_cache_dir: Path
     rrf_k: int
@@ -98,6 +105,7 @@ class Settings(BaseSettings):
     persist_uploads: bool
     uploads_dir: Path
     uploads_per_client: int
+    max_open_uploads: int
     upload_ttl_minutes: int
     conversation_max_turns: int
     profile_prompt: str
@@ -116,6 +124,22 @@ class Settings(BaseSettings):
     cost_llm_output_per_million_tokens: str
     cost_tts_per_million_chars: str
     cost_stt_per_hour: str
+    demo_paused: bool
+    demo_video_url: str
+    budget_llm_calls_per_day: int
+    budget_tts_chars_per_day: int
+    budget_stt_seconds_per_day: int
+    budget_stt_sessions_per_day: int
+    budget_cost_usd_per_day: float
+    budget_state_file: str
+    limit_questions_per_minute: int
+    limit_questions_per_day: int
+    limit_spoken_seconds_per_day: int
+    limit_stt_sessions_per_day: int
+    limit_uploads_per_day: int
+    limit_ip_factor: int
+    client_ip_header: str
+    client_ip_position: str
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else PROJECT_ROOT / p

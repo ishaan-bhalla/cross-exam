@@ -1,5 +1,6 @@
 import { activeWordIndex, mergeWords, quotePieces } from "./sync.js";
-import { prefetchSttSession, startMic } from "./mic.js";
+import { ensureSttSession, prefetchSttSession, startMic } from "./mic.js";
+import { demoLimitText, fetchConfig, showNotice } from "./notice.js";
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -13,6 +14,7 @@ let witnessId = null;
 let mic = null; // { stop } while listening
 let spoken = null; // timing for a question asked by voice, shown under it
 let witnesses = []; // this visitor's witnesses, for the switcher
+let demoLimited = false; // the demo's daily budget is spent: the statement can be read, nothing asked
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -31,7 +33,7 @@ function showGone(title, text) {
 }
 
 async function init() {
-  config = await (await fetch("/api/config")).json();
+  config = await fetchConfig();
   const list = await (await fetch("/api/witnesses")).json();
   const wanted = params.get("witness");
   const witness = wanted ? list.find((w) => w.id === wanted) : list[0];
@@ -42,7 +44,8 @@ async function init() {
   witnessId = witness.id;
   witnesses = list;
   renderSwitcher();
-  prefetchSttSession(witnessId); // so the mic does not wait for a token
+  if (config.demo_limit) enterDemoLimit(config.demo_limit);
+  else prefetchSttSession(witnessId); // so the mic does not wait for a token
   // Role first, then name: the values the user confirmed for an upload.
   $("witness-role").textContent = witness.role_label;
   $("witness-name").textContent = witness.name;
@@ -151,6 +154,7 @@ function addReplay(turn, id) {
   replay.type = "button";
   replay.innerHTML = '<svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7-4.5z" fill="currentColor"/></svg><span>Replay</span>';
   replay.setAttribute("aria-label", "Replay this answer");
+  replay.disabled = demoLimited;
   replay.addEventListener("click", () => {
     if (!ws || ws.readyState !== WebSocket.OPEN || $("ask-button").disabled) return;
     ensureAudio();
@@ -185,8 +189,22 @@ function connect(witnessId) {
 }
 
 function setStatus(text) { $("status").textContent = text; }
+// The LLM gateway is rate-limiting: the server is waiting and will retry.
+function setBusyStatus(text) {
+  $("status").replaceChildren(el("span", "spinner"), " ", text);
+}
 function setMicLabel(text) { $("mic-button").querySelector(".label").textContent = text; }
+// The daily budget is spent: say so, and leave the statement and the conversation to read.
+function enterDemoLimit(message) {
+  demoLimited = true;
+  showNotice(demoLimitText({ demo_limit: message }), { kind: "limit", link: config.demo_video_url });
+  setBusy(true);
+  setStatus("Questions are paused for today.");
+  document.querySelectorAll(".turn .replay").forEach((b) => { b.disabled = true; });
+}
+
 function setBusy(busy) {
+  busy = busy || demoLimited;
   $("ask-button").disabled = busy;
   $("question").disabled = busy;
   $("mic-button").disabled = busy;
@@ -217,12 +235,12 @@ $("mic-button").addEventListener("click", async () => {
       onText: (text) => { $("question").value = text; },
       onSubmit: (text, info) => {
         stopMic();
-        if (!text) { setStatus("Didn't catch that. Try again or type."); return; }
+        if (!text) { setStatus("Didn't catch that. Try again or type."); if (!demoLimited) ensureSttSession(witnessId); return; }
         $("question").value = text;
         spoken = info;
         $("ask-form").requestSubmit();
       },
-      onError: (message) => { stopMic(); setStatus(`Microphone: ${message}. You can type instead.`); },
+      onError: (message) => { stopMic(); setStatus(`Microphone: ${message}. You can type instead.`); if (!demoLimited) ensureSttSession(witnessId); },
     });
   } catch (e) {
     stopMic();
@@ -297,10 +315,13 @@ function startAnswer() {
 function handle(msg) {
   if (msg.type === "error") {
     if (msg.status === 410) return showGone("This witness is no longer available", msg.message);
-    setStatus(`Error: ${msg.message}`);
+    if (msg.code === "demo_limit") return enterDemoLimit(msg.message);
+    // Quotas and a gateway that stayed busy are explained as they are, not as errors.
+    setStatus(msg.status === 429 || msg.code === "busy" ? msg.message : `Error: ${msg.message}`);
     setBusy(false);
     return;
   }
+  if (msg.type === "busy") return setBusyStatus(msg.message);
   if (!current) return;
   if (msg.type === "question") onQuestionUnderstood(msg);
   else if (msg.type === "answer") onAnswer(msg);
@@ -319,6 +340,7 @@ function onReplay(msg) {
 }
 
 function onTurnStored(msg) {
+  if (!demoLimited) ensureSttSession(witnessId); // the question is counted now
   if (current?.turn && !current.turn.dataset.turn) addReplay(current.turn, msg.turn);
   bumpQuestionCount(1);
 }

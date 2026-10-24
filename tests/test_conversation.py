@@ -129,3 +129,21 @@ def test_removing_an_upload_drops_its_conversation(app_module):
     c.delete(f"/api/uploads/{other}")
     from crossexam.api import conversations
     assert conversations.count(c.cookies.get("cx_visitor"), other) == 0
+
+
+def test_startup_survives_tts_being_unavailable(monkeypatch):
+    """A TTS error while pre-synthesising phrases (e.g. 3009, the session limit) must not stop startup."""
+    from crossexam.config import load_settings
+    try:
+        load_settings()
+    except SystemExit as e:
+        pytest.skip(f"settings not configured: {e}")
+    from fastapi.testclient import TestClient
+    from crossexam.api import app as appmod, phrases
+    from crossexam.clients.tts import TTSError
+
+    async def failing_warm(voice, texts):
+        raise TTSError("TTS error 3009: Too many concurrent sessions for this account; try again later", 3009)
+    monkeypatch.setattr(phrases, "warm", failing_warm)
+    with TestClient(appmod.app) as c:
+        assert c.get("/healthz").json() == {"status": "ok"}

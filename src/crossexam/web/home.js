@@ -1,6 +1,7 @@
 // Front page, upload progress and the confirm step. Views are sections of index.html;
 // ?upload=<id> resumes an upload (progress or confirm) after a reload.
 import { findSource, roleLabel, sentenceStart, titleCase, uploadError } from "./profile-ui.js";
+import { demoLimitText, fetchConfig, showNotice } from "./notice.js";
 
 const $ = (id) => document.getElementById(id);
 const POLL_MS = 400;
@@ -388,9 +389,16 @@ $("discard").addEventListener("click", async () => {
 });
 
 async function init() {
-  config = await (await fetch("/api/config")).json();
+  config = await fetchConfig();
   const id = new URLSearchParams(location.search).get("upload");
   await initHome();
+  if (config.demo_limit) {
+    // The example witness's statement can still be read; nothing that spends credit can start.
+    showNotice(demoLimitText(config), { kind: "limit", link: config.demo_video_url });
+    $("file").disabled = true;
+    $("dropzone").classList.add("disabled");
+    $("drop-hint").textContent = "Uploads are paused for today.";
+  }
   if (id) follow(id);
 }
 

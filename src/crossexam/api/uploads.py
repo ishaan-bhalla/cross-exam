@@ -85,10 +85,13 @@ def remove(upload_id: str):
     conversations.drop_witness(upload_id)
 
 
-def active_count(visitor: str) -> int:
+def active_count(visitor: str | None = None) -> int:
+    """Uploads open (processing or ready, not expired or failed): this visitor's, or everyone's
+    if visitor is None. Each open upload holds its parsed statement and index in memory."""
     expire_stale()
     with _lock:
-        return sum(u.get("visitor") == visitor and u["stage"] not in ("expired", "error") for u in _uploads.values())
+        return sum((visitor is None or u.get("visitor") == visitor) and u["stage"] not in ("expired", "error")
+                   for u in _uploads.values())
 
 
 def start(filename: str, data: bytes, visitor: str | None = None) -> dict:

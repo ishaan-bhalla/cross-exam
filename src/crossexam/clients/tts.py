@@ -31,6 +31,7 @@ from urllib.parse import urlencode
 import numpy as np
 import websockets
 from websockets.protocol import State
+from crossexam import budget
 from crossexam.config import get_settings
 
 SESSION_LIMIT_ERROR = 3009
@@ -250,6 +251,7 @@ class Session:
         sent_at = time.perf_counter()
         for part in parts:
             await self.ws.send(json.dumps({"type": "Generate", "text": part}))
+            budget.record(tts_chars=len(part))
             await self.ws.send(json.dumps({"type": "Flush"}))
 
         order = FlushOrder(len(parts))
